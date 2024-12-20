@@ -11,8 +11,8 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup("tannerdavison.plugins", {
- checker = {
+require("lazy").setup({ { import = "tannerdavison.plugins" }, { import = "tannerdavison.plugins.lsp" } }, {
+  checker = {
     enabled = true,
     notify = false,
   },

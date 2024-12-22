@@ -5,27 +5,36 @@ return {
 		"hrsh7th/nvim-cmp",
 	},
 	config = function()
-		-- import nvim-autopairs
+		-- Import nvim-autopairs
 		local autopairs = require("nvim-autopairs")
 
-		-- configure autopairs
+		-- Configure autopairs
 		autopairs.setup({
-			check_ts = true, -- enable treesitter
+			check_ts = true, -- Enable Tree-sitter for better context
 			ts_config = {
-				lua = { "string" }, -- don't add pairs in lua string treesitter nodes
-				javascript = { "template_string" }, -- don't add pairs in javscript template_string treesitter nodes
-				java = false, -- don't check treesitter on java
-				cpp = { "string" }, -- dont add pairs in c++ string treesitter nodes
+				lua = { "string" }, -- Don't add pairs in Lua string nodes
+				javascript = { "template_string" }, -- Don't add pairs in JavaScript template string nodes
+				javascriptreact = { "template_string", "string" },
+				typescript = { "template_string " },
+				typescriptreact = { "template_string" },
+				java = false, -- Disable Tree-sitter for Java
+				cpp = { "string" }, -- Don't add pairs in C++ string nodes
 			},
+			disable_filetype = { "TelescopePrompt" },
+			enable_check_bracket_line = true,
+			ignored_next_char = "[%w%.]", -- will ignore alphanumeric and `.` symbol
+			enable_moveright = true,
+			enable_afterquote = true,
+			enable_bracket_in_quote = true,
+			map_cr = true,
 		})
-
-		-- import nvim-autopairs completion functionality
+		-- Import nvim-autopairs completion functionality
 		local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+		local cmp = require("cmp") -- Import nvim-cmp plugin (completions plugin)
 
-		-- import nvim-cmp plugin (completions plugin)
-		local cmp = require("cmp")
-
-		-- make autopairs and completion work together
-		cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+		-- Ensure autopairs works with nvim-cmp
+		cmp.event:on("confirm_done", function()
+			cmp_autopairs.on_confirm_done() -- This ensures autopairs and completion work together
+		end)
 	end,
 }

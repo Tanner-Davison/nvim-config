@@ -95,28 +95,50 @@ return {
 						"javascriptreact",
 						"javascript.jsx",
 					},
-					cmd = { "typescript-language-server", "--stdio" },
 					settings = {
 						typescript = {
-							inlayHints = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayPropertyDeclarationTypeHints = true,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
+							plugins = {
+								{
+									name = "typescript-styled-plugin",
+									location = "node_modules/typescript-styled-plugin",
+								},
+							},
+							suggest = {
+								enabled = true,
+								includeCompletionsForModuleExports = true,
+								includeCompletionsWithObjectLiteralMethodSnippets = true,
+								autoImports = true,
+								includeAutomaticOptionalChainCompletions = false,
+								includeCompletionsWithInsertText = true,
+								includeCompletionsWithSnippetText = true,
+								includeCompletionsWithClassMemberSnippets = true,
+								includeCompletionsWithImportStatements = true,
+							},
+							preferences = {
+								importModuleSpecifierPreference = "non-relative",
+								quoteStyle = "single",
 							},
 						},
 						javascript = {
-							inlayHints = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayPropertyDeclarationTypeHints = true,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
+							plugins = {
+								name = "typescript-styled-plugin",
+								location = "node_modules/typescript-styled-plugin",
+							},
+							suggest = {
+								enabled = true,
+								includeCompletionsForModuleExports = true,
+								includeCompletionsWithObjectLiteralMethodSnippets = true,
+								autoImports = true,
+								includeAutomaticOptionalChainCompletions = false,
+								includeCompletionsWithSnippetText = true,
+								includeCompletionsWithImportStatements = true,
+								completeJSDocs = false,
+							},
+							preferences = {
+								importModuleSpecifierPreference = "non-relative",
+								quoteStyle = "single",
+								quotePreference = "single",
+								jsxAttributeCompletionStyle = "html",
 							},
 						},
 					},
@@ -131,6 +153,10 @@ return {
 							validate = true,
 							lint = {
 								unknownAtRules = "ignore",
+							},
+							completion = {
+								completePropertyWithSemiColon = true,
+								triggerPropertyValueCompletion = true,
 							},
 						},
 						scss = {
@@ -178,11 +204,44 @@ return {
 						"html",
 						"typescriptreact",
 						"javascriptreact",
+						"javascript",
+						"javascript.jsx",
+						"typescript",
 						"css",
 						"sass",
 						"scss",
 						"less",
 						"svelte",
+					},
+					init_options = {
+						html = {
+							options = {
+								["bem.enabled"] = true,
+								["jsx.enabled"] = true,
+							},
+						},
+					},
+					settings = {
+						emmet = {
+							showSuggestionsAsSnippets = true,
+							showExpandedAbbreviation = "always",
+							includedLanguages = {
+								javascript = "html",
+								typescript = "html",
+							},
+							preferences = {
+								["css.intUnit"] = "px",
+								["css.floatUnit"] = "rem",
+								["jsx.enabled"] = true,
+								["markup.selfClosingStyle"] = "xhtml",
+								["tailwind.enable"] = false,
+							},
+							syntaxProfiles = {
+								javascript = {
+									quote_char = "'",
+								},
+							},
+						},
 					},
 				})
 			end,

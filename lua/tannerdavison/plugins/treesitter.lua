@@ -8,9 +8,9 @@ return {
 	config = function()
 		-- import nvim-treesitter plugin
 		local treesitter = require("nvim-treesitter.configs")
-
 		-- configure treesitter
-		treesitter.setup({ -- enable syntax highlighting
+		treesitter.setup({
+			-- enable syntax highlighting
 			highlight = {
 				enable = true,
 			},
@@ -55,6 +55,11 @@ return {
 					node_decremental = "<bs>",
 				},
 			},
+			-- Add the missing required fields
+			modules = {},
+			sync_install = false,
+			ignore_install = { "haskell", "latex" }, -- List of parsers to ignore installing
+			auto_install = true, -- Automatically install missing parsers when entering buffer
 		})
 	end,
 }

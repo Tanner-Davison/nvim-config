@@ -44,6 +44,7 @@ return {
 				"isort", -- python formatter
 				"black", -- python formatter
 				"clang-format", -- C/C++ formatter
+				"cpplint",
 				"pylint",
 				"eslint_d",
 			},

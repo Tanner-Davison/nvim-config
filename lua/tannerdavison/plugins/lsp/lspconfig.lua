@@ -306,15 +306,11 @@ return {
 			-- end,
 			["clangd"] = function()
 				lspconfig["clangd"].setup({
-					capabilities = capabilities,
 					cmd = {
 						"clangd",
 						"--background-index",
 						"--completion-style=detailed",
-						"--header-insertion=iwyu",
-						"--fallback-style=llvm",
 					},
-					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
 				})
 			end,
 			["lua_ls"] = function()

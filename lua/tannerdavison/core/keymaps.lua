@@ -33,7 +33,34 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 
 -- CPP compiling
 -- Compile C++ code with <Leader>cc
-vim.keymap.set("n", "<Space>cc", "<cmd>w!<CR>:!g++ % -o %:t:r <CR>", { desc = "Compile C++ code" })
+vim.keymap.set("n", "<Space>cc", ":!g++ % -o %:t:r <CR>", { desc = "Compile C++ code" })
+
+-- Compile all *Cpp files on windows machine
+vim.keymap.set("n", "<Space>cx", function()
+	vim.cmd("w!") -- Save the current file
+	local output_name = vim.fn.expand("%:t:r") -- Get the file name without extension
+
+	-- Adjust command based on the operating system
+	if vim.fn.has("win32") == 1 then
+		vim.cmd("!dir /b *.cpp > files.txt && g++ @files.txt -o " .. output_name)
+	elseif vim.fn.has("mac") == 1 then
+		vim.cmd("!ls *.cpp > files.txt && clang++ @files.txt -o " .. output_name)
+	else
+		vim.cmd("!ls *.cpp > files.txt && g++ @files.txt -o " .. output_name)
+	end
+end, { desc = "Compile all C++ files" })
 
 -- Run the compiled executable with <Leader>cv
-vim.keymap.set("n", "<Space>cv", "<cmd>w!<CR>:!cmd /c %:t:r.exe <CR>", { desc = "Run compiled C++ code" })
+vim.keymap.set("n", "<Space>cv", function()
+	vim.cmd("w!") -- Save the current file
+	local output_name = vim.fn.expand("%:t:r") -- Get the file name without extension
+
+	-- Adjust command based on the operating system
+	if vim.fn.has("win32") == 1 then
+		vim.cmd("!cmd /c " .. output_name .. ".exe")
+	elseif vim.fn.has("mac") == 1 then
+		vim.cmd("!./" .. output_name)
+	else
+		vim.cmd("!./" .. output_name)
+	end
+end, { desc = "Run compiled C++ code" })

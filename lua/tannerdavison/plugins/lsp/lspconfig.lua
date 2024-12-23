@@ -13,6 +13,34 @@ return {
 		-- import mason_lspconfig plugin
 		local mason_lspconfig = require("mason-lspconfig")
 
+		-- vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+		-- 	pattern = {
+		-- 		"*/MSVC/*/include/*", -- MSVC include files
+		-- 		"*.h",
+		-- 		"*.hpp",
+		-- 		"*.cpp",
+		-- 		"*.c", -- Regular C++ files
+		-- 		"*/include/*/bits/*", -- Standard library files
+		-- 	},
+		-- 	callback = function()
+		-- 		vim.bo.filetype = "cpp"
+		-- 		-- Optionally set other options specific to MSVC files
+		-- 		vim.bo.syntax = "cpp"
+		-- 	end,
+		-- })
+		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+			pattern = {
+				"*.h",
+				"*.hpp",
+				"*.cpp",
+				"*.c",
+				"*/include/*",
+				"*/MSVC/*",
+			},
+			callback = function()
+				vim.bo.filetype = "cpp"
+			end,
+		})
 		-- import cmp-nvim-lsp plugin
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
@@ -245,20 +273,48 @@ return {
 					},
 				})
 			end,
+			-- ["clangd"] = function()
+			-- 	lspconfig["clangd"].setup({
+			-- 		capabilities = capabilities,
+			-- 		cmd = {
+			-- 			"clangd",
+			-- 			"--background-index",
+			-- 			"--clang-tidy",
+			-- 			"--header-insertion=iwyu",
+			-- 			"--completion-style=detailed",
+			-- 			"--function-arg-placeholders",
+			-- 			"--fallback-style=llvm",
+			-- 			"--query-driver=**/cl.exe",
+			-- 			"--enable-config",
+			-- 		},
+			-- 		filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
+			-- 		root_dir = function(fname)
+			-- 			return require("lspconfig.util").root_pattern(
+			-- 				"compile_commands.json",
+			-- 				"compile_flags.txt",
+			-- 				".git",
+			-- 				"*.sln",
+			-- 				"*.vcxproj"
+			-- 			)(fname) or vim.fn.getcwd()
+			-- 		end,
+			-- 		init_options = {
+			-- 			usePlaceholders = true,
+			-- 			completeUnimported = true,
+			-- 			clangdFileStatus = true,
+			-- 		},
+			-- 	})
+			-- end,
 			["clangd"] = function()
-				-- configure clangd language server
 				lspconfig["clangd"].setup({
 					capabilities = capabilities,
 					cmd = {
 						"clangd",
 						"--background-index",
-						"--clang-tidy",
-						"--header-insertion=iwyu",
 						"--completion-style=detailed",
-						"--function-arg-placeholders",
+						"--header-insertion=iwyu",
 						"--fallback-style=llvm",
 					},
-					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
 				})
 			end,
 			["lua_ls"] = function()

@@ -64,3 +64,76 @@ vim.keymap.set("n", "<Space>cv", function()
 		vim.cmd("!./" .. output_name)
 	end
 end, { desc = "Run compiled C++ code" })
+
+-- Unit Conversion For
+vim.opt.selection = "exclusive"
+local breakpoints = {
+	desktop = 1600,
+	tablet = 1024,
+	mobile = 480,
+}
+
+local function format_vw(value)
+	local formatted = string.format("%.3f", value)
+	formatted = formatted:gsub("%.?0+$", "")
+	return formatted .. "vw"
+end
+
+local function convert_units(mode, is_visual)
+	local viewport = breakpoints[mode]
+
+	if is_visual then
+		local start_row = vim.fn.line("'<")
+		local end_row = vim.fn.line("'>")
+
+		-- Check if any line contains vw
+		local has_vw = false
+		for i = start_row, end_row do
+			local line = vim.fn.getline(i)
+			if line:match("%d+%.?%d*vw") then
+				has_vw = true
+				break
+			end
+		end
+
+		for i = start_row, end_row do
+			local line = vim.fn.getline(i)
+			local new_line
+			if has_vw then
+				new_line = line:gsub("(%d+%.?%d*)vw", function(num)
+					return string.format("%dpx", math.floor(tonumber(num) * viewport / 100))
+				end)
+			else
+				new_line = line:gsub("(%d+%.?%d*)px", function(num)
+					return format_vw(tonumber(num) / viewport * 100)
+				end)
+			end
+			vim.fn.setline(i, new_line)
+		end
+	else
+		local line = vim.fn.getline(".")
+		local value, unit = line:match("(%d+%.?%d*)(px|vw)")
+
+		if value and unit then
+			local result
+			if unit == "vw" then
+				result = string.format("%dpx", math.floor(tonumber(value) * viewport / 100))
+			else
+				result = format_vw(tonumber(value) / viewport * 100)
+			end
+			--
+			local new_line = line:gsub("(%d+%.?%d*)(px|vw)", result)
+			vim.api.nvim_set_current_line(new_line)
+		end
+	end
+end
+--
+local modes = { d = "desktop", t = "tablet", m = "mobile" }
+for key, mode in pairs(modes) do
+	vim.keymap.set("n", "<leader>" .. key .. "z", function()
+		convert_units(mode, false)
+	end)
+	vim.keymap.set("v", "<leader>" .. key .. "z", function()
+		convert_units(mode, true)
+	end)
+end

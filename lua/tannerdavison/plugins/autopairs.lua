@@ -33,8 +33,9 @@ return {
 		local cmp = require("cmp") -- Import nvim-cmp plugin (completions plugin)
 
 		-- Ensure autopairs works with nvim-cmp
-		cmp.event:on("confirm_done", function()
-			cmp_autopairs.on_confirm_done() -- This ensures autopairs and completion work together
-		end)
+		-- cmp.event:on("confirm_done", function()
+		-- 	cmp_autopairs.on_confirm_done() -- This ensures autopairs and completion work together
+		-- end)
+		cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 	end,
 }

@@ -34,6 +34,7 @@ return {
 				"*.hpp",
 				"*.cpp",
 				"*.c",
+				"*.dll",
 				"*/include/*",
 				"*/MSVC/*",
 			},
@@ -273,37 +274,6 @@ return {
 					},
 				})
 			end,
-			-- ["clangd"] = function()
-			-- 	lspconfig["clangd"].setup({
-			-- 		capabilities = capabilities,
-			-- 		cmd = {
-			-- 			"clangd",
-			-- 			"--background-index",
-			-- 			"--clang-tidy",
-			-- 			"--header-insertion=iwyu",
-			-- 			"--completion-style=detailed",
-			-- 			"--function-arg-placeholders",
-			-- 			"--fallback-style=llvm",
-			-- 			"--query-driver=**/cl.exe",
-			-- 			"--enable-config",
-			-- 		},
-			-- 		filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
-			-- 		root_dir = function(fname)
-			-- 			return require("lspconfig.util").root_pattern(
-			-- 				"compile_commands.json",
-			-- 				"compile_flags.txt",
-			-- 				".git",
-			-- 				"*.sln",
-			-- 				"*.vcxproj"
-			-- 			)(fname) or vim.fn.getcwd()
-			-- 		end,
-			-- 		init_options = {
-			-- 			usePlaceholders = true,
-			-- 			completeUnimported = true,
-			-- 			clangdFileStatus = true,
-			-- 		},
-			-- 	})
-			-- end,
 			["clangd"] = function()
 				lspconfig["clangd"].setup({
 					capabilities = capabilities,

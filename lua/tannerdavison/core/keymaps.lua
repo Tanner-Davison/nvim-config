@@ -33,7 +33,7 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 
 -- CPP compiling
 -- Compile C++ code with <Leader>cc
-vim.keymap.set("n", "<Space>cc", ":!g++ % -o %:t:r <CR>", { desc = "Compile C++ code" })
+vim.keymap.set("n", "<Space>cc", ":!g++ -std=c++23 -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
 
 -- Compile all *Cpp allcppfiles on windows machine
 vim.keymap.set("n", "<Space>cx", function()
@@ -137,3 +137,118 @@ for key, mode in pairs(modes) do
 		convert_units(mode, true)
 	end)
 end
+
+-- CMake commands
+-- RUN IN THIS ORDER TO CREATE CMAKE PROJECT
+-- <leader>mf   -- Creates CMakeLists.txt with detected files
+-- <leader>mg   -- Creates build directory and generates build files
+-- <leader>mb   -- Actually compiles your code and creates executable
+-- <leader>mx   -- Runs the executable
+vim.keymap.set("n", "<leader>mf", function()
+	-- Check for existing CMakeLists.txt
+	if vim.fn.filereadable("CMakeLists.txt") == 1 then
+		local confirm = vim.fn.input("CMakeLists.txt already exists. Overwrite? (y/n): ")
+		if confirm ~= "y" then
+			print("\nCanceled CMakeLists.txt generation")
+			return
+		end
+	end
+
+	-- Detect source files
+	local cpp_files = vim.fn.glob("**/*.cpp", false, true)
+	local hpp_files = vim.fn.glob("**/*.hpp", false, true)
+	local h_files = vim.fn.glob("**/*.h", false, true)
+
+	-- Create source files string for CMake
+	local sources = table.concat(cpp_files, "\n    ")
+	local headers = table.concat(vim.fn.extend(hpp_files, h_files), "\n    ")
+
+	local file, err = io.open("CMakeLists.txt", "w")
+	if not file then
+		print("Error creating CMakeLists.txt: " .. (err or "unknown error"))
+		return
+	end
+
+	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+
+	local cmake_content = string.format(
+		[[
+cmake_minimum_required(VERSION 3.15)
+project(%s)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Source files found in project
+set(SOURCES
+   %s
+)
+
+# Header files found in project
+set(HEADERS
+   %s
+)
+
+# Add executable
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+
+# Include directories
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# If using SDL2
+# find_package(SDL2 REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
+]],
+		project_name,
+		sources,
+		headers
+	)
+
+	local success, write_err = pcall(function()
+		file:write(cmake_content)
+		file:close()
+	end)
+
+	if not success then
+		print("Error writing to CMakeLists.txt: " .. (write_err or "unknown error"))
+		return
+	end
+
+	print(
+		string.format(
+			"Generated CMakeLists.txt with %d source files and %d header files",
+			#cpp_files,
+			#hpp_files + #h_files
+		)
+	)
+end, { desc = "Generate CMakeLists.txt" })
+-- CMake commands
+keymap.set("n", "<leader>mg", function()
+	vim.cmd("!cmake -S . -B build") -- Generate build files
+end, { desc = "CMake Generate" })
+
+keymap.set("n", "<leader>mb", function()
+	vim.cmd("!cmake --build build") -- Build project
+end, { desc = "CMake Build" })
+
+keymap.set("n", "<leader>mc", function()
+	vim.cmd("!rm -rf build") -- Clean build directory
+end, { desc = "CMake Clean" })
+
+keymap.set("n", "<leader>mr", function()
+	-- Clean, regenerate, and build
+	vim.cmd("!rm -rf build && cmake -S . -B build && cmake --build build")
+end, { desc = "CMake Rebuild" })
+
+keymap.set("n", "<leader>mx", function()
+	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+	if vim.fn.has("win32") == 1 then
+		-- Windows path with .exe extension
+		vim.cmd("!.\\build\\Debug\\" .. project_name .. ".exe")
+		-- Or if you're using Release build:
+		-- vim.cmd("!.\\build\\Release\\" .. project_name .. ".exe")
+	else
+		-- Unix path
+		vim.cmd("!./build/" .. project_name)
+	end
+end, { desc = "Run CMake executable" })

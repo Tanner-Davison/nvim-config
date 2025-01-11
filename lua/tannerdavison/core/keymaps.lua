@@ -42,7 +42,7 @@ vim.keymap.set("n", "<Space>cx", function()
 
 	-- Adjust command based on the operating system
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!dir /b *.cpp > allcppfiles.txt && g++ @allcppfiles.txt -o " .. output_name)
+		vim.cmd("!dir /b *.cpp > allcppfiles.txt && g++ -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	elseif vim.fn.has("mac") == 1 then
 		vim.cmd("!ls *.cpp > allcppfiles.txt && clang++ @allcppfiles.txt -o " .. output_name)
 	else
@@ -138,8 +138,8 @@ for key, mode in pairs(modes) do
 	end)
 end
 
--- CMake commands
--- RUN IN THIS ORDER TO CREATE CMAKE PROJECT
+--                       CMake commands
+--           RUN IN THIS ORDER TO CREATE CMAKE PROJECT
 -- <leader>mf   -- Creates CMakeLists.txt with detected files
 -- <leader>mg   -- Creates build directory and generates build files
 -- <leader>mb   -- Actually compiles your code and creates executable
@@ -239,12 +239,13 @@ keymap.set("n", "<leader>mr", function()
 	-- Clean, regenerate, and build
 	vim.cmd("!rm -rf build && cmake -S . -B build && cmake --build build")
 end, { desc = "CMake Rebuild" })
-
+-- Start Cmake Executable
 keymap.set("n", "<leader>mx", function()
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 	if vim.fn.has("win32") == 1 then
 		-- Windows path with .exe extension
-		vim.cmd("!.\\build\\Debug\\" .. project_name .. ".exe")
+		-- vim.cmd("!.\\build\\Debug\\" .. project_name .. ".exe")
+		vim.cmd("!start cmd /k .\\build\\Debug\\" .. project_name .. ".exe")
 		-- Or if you're using Release build:
 		-- vim.cmd("!.\\build\\Release\\" .. project_name .. ".exe")
 	else

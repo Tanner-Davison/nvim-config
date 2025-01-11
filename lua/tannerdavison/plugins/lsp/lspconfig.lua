@@ -13,21 +13,6 @@ return {
 		-- import mason_lspconfig plugin
 		local mason_lspconfig = require("mason-lspconfig")
 
-		-- vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-		-- 	pattern = {
-		-- 		"*/MSVC/*/include/*", -- MSVC include files
-		-- 		"*.h",
-		-- 		"*.hpp",
-		-- 		"*.cpp",
-		-- 		"*.c", -- Regular C++ files
-		-- 		"*/include/*/bits/*", -- Standard library files
-		-- 	},
-		-- 	callback = function()
-		-- 		vim.bo.filetype = "cpp"
-		-- 		-- Optionally set other options specific to MSVC files
-		-- 		vim.bo.syntax = "cpp"
-		-- 	end,
-		-- })
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {
 				"*.h",
@@ -36,6 +21,8 @@ return {
 				"*.c",
 				"*.dll",
 				"*/include/*",
+				"*/SDL2/*",
+				"**/src/**/*.cpp",
 				"*/MSVC/*",
 			},
 			callback = function()
@@ -60,6 +47,9 @@ return {
 
 				opts.desc = "Go to declaration"
 				keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
+
+				opts.desc = "Show function signature help"
+				keymap.set("n", "<leader>sp", vim.lsp.buf.signature_help, opts)
 
 				opts.desc = "Show LSP definitions"
 				keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts) -- show lsp definitions

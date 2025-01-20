@@ -3,26 +3,39 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	main = "ibl",
 	opts = {
-		indent = { char = "" }, -- No character for indentation (empty arrow)
-		whitespace = {
-			highlight = { "CursorColumn", "Whitespace" },
-			remove_blankline_trail = false, -- Don't remove trailing blank lines
+		indent = {
+			char = "│", -- Using a vertical line for indentation
+			highlight = "IndentBlanklineChar",
 		},
-		scope = { enabled = false }, -- Disable scope highlighting
+		whitespace = {
+			highlight = { "Whitespace" },
+			remove_blankline_trail = false,
+		},
+		scope = {
+			enabled = true,
+			char = "│",
+			highlight = "IndentBlanklineContextChar",
+		},
 	},
 	config = function()
-		local highlight = {
-			"CursorColumn",
-			"Whitespace",
-		}
+		-- Set up custom highlights for indent lines
+		vim.api.nvim_set_hl(0, "IndentBlanklineChar", { fg = "#2D3A4A" }) -- Normal indent
+		vim.api.nvim_set_hl(0, "IndentBlanklineContextChar", { fg = "#3B4D63" }) -- Active indent
 
 		require("ibl").setup({
-			indent = { highlight = highlight, char = " " }, -- Empty character for indent
-			whitespace = {
-				highlight = highlight,
-				remove_blankline_trail = false, -- Keep trailing blank lines
+			indent = {
+				char = "",
+				highlight = "IndentBlanklineChar",
 			},
-			scope = { enabled = false }, -- Disable scope
+			whitespace = {
+				highlight = { "Whitespace" },
+				remove_blankline_trail = false,
+			},
+			scope = {
+				enabled = true,
+				char = "│",
+				highlight = "IndentBlanklineContextChar",
+			},
 		})
 	end,
 }

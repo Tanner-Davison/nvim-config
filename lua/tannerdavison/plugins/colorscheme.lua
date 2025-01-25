@@ -13,8 +13,8 @@ return {
 			-- Override colors
 			color_overrides = {
 				-- Enhanced base colors for OLED
-				vscBack = "#030507",
-				vscLeft = "#050A0F",
+				vscBack = "#13171a", -- #13171a
+				vscLeft = "#1B1B19",
 				vscLineNumber = "#405779",
 				vscSelection = "#103362",
 

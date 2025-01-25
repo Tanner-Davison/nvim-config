@@ -31,11 +31,28 @@ keymap.set("n", "<leader>tn", "<cmd>tabn<CR>", { desc = "Go to next tab" }) --  
 keymap.set("n", "<leader>tp", "<cmd>tabp<CR>", { desc = "Go to previous tab" }) --  go to previous tab
 keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer in new tab" }) --  move current buffer to new tab
 
--- CPP compiling
--- Compile C++ code with <Leader>cc
+-- Media Query Snippets
+vim.keymap.set("n", "<leader>mq", function()
+	local lines = {
+		"${media.fullWidth}{",
+		"",
+		"}",
+		"${media.tablet}{",
+		"",
+		"}",
+		"${media.mobile}{",
+		"",
+		"}",
+	}
+	vim.api.nvim_put(lines, "l", true, true)
+end, { desc = "Insert media queries" })
+
+--                                                        CPP COMPILING COMMANDS
+
+-- Compile Single file C++ code with <Leader>cc
 vim.keymap.set("n", "<Space>cc", ":!g++ -std=c++23 -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
 
--- Compile all *Cpp allcppfiles on windows machine
+-- Compile all *CPP files on WINDOWS & Mac machines
 vim.keymap.set("n", "<Space>cx", function()
 	vim.cmd("w!") -- Save the current file
 	local output_name = vim.fn.expand("%:t:r") -- Get the file name without extension
@@ -64,8 +81,7 @@ vim.keymap.set("n", "<Space>cv", function()
 		vim.cmd("!./" .. output_name)
 	end
 end, { desc = "Run compiled C++ code" })
-
--- Unit Conversion For
+-- Unit Conversion For MEDIA QUERY BREAK POINTS
 vim.opt.selection = "exclusive"
 local breakpoints = {
 	desktop = 1600,

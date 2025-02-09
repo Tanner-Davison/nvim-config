@@ -273,6 +273,9 @@ return {
 						"--completion-style=detailed",
 						"--header-insertion=iwyu",
 						"--fallback-style=llvm",
+						"--enable-config",
+						"--std=c++23",
+						"--all-scopes-completion",
 					},
 					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
 				})

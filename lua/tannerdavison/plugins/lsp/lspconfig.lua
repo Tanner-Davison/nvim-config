@@ -274,10 +274,22 @@ return {
 						"--header-insertion=iwyu",
 						"--fallback-style=llvm",
 						"--enable-config",
-						"--std=c++23",
+						"--query-driver=**", -- Add this to help find system compilers
+						"--clang-tidy", -- Enable clang-tidy
+						"--offset-encoding=utf-16", -- Important for Windows
+						"--compile-commands-dir=.", -- Look for compile_commands.json in the root
+						"--header-insertion-decorators",
 						"--all-scopes-completion",
+						"--pch-storage=memory",
+						"-j=4", -- Number of workers
 					},
 					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
+					init_options = {
+						clangdFileStatus = true,
+						usePlaceholders = true,
+						completeUnimported = true,
+						semanticHighlighting = true,
+					},
 				})
 			end,
 			["lua_ls"] = function()

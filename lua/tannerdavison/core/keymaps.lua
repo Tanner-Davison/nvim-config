@@ -49,7 +49,7 @@ end, { desc = "Insert media queries" })
 --                                                        CPP COMPILING COMMANDS
 
 -- Compile Single file C++ code with <Leader>cc
-vim.keymap.set("n", "<Space>cc", ":!g++ -std=c++23 -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
+vim.keymap.set("n", "<Space>cc", ":!g++ -g -O0 -std=c++23 -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
 
 -- Compile all *CPP files on WINDOWS & Mac machines
 vim.keymap.set("n", "<Space>cx", function()

@@ -60,7 +60,7 @@ vim.keymap.set("n", "<Space>cx", function()
 	if vim.fn.has("win32") == 1 then
 		vim.cmd("!dir /b *.cpp > allcppfiles.txt && g++ -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!ls *.cpp > allcppfiles.txt && clang++ @allcppfiles.txt -o " .. output_name)
+		vim.cmd("!ls *.cpp > allcppfiles.txt && clang++ -std=c++23 -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	else
 		vim.cmd("!ls *.cpp > allcppfiles.txt && g++ @allcppfiles.txt -o " .. output_name)
 	end

@@ -16,6 +16,16 @@ opt.autoindent = true -- copy indent from current line when starting new one
 -- line wrapping
 opt.wrap = false -- disable line wrapping
 
+-- folding
+opt.foldenable = true -- enable folding
+opt.foldlevel = 99 -- start with all folds open
+
+-- Choose ONE of these methods:
+-- For treesitter-based folding:
+opt.foldmethod = "expr"
+vim.wo.foldexpr = "nvim_treesitter#foldexpr()"
+opt.foldtext = ""
+
 -- search settings
 opt.ignorecase = true -- ignore case when searching
 opt.smartcase = true -- if you include mixed case in your search, assumes you want case-sensitive
@@ -43,4 +53,3 @@ opt.splitbelow = true -- split horizontal window to the bottom
 
 -- turn off swapfile
 opt.swapfile = false
-

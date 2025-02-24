@@ -71,13 +71,13 @@ vim.keymap.set("n", "<Space>cv", function()
 	vim.cmd("w!") -- Save the current file
 	local output_name = vim.fn.expand("%:t:r") -- Get the file name without extension
 
-	-- Adjust command based on the operating system
+	-- Create a new split window and open a proper terminal buffer
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!cmd /c " .. output_name .. ".exe")
+		vim.cmd("split | terminal cmd /k " .. output_name .. ".exe")
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!./" .. output_name)
+		vim.cmd("split | terminal ./" .. output_name)
 	else
-		vim.cmd("!./" .. output_name)
+		vim.cmd("split | terminal ./" .. output_name)
 	end
 end, { desc = "Run compiled C++ code" })
 -- Unit Conversion For MEDIA QUERY BREAK POINTS

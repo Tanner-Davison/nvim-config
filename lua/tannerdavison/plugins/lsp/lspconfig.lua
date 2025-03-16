@@ -289,6 +289,7 @@ return {
 						usePlaceholders = true,
 						completeUnimported = true,
 						semanticHighlighting = true,
+						fallbackFlags = { "-std=c++20" },
 					},
 				})
 			end,

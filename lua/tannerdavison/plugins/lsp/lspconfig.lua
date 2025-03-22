@@ -265,6 +265,13 @@ return {
 				})
 			end,
 			["clangd"] = function()
+				local system_name = vim.loop.os_uname().sysname
+				local fallback_flags = {}
+
+				if system_name == "Windows_NT" then
+					table.insert(fallback_flags, "-std=c++20")
+				end
+
 				lspconfig["clangd"].setup({
 					capabilities = capabilities,
 					cmd = {
@@ -274,14 +281,14 @@ return {
 						"--header-insertion=iwyu",
 						"--fallback-style=llvm",
 						"--enable-config",
-						"--query-driver=**", -- Add this to help find system compilers
-						"--clang-tidy", -- Enable clang-tidy
-						"--offset-encoding=utf-16", -- Important for Windows
-						"--compile-commands-dir=.", -- Look for compile_commands.json in the root
+						"--query-driver=**",
+						"--clang-tidy",
+						"--offset-encoding=utf-16",
+						"--compile-commands-dir=.",
 						"--header-insertion-decorators",
 						"--all-scopes-completion",
 						"--pch-storage=memory",
-						"-j=4", -- Number of workers
+						"-j=4",
 					},
 					filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
 					init_options = {
@@ -289,7 +296,7 @@ return {
 						usePlaceholders = true,
 						completeUnimported = true,
 						semanticHighlighting = true,
-						fallbackFlags = { "-std=c++20" },
+						fallbackFlags = fallback_flags,
 					},
 				})
 			end,

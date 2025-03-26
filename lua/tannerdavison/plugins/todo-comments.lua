@@ -16,16 +16,6 @@ return {
 			todo_comments.jump_prev()
 		end, { desc = "Previous todo comment" })
 
-		-- Custom regex to match TODOs with dates
-		todo_comments.setup({
-			keywords = {
-				TODO = {
-					icon = " ", -- Custom icon
-					color = "info",
-					alt = { "todo", "Todo", "TASK" }, -- Alternative keywords
-					regex = "TODO%s*%[%d%d%d%d%-%d%d%-%d%d%]:", -- Match TODOs with YYYY-MM-DD format
-				},
-			},
-		})
+		todo_comments.setup()
 	end,
 }

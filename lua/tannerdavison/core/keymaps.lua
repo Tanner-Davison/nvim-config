@@ -31,11 +31,9 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 keymap.set("n", "<leader>tD", function()
 	local date = os.date("%Y-%m-%d")
 	vim.api.nvim_put({ "// TODO [" .. date .. "]: " }, "l", true, true)
+	-- Enter insert mode at the end of line
+	vim.cmd("startinsert!")
 end, { desc = "Insert a TODO with date" }) -- Insert a TODO comment with a timestamp
--- keymap.set("n", "<leader>tD", function()
--- 	local date = os.date("%Y-%m-%d")
--- 	vim.api.nvim_put({ "// TODO: [" .. date .. "] " }, "l", true, true)
--- end, { desc = "Insert a TODO with date" }) -- Insert a TODO comment with a timestamp
 keymap.set("n", "<leader>td", function()
 	local comment_prefix = "// " -- Default to JavaScript-style comments
 	local filetype = vim.bo.filetype

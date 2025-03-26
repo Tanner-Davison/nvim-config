@@ -30,10 +30,20 @@ keymap.set("n", "<leader>tp", "<cmd>tabp<CR>", { desc = "Go to previous tab" }) 
 keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer in new tab" }) --  move current buffer to new tab
 keymap.set("n", "<leader>tD", function()
 	local date = os.date("%Y-%m-%d")
-	vim.api.nvim_put({ "// TODO [" .. date .. "]: " }, "l", true, true)
-	-- Enter insert mode at the end of line
-	vim.cmd("startinsert!")
-end, { desc = "Insert a TODO with date" }) -- Insert a TODO comment with a timestamp
+	local todo_text = "// TODO [" .. date .. "]: "
+
+	-- Get current cursor position
+	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+
+	-- Insert the TODO text at current line
+	vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col, { todo_text })
+
+	-- Move cursor to end of inserted text
+	vim.api.nvim_win_set_cursor(0, { row, col + #todo_text })
+
+	-- Enter insert mode
+	vim.cmd("startinsert")
+end, { desc = "Insert a TODO with date" })
 keymap.set("n", "<leader>td", function()
 	local comment_prefix = "// " -- Default to JavaScript-style comments
 	local filetype = vim.bo.filetype

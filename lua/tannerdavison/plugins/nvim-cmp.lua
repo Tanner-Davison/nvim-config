@@ -4,27 +4,31 @@ return {
 	dependencies = {
 		"hrsh7th/cmp-buffer", -- source for text in buffer
 		"hrsh7th/cmp-path", -- source for file system paths
-		{
-			"L3MON4D3/LuaSnip",
-			version = "v2.*",
-			build = "make install_jsregexp",
-		},
-		"saadparwaiz1/cmp_luasnip", -- for autocompletion
+		-- Remove LuaSnip dependency completely
+		-- Replace with vsnip
+		"hrsh7th/vim-vsnip",
+		"hrsh7th/cmp-vsnip",
 		"rafamadriz/friendly-snippets", -- useful snippets
 		"onsails/lspkind.nvim", -- vs-code like pictograms
 	},
 	config = function()
 		local cmp = require("cmp")
-		local luasnip = require("luasnip")
 		local lspkind = require("lspkind")
-		require("luasnip.loaders.from_vscode").lazy_load()
+
+		-- Load vsnip instead of LuaSnip
+		vim.g.vsnip_filetypes = {
+			javascriptreact = { "javascript" },
+			typescriptreact = { "typescript" },
+		}
+
 		cmp.setup({
 			completion = {
 				completeopt = "menu,menuone,preview,noselect",
 			},
 			snippet = {
+				-- Change to use vsnip instead of LuaSnip
 				expand = function(args)
-					luasnip.lsp_expand(args.body)
+					vim.fn["vsnip#anonymous"](args.body)
 				end,
 			},
 			mapping = cmp.mapping.preset.insert({
@@ -38,7 +42,7 @@ return {
 			}),
 			sources = cmp.config.sources({
 				{ name = "nvim_lsp" },
-				{ name = "luasnip" },
+				{ name = "vsnip" }, -- Change to vsnip
 				{ name = "buffer" },
 				{ name = "path" },
 			}),

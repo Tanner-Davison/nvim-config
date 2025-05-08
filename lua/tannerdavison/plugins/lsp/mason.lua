@@ -1,7 +1,7 @@
 return {
 	"williamboman/mason.nvim",
 	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
+		{ "williamboman/mason-lspconfig.nvim", commit = "f995805" }, -- Use v2.0.0-rc.1 from before the breaking changes
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
 	config = function()

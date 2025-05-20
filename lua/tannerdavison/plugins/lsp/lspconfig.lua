@@ -266,7 +266,7 @@ return {
 			end,
 			["clangd"] = function()
 				local system_name = vim.loop.os_uname().sysname
-				local fallback_flags = {}
+				local fallback_flags = { "-std=c++17" }
 
 				if system_name == "Windows_NT" then
 					table.insert(fallback_flags, "-std=c++20")

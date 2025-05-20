@@ -28,7 +28,38 @@ keymap.set("n", "<leader>tx", "<cmd>tabclose<CR>", { desc = "Close current tab" 
 keymap.set("n", "<leader>tn", "<cmd>tabn<CR>", { desc = "Go to next tab" }) --  go to next tab
 keymap.set("n", "<leader>tp", "<cmd>tabp<CR>", { desc = "Go to previous tab" }) --  go to previous tab
 keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer in new tab" }) --  move current buffer to new tab
+keymap.set("n", "<leader>tD", function()
+	local date = os.date("%Y-%m-%d")
+	local todo_text = "// TODO [" .. date .. "]: "
 
+	-- Get current cursor position
+	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+
+	-- Insert the TODO text at current line
+	vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col, { todo_text })
+
+	-- Move cursor to end of inserted text
+	vim.api.nvim_win_set_cursor(0, { row, col + #todo_text })
+
+	-- Enter insert mode
+	vim.cmd("startinsert")
+end, { desc = "Insert a TODO with date" })
+keymap.set("n", "<leader>td", function()
+	local comment_prefix = "// " -- Default to JavaScript-style comments
+	local filetype = vim.bo.filetype
+	if filetype == "lua" then
+		comment_prefix = "-- "
+	elseif filetype == "python" or filetype == "sh" then
+		comment_prefix = "# "
+	elseif filetype == "c" or filetype == "cpp" then
+		comment_prefix = "// "
+	end
+
+	-- Insert TODO comment and stay at the end in insert mode
+	local todo_text = comment_prefix .. "TODO: "
+	vim.api.nvim_put({ todo_text }, "", false, true)
+	vim.cmd("startinsert!")
+end, { desc = "Insert a TODO comment dynamically" })
 -- Media Query Snippets
 vim.keymap.set("n", "<leader>mq", function()
 	local lines = {

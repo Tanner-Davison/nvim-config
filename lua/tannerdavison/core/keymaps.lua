@@ -182,7 +182,59 @@ for key, mode in pairs(modes) do
 		convert_units(mode, true)
 	end)
 end
+-- GEN (Anthropic AI code keymaps)
+-- Claude AI with gen.nvim keybindings
+-- Add these lines to the end of your keymaps.lua file
+-- Claude AI integration
+-- Load the Claude module
+local claude
+local utils
+pcall(function()
+	claude = require("tannerdavison.core.claude")
+	utils = require("tannerdavison.core.utils")
+end)
 
+if claude and utils then
+	-- Claude keymaps
+	keymap.set("n", "<leader>k", function()
+		-- Get user input
+		vim.ui.input({ prompt = "Ask Claude: " }, function(input)
+			if input then
+				claude.query_claude(input)
+			end
+		end)
+	end, { desc = "Claude - Ask a question" })
+
+	keymap.set("v", "<leader>k", function()
+		local text = utils.get_visual_selection()
+		claude.query_claude(text, nil, "Claude Response")
+	end, { desc = "Claude - Generic prompt" })
+
+	keymap.set("v", "<leader>kq", function()
+		local text = utils.get_visual_selection()
+		claude.query_claude_with_context(text, "Claude Response")
+	end, { desc = "Claude - Ask about selected text" })
+
+	keymap.set("v", "<leader>ke", function()
+		local text = utils.get_visual_selection()
+		claude.explain_code(text)
+	end, { desc = "Claude - Explain code" })
+
+	keymap.set("v", "<leader>kc", function()
+		local text = utils.get_visual_selection()
+		claude.complete_code(text)
+	end, { desc = "Claude - Complete code" })
+
+	keymap.set("v", "<leader>kr", function()
+		local text = utils.get_visual_selection()
+		claude.refactor_code(text)
+	end, { desc = "Claude - Refactor code" })
+
+	keymap.set("v", "<leader>kd", function()
+		local text = utils.get_visual_selection()
+		claude.generate_docs(text)
+	end, { desc = "Claude - Generate documentation" })
+end
 --                       CMake commands
 --           RUN IN THIS ORDER TO CREATE CMAKE PROJECT
 -- <leader>mf   -- Creates CMakeLists.txt with detected files

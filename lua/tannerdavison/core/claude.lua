@@ -457,16 +457,32 @@ function Claude.handle_streaming_response(buf, response_file, conversation_id, w
 							end
 
 							-- Update conversation history
-							if conversation_id and json_data.message then
+							if conversation_id then
 								if not state.conversations[conversation_id] then
 									state.conversations[conversation_id] = {}
 								end
 
+								-- Make sure we don't add duplicate assistant messages
+								local is_duplicate = false
+								for _, msg in ipairs(state.conversations[conversation_id]) do
+									if msg.role == "assistant" then
+										-- Check if contents are similar
+										local new_content = table.concat(content_lines, "\n")
+										if msg.content == new_content then
+											is_duplicate = true
+											break
+										end
+									end
+								end
+
 								-- Store assistant's response in conversation history
-								table.insert(state.conversations[conversation_id], {
-									role = "assistant",
-									content = table.concat(content_lines, "\n"),
-								})
+								if not is_duplicate then
+									print("Adding assistant response to conversation: " .. conversation_id)
+									table.insert(state.conversations[conversation_id], {
+										role = "assistant",
+										content = table.concat(content_lines, "\n"),
+									})
+								end
 							end
 
 							-- Final update to the buffer
@@ -843,23 +859,57 @@ function Claude.clear_conversation(conversation_id)
 		vim.notify("Cleared all conversations", vim.log.levels.INFO)
 	end
 end
-
 --- Get a list of active conversations
 ---@return table conversation_list
 function Claude.list_conversations()
 	local conversations = {}
 	for id, messages in pairs(state.conversations) do
-		local first_msg = messages[1] and messages[1].content or ""
-		local preview = first_msg:sub(1, 30) .. (first_msg:len() > 30 and "..." or "")
+		-- Find the last user question and Claude's response
+		local last_user_msg = ""
+		local last_claude_msg = ""
+
+		-- Go through messages in reverse to find the last pair
+		for i = #messages, 1, -1 do
+			if messages[i].role == "assistant" and last_claude_msg == "" then
+				last_claude_msg = messages[i].content
+			elseif messages[i].role == "user" and last_user_msg == "" and last_claude_msg ~= "" then
+				last_user_msg = messages[i].content
+				break -- Found both messages
+			elseif messages[i].role == "user" and last_user_msg == "" and i == #messages then
+				-- Special case: last message is from user (no response yet)
+				last_user_msg = messages[i].content
+			end
+		end
+
+		-- Format previews
+		local clean_user_msg = last_user_msg:gsub("\n", " "):gsub("%s+", " ")
+		local user_preview = clean_user_msg:sub(1, 25) .. (clean_user_msg:len() > 25 and "..." or "")
+
+		local clean_claude_msg = last_claude_msg:gsub("\n", " "):gsub("%s+", " ")
+		local claude_preview = clean_claude_msg:sub(1, 25) .. (clean_claude_msg:len() > 25 and "..." or "")
+
+		-- Create a combined preview
+		local preview = "Q: " .. user_preview
+		if claude_preview ~= "" then
+			preview = preview .. " | A: " .. claude_preview
+		else
+			preview = preview .. " | (No response yet)"
+		end
+
 		table.insert(conversations, {
 			id = id,
 			messages = #messages,
 			preview = preview,
 		})
 	end
+
+	-- Sort by most recent conversation (assuming conversation IDs are based on timestamps)
+	table.sort(conversations, function(a, b)
+		return a.id > b.id -- Newest first
+	end)
+
 	return conversations
 end
-
 --- Open a floating window with conversation list
 function Claude.show_conversations()
 	local conversations = Claude.list_conversations()
@@ -872,15 +922,27 @@ function Claude.show_conversations()
 	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 
 	-- Create lines for the buffer
-	local lines = { "# Claude Conversations", "" }
-	for _, conv in ipairs(conversations) do
-		table.insert(lines, string.format("%s (%d messages) - %s", conv.id, conv.messages, conv.preview))
+	local lines = {
+		"# Claude Conversations",
+		"",
+		"Navigate with arrow keys, press Enter to view a conversation, press 'c' to continue a conversation",
+		"Press 'q' or <Esc> to close this window",
+		"",
+	}
+
+	-- Add a line for each conversation
+	for i, conv in ipairs(conversations) do
+		local status_indicator = conv.has_response and "✓" or "..."
+		-- Format: [✓] 2023-05-20_12345 (4 messages) - Q: What is Neovim? | A: Neovim is...
+		table.insert(lines, string.format("[%s] %s (%d messages)", status_indicator, conv.id, conv.messages))
+		table.insert(lines, conv.preview)
+		table.insert(lines, "") -- Add empty line for better readability
 	end
 
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 
-	-- Create a window
-	local width = math.min(80, vim.o.columns - 4)
+	-- Create a window with proper size for the content
+	local width = math.min(100, vim.o.columns - 4) -- Wider window for better readability
 	local height = math.min(#lines + 2, vim.o.lines - 4)
 	local row = math.floor((vim.o.lines - height) / 2)
 	local col = math.floor((vim.o.columns - width) / 2)
@@ -903,61 +965,161 @@ function Claude.show_conversations()
 	vim.api.nvim_win_set_option(win, "wrap", true)
 	vim.api.nvim_win_set_option(win, "cursorline", true)
 
+	-- Set up buffer-local syntax highlighting using a safer approach
+	vim.api.nvim_buf_call(buf, function()
+		vim.cmd("syntax clear")
+
+		-- Simple patterns that avoid special characters
+		vim.cmd('syntax match ConversationId "\\[.*\\] [0-9_]\\+"')
+		vim.cmd('syntax match ConversationCount "(\\d\\+ messages)"')
+		vim.cmd('syntax match QuestionPrefix "Q:"')
+		vim.cmd('syntax match AnswerPrefix "A:"')
+		vim.cmd('syntax match ConversationHeader "^# Claude Conversations"')
+
+		-- Link to highlight groups
+		vim.cmd("highlight link ConversationId Identifier")
+		vim.cmd("highlight link ConversationCount Number")
+		vim.cmd("highlight link QuestionPrefix Statement")
+		vim.cmd("highlight link AnswerPrefix Special")
+		vim.cmd("highlight link ConversationHeader Title")
+	end)
+
 	-- Add keymaps
 	vim.api.nvim_buf_set_keymap(buf, "n", "q", ":close<CR>", { noremap = true, silent = true })
 	vim.api.nvim_buf_set_keymap(buf, "n", "<Esc>", ":close<CR>", { noremap = true, silent = true })
+
+	-- Modify the open_conversation function to be called with proper line selection
 	vim.api.nvim_buf_set_keymap(
 		buf,
 		"n",
 		"<CR>",
-		":lua require('tannerdavison.core.claude').open_conversation()<CR>",
+		":lua require('tannerdavison.core.claude').open_conversation_from_list()<CR>",
 		{ noremap = true, silent = true }
 	)
+
+	-- Add keymap to continue the conversation
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"c",
+		":lua require('tannerdavison.core.claude').continue_conversation_from_list()<CR>",
+		{ noremap = true, silent = true }
+	)
+
+	-- Store the buffer in state for reference
+	state.conversation_list_buf = buf
+end
+--- Extract conversation ID from the current or specified line
+---@param line_nr number|nil Line number to extract from (current line if nil)
+---@return string|nil conversation_id The extracted conversation ID, or nil if not found
+function Claude.extract_conversation_id(line_nr)
+	local line_nr = line_nr or vim.fn.line(".")
+	local line = vim.fn.getline(line_nr)
+
+	-- Try to extract conversation ID from current line with status indicator
+	local conversation_id = line:match("%[.-%] ([0-9_]+)")
+
+	-- If not found, try without status indicator (older format)
+	if not conversation_id then
+		conversation_id = line:match("^([0-9_]+)")
+	end
+
+	-- If not found and we're on a preview line, check the line above
+	if not conversation_id and line:match("^Q:") then
+		line = vim.fn.getline(line_nr - 1)
+		conversation_id = line:match("%[.-%] ([0-9_]+)") or line:match("^([0-9_]+)")
+	end
+
+	-- If still not found and we're on an empty line, check surrounding lines
+	if not conversation_id and line:match("^%s*$") then
+		-- Try the line above
+		if line_nr > 1 then
+			line = vim.fn.getline(line_nr - 1)
+			conversation_id = line:match("%[.-%] ([0-9_]+)") or line:match("^([0-9_]+)")
+		end
+
+		-- If still not found, try the line below
+		if not conversation_id and line_nr < vim.fn.line("$") then
+			line = vim.fn.getline(line_nr + 1)
+			conversation_id = line:match("%[.-%] ([0-9_]+)") or line:match("^([0-9_]+)")
+		end
+	end
+
+	return conversation_id
 end
 
---- Open a specific conversation from the conversation list
-function Claude.open_conversation()
-	local line = vim.fn.getline(".")
-	local conversation_id = line:match("^([0-9_]+)")
+--- Open a conversation from the conversation list
+function Claude.open_conversation_from_list()
+	local conversation_id = Claude.extract_conversation_id()
 
 	if conversation_id and state.conversations[conversation_id] then
-		-- Create a buffer to show the conversation
-		local buf, win = Claude.create_claude_buffer("Claude Conversation: " .. conversation_id, conversation_id)
+		-- Close the conversation list window
+		vim.cmd("close")
 
-		-- Format the conversation
-		local lines = {}
-		for _, message in ipairs(state.conversations[conversation_id]) do
-			table.insert(lines, "# " .. (message.role == "user" and "You" or "Claude"))
-			table.insert(lines, "")
-
-			-- Split message content into lines
-			for content_line in (message.content .. "\n"):gmatch("(.-)\n") do
-				table.insert(lines, content_line)
-			end
-
-			table.insert(lines, "")
-			table.insert(lines, "---")
-			table.insert(lines, "")
-		end
-
-		-- Display the conversation
-		vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-
-		-- Add a keybinding to continue the conversation
-		vim.api.nvim_buf_set_keymap(
-			buf,
-			"n",
-			"c",
-			":lua require('tannerdavison.core.claude').continue_conversation('" .. conversation_id .. "')<CR>",
-			{ noremap = true, silent = true, desc = "Continue conversation" }
-		)
-
-		-- Highlight code blocks
-		if state.config.highlight then
-			Claude.highlight_code_blocks(buf)
-		end
+		-- Open the conversation
+		Claude.open_conversation(conversation_id)
 	else
-		vim.notify("Invalid conversation selection", vim.log.levels.ERROR)
+		vim.notify("No valid conversation selected", vim.log.levels.WARN)
+	end
+end
+
+--- Continue a conversation from the conversation list
+function Claude.continue_conversation_from_list()
+	local conversation_id = Claude.extract_conversation_id()
+
+	if conversation_id and state.conversations[conversation_id] then
+		-- Close the conversation list window
+		vim.cmd("close")
+
+		-- Continue the conversation
+		Claude.continue_conversation(conversation_id)
+	else
+		vim.notify("No valid conversation selected", vim.log.levels.WARN)
+	end
+end
+
+--- Open a specific conversation by ID
+---@param conversation_id string The conversation ID to open
+function Claude.open_conversation(conversation_id)
+	if not state.conversations[conversation_id] then
+		vim.notify("Conversation not found: " .. conversation_id, vim.log.levels.ERROR)
+		return
+	end
+
+	-- Create a buffer to show the conversation
+	local buf, win = Claude.create_claude_buffer("Claude Conversation: " .. conversation_id, conversation_id)
+
+	-- Format the conversation
+	local lines = {}
+	for _, message in ipairs(state.conversations[conversation_id]) do
+		table.insert(lines, "# " .. (message.role == "user" and "You" or "Claude"))
+		table.insert(lines, "")
+
+		-- Split message content into lines
+		for content_line in (message.content .. "\n"):gmatch("(.-)\n") do
+			table.insert(lines, content_line)
+		end
+
+		table.insert(lines, "")
+		table.insert(lines, "---")
+		table.insert(lines, "")
+	end
+
+	-- Display the conversation
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+
+	-- Add a keybinding to continue the conversation
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"c",
+		":lua require('tannerdavison.core.claude').continue_conversation('" .. conversation_id .. "')<CR>",
+		{ noremap = true, silent = true, desc = "Continue conversation" }
+	)
+
+	-- Highlight code blocks
+	if state.config.highlight then
+		Claude.highlight_code_blocks(buf)
 	end
 end
 

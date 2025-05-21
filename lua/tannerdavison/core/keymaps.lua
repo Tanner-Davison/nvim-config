@@ -234,6 +234,10 @@ if claude and utils then
 		local text = utils.get_visual_selection()
 		claude.generate_docs(text)
 	end, { desc = "Claude - Generate documentation" })
+	keymap.set("n", "<leader>kh", function()
+		local claude_module = require("tannerdavison.core.claude")
+		claude_module.show_conversations()
+	end, { desc = "Claude - Show conversation history" })
 end
 --                       CMake commands
 --           RUN IN THIS ORDER TO CREATE CMAKE PROJECT

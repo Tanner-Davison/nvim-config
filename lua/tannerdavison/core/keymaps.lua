@@ -426,7 +426,7 @@ keymap.set("n", "<leader>rsc", function()
 		"<RichTextRenderer document={blok.copy_section[0].copy} />",
 		"         ) : ",
 		"       <h1>{'No Copy_Section... Default Hello World'}</h1>",
-		"     )}",
+		"     }",
 		"</CopyWrapper>",
 
 		"        <h1>Hello World! :) </h1>",

@@ -1,5 +1,6 @@
 require("tannerdavison.core.options")
 require("tannerdavison.core.keymaps")
+require("tannerdavison.core.title")
 
 --  diagnostic signs using modern API
 vim.diagnostic.config({

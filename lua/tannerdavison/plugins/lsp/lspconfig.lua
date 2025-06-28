@@ -225,7 +225,7 @@ return {
 					local system_name = vim.loop.os_uname().sysname
 					local fallback_flags = {}
 					if system_name == "Windows_NT" then
-						table.insert(fallback_flags, "-std=c++20")
+						table.insert(fallback_flags, "-std=c++23")
 					end
 					return fallback_flags
 				end)(),

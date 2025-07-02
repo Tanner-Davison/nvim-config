@@ -437,6 +437,7 @@ keymap.set("n", "<leader>rsc", function()
 		"",
 		"export default " .. component_name .. ";",
 		"",
+		"const CopyWrapper = styled.div``;",
 		"const Wrapper = styled.div`",
 		"  display: flex;",
 		"  flex-direction: column;",

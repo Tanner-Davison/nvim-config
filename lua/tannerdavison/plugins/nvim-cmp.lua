@@ -233,30 +233,6 @@ return {
 		})
 
 		-- ================================================================
-		-- AUTOCOMPLETE TOGGLE FUNCTION (ADDED AFTER CMP.SETUP)
-		-- ================================================================
-
-		-- Toggle function using a more reliable approach
-		local cmp_enabled = true
-		local function toggle_autocomplete()
-			if cmp_enabled then
-				cmp.setup.buffer({ enabled = false })
-				cmp_enabled = false
-				print("✗ Autocomplete disabled")
-			else
-				cmp.setup.buffer({ enabled = true })
-				cmp_enabled = true
-				print("✓ Autocomplete enabled")
-			end
-		end
-
-		-- Set up the toggle keybinding
-		vim.keymap.set({ "n", "i" }, "<leader>tc", toggle_autocomplete, {
-			desc = "Toggle autocomplete",
-			silent = true,
-		})
-
-		-- ================================================================
 		-- FILETYPE-SPECIFIC CONFIGURATIONS
 		-- ================================================================
 

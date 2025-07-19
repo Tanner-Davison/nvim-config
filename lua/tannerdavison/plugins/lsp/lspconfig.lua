@@ -143,7 +143,7 @@ return {
 				vim.api.nvim_create_autocmd("BufWritePost", {
 					pattern = { "*.js", "*.ts" },
 					callback = function(ctx)
-						if client.server_capabilities then
+						if client then
 							client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.match })
 						end
 					end,
@@ -266,7 +266,7 @@ return {
 				-- Enhanced keybindings with capability checks
 				opts.desc = "Show LSP references"
 				keymap.set("n", "gR", function()
-					if client and client.server_capabilities.referencesProvider then
+					if client and client:supports_method("textDocument/references") then
 						vim.cmd("Telescope lsp_references")
 					else
 						vim.notify("LSP server does not support references", vim.log.levels.WARN)
@@ -275,7 +275,7 @@ return {
 
 				opts.desc = "Go to declaration"
 				keymap.set("n", "gD", function()
-					if client and client.server_capabilities.declarationProvider then
+					if client and client:supports_method("textDocument/declaration") then
 						vim.lsp.buf.declaration()
 					else
 						vim.notify("LSP server does not support go to declaration", vim.log.levels.WARN)
@@ -284,7 +284,7 @@ return {
 
 				opts.desc = "Show function signature help"
 				keymap.set("n", "<leader>sp", function()
-					if client and client.server_capabilities.signatureHelpProvider then
+					if client and client:supports_method("textDocument/signatureHelp") then
 						vim.lsp.buf.signature_help()
 					else
 						vim.notify("LSP server does not support signature help", vim.log.levels.WARN)
@@ -293,7 +293,7 @@ return {
 
 				opts.desc = "Show LSP definitions"
 				keymap.set("n", "gd", function()
-					if client and client.server_capabilities.definitionProvider then
+					if client and client:supports_method("textDocument/definition") then
 						vim.cmd("Telescope lsp_definitions")
 					else
 						vim.notify("LSP server does not support go to definition", vim.log.levels.WARN)
@@ -302,7 +302,7 @@ return {
 
 				opts.desc = "Show LSP implementations"
 				keymap.set("n", "gi", function()
-					if client and client.server_capabilities.implementationProvider then
+					if client and client:supports_method("textDocument/implementation") then
 						vim.cmd("Telescope lsp_implementations")
 					else
 						vim.notify("LSP server does not support implementations", vim.log.levels.WARN)
@@ -311,7 +311,7 @@ return {
 
 				opts.desc = "Show LSP type definitions"
 				keymap.set("n", "gt", function()
-					if client and client.server_capabilities.typeDefinitionProvider then
+					if client and client:supports_method("textDocument/typeDefinition") then
 						vim.cmd("Telescope lsp_type_definitions")
 					else
 						vim.notify("LSP server does not support type definitions", vim.log.levels.WARN)
@@ -320,7 +320,7 @@ return {
 
 				opts.desc = "See available code actions"
 				keymap.set({ "n", "v" }, "<leader>ca", function()
-					if client and client.server_capabilities.codeActionProvider then
+					if client and client:supports_method("textDocument/codeAction") then
 						vim.lsp.buf.code_action()
 					else
 						vim.notify("LSP server does not support code actions", vim.log.levels.WARN)
@@ -329,7 +329,7 @@ return {
 
 				opts.desc = "Smart rename"
 				keymap.set("n", "<leader>rn", function()
-					if client and client.server_capabilities.renameProvider then
+					if client and client:supports_method("textDocument/rename") then
 						vim.lsp.buf.rename()
 					else
 						vim.notify("LSP server does not support rename", vim.log.levels.WARN)
@@ -350,7 +350,7 @@ return {
 
 				opts.desc = "Show documentation for what is under cursor"
 				keymap.set("n", "K", function()
-					if client and client.server_capabilities.hoverProvider then
+					if client and client:supports_method("textDocument/hover") then
 						vim.lsp.buf.hover()
 					else
 						vim.notify("LSP server does not support hover", vim.log.levels.WARN)

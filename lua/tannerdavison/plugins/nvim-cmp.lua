@@ -1,10 +1,11 @@
 return {
 	"hrsh7th/nvim-cmp",
 	event = "InsertEnter",
+	version = "*", -- Use latest version to get deprecation fixes
 	dependencies = {
 		-- Core completion sources
 		"hrsh7th/cmp-buffer",
-		"hrsh7th/cmp-path",
+		{ "hrsh7th/cmp-path", version = "*" }, -- Use latest version to get deprecation fixes
 		"hrsh7th/cmp-cmdline",
 		"hrsh7th/cmp-nvim-lsp",
 		"hrsh7th/cmp-nvim-lsp-signature-help",

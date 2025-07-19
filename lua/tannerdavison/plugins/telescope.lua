@@ -1,6 +1,7 @@
 return {
 	"nvim-telescope/telescope.nvim",
-	tag = "0.1.8", -- Latest stable tag
+	-- Use latest version to get deprecation fixes
+	version = "0.1.8",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },

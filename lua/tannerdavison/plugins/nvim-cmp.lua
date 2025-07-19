@@ -108,9 +108,15 @@ return {
 					select = false,
 				}),
 
-				-- Only use Shift-Tab for completion navigation
+				-- Use Shift+Tab to accept LSP completions
 				-- This leaves Tab free for tabout.nvim
-				["<S-Tab>"] = cmp.mapping(smart_shift_tab, { "i", "s" }),
+				["<S-Tab>"] = cmp.mapping.confirm({
+					behavior = cmp.ConfirmBehavior.Replace,
+					select = true,
+				}),
+				
+				-- Don't map Tab to anything - let tabout.nvim handle it
+				-- ["<Tab>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
 			}),
 
 			-- Completion sources with priority

@@ -45,26 +45,7 @@ return {
 		-- HELPER FUNCTIONS
 		-- ================================================================
 
-		-- Check if we're in a snippet and can jump
-		local function has_words_before()
-			local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-			return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
-		end
-
-		-- Smart tab behavior for snippets and completion
-		local function smart_tab(fallback)
-			if cmp.visible() then
-				cmp.select_next_item()
-			elseif vim.fn["vsnip#available"](1) == 1 then
-				vim.fn.feedkeys(vim.api.nvim_replace_termcodes("<Plug>(vsnip-expand-or-jump)", true, true, true), "")
-			elseif has_words_before() then
-				cmp.complete()
-			else
-				fallback()
-			end
-		end
-
-		-- Smart shift-tab behavior
+		-- Smart shift-tab behavior for completion and snippets
 		local function smart_shift_tab(fallback)
 			if cmp.visible() then
 				cmp.select_prev_item()
@@ -127,8 +108,8 @@ return {
 					select = false,
 				}),
 
-				-- Smart tab completion with snippet support
-				["<Tab>"] = cmp.mapping(smart_tab, { "i", "s" }),
+				-- Only use Shift-Tab for completion navigation
+				-- This leaves Tab free for tabout.nvim
 				["<S-Tab>"] = cmp.mapping(smart_shift_tab, { "i", "s" }),
 			}),
 

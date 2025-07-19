@@ -1,6 +1,5 @@
 return {
 	"neovim/nvim-lspconfig",
-	-- Remove the commit pin to get the latest version
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",
@@ -12,7 +11,7 @@ return {
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 		local keymap = vim.keymap -- for conciseness
 
-		-- Create autocmd for file type detection (same as your original)
+		-- Create autocmd for file type detection
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {
 				"*.h",
@@ -32,21 +31,24 @@ return {
 
 		-- Set up enhanced capabilities for all LSP servers
 		local capabilities = cmp_nvim_lsp.default_capabilities()
+		-- Fix for position encoding warnings
+		capabilities.textDocument.positionEncoding = "utf-16"
 
-		-- Configure diagnostic signs (same as your original)
+		-- Configure diagnostic signs
 		local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
 		for type, icon in pairs(signs) do
 			local hl = "DiagnosticSign" .. type
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
-		-- Set default config for all LSP servers
+		-- Set default config for all LSP servers with position encoding
 		vim.lsp.config("*", {
 			capabilities = capabilities,
 		})
 
 		-- Configure TypeScript server
 		vim.lsp.config.ts_ls = {
+			capabilities = capabilities,
 			filetypes = {
 				"typescript",
 				"typescriptreact",
@@ -106,6 +108,7 @@ return {
 
 		-- Configure CSS server
 		vim.lsp.config.cssls = {
+			capabilities = capabilities,
 			filetypes = { "css", "scss", "less", "sass", "javascriptreact", "typescriptreact" },
 			settings = {
 				css = {
@@ -135,11 +138,14 @@ return {
 
 		-- Configure Svelte server
 		vim.lsp.config.svelte = {
+			capabilities = capabilities,
 			on_attach = function(client, bufnr)
 				vim.api.nvim_create_autocmd("BufWritePost", {
 					pattern = { "*.js", "*.ts" },
 					callback = function(ctx)
-						client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.match })
+						if client.server_capabilities then
+							client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.match })
+						end
 					end,
 				})
 			end,
@@ -147,11 +153,13 @@ return {
 
 		-- Configure GraphQL server
 		vim.lsp.config.graphql = {
+			capabilities = capabilities,
 			filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
 		}
 
 		-- Configure Emmet server
 		vim.lsp.config.emmet_ls = {
+			capabilities = capabilities,
 			filetypes = {
 				"html",
 				"typescriptreact",
@@ -197,8 +205,9 @@ return {
 			},
 		}
 
-		-- Configure Clangd server
+		-- Configure Clangd server (already has utf-16 encoding)
 		vim.lsp.config.clangd = {
+			capabilities = capabilities,
 			cmd = {
 				"clangd",
 				"--background-index",
@@ -234,6 +243,7 @@ return {
 
 		-- Configure Lua server
 		vim.lsp.config.lua_ls = {
+			capabilities = capabilities,
 			settings = {
 				Lua = {
 					diagnostics = {
@@ -246,36 +256,85 @@ return {
 			},
 		}
 
-		-- Create keymaps on LSP attach
+		-- Create keymaps on LSP attach with improved error handling
 		vim.api.nvim_create_autocmd("LspAttach", {
 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 			callback = function(ev)
+				local client = vim.lsp.get_client_by_id(ev.data.client_id)
 				local opts = { buffer = ev.buf, silent = true }
 
-				-- Use the same keybindings as your original config
+				-- Enhanced keybindings with capability checks
 				opts.desc = "Show LSP references"
-				keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts)
+				keymap.set("n", "gR", function()
+					if client and client.server_capabilities.referencesProvider then
+						vim.cmd("Telescope lsp_references")
+					else
+						vim.notify("LSP server does not support references", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Go to declaration"
-				keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+				keymap.set("n", "gD", function()
+					if client and client.server_capabilities.declarationProvider then
+						vim.lsp.buf.declaration()
+					else
+						vim.notify("LSP server does not support go to declaration", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Show function signature help"
-				keymap.set("n", "<leader>sp", vim.lsp.buf.signature_help, opts)
+				keymap.set("n", "<leader>sp", function()
+					if client and client.server_capabilities.signatureHelpProvider then
+						vim.lsp.buf.signature_help()
+					else
+						vim.notify("LSP server does not support signature help", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Show LSP definitions"
-				keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
+				keymap.set("n", "gd", function()
+					if client and client.server_capabilities.definitionProvider then
+						vim.cmd("Telescope lsp_definitions")
+					else
+						vim.notify("LSP server does not support go to definition", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Show LSP implementations"
-				keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
+				keymap.set("n", "gi", function()
+					if client and client.server_capabilities.implementationProvider then
+						vim.cmd("Telescope lsp_implementations")
+					else
+						vim.notify("LSP server does not support implementations", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Show LSP type definitions"
-				keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
+				keymap.set("n", "gt", function()
+					if client and client.server_capabilities.typeDefinitionProvider then
+						vim.cmd("Telescope lsp_type_definitions")
+					else
+						vim.notify("LSP server does not support type definitions", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "See available code actions"
-				keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+				keymap.set({ "n", "v" }, "<leader>ca", function()
+					if client and client.server_capabilities.codeActionProvider then
+						vim.lsp.buf.code_action()
+					else
+						vim.notify("LSP server does not support code actions", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Smart rename"
-				keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+				keymap.set("n", "<leader>rn", function()
+					if client and client.server_capabilities.renameProvider then
+						vim.lsp.buf.rename()
+					else
+						vim.notify("LSP server does not support rename", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Show buffer diagnostics"
 				keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
@@ -290,7 +349,13 @@ return {
 				keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
 
 				opts.desc = "Show documentation for what is under cursor"
-				keymap.set("n", "K", vim.lsp.buf.hover, opts)
+				keymap.set("n", "K", function()
+					if client and client.server_capabilities.hoverProvider then
+						vim.lsp.buf.hover()
+					else
+						vim.notify("LSP server does not support hover", vim.log.levels.WARN)
+					end
+				end, opts)
 
 				opts.desc = "Restart LSP"
 				keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
@@ -314,6 +379,23 @@ return {
 
 		for _, server in ipairs(servers) do
 			vim.lsp.enable(server)
+		end
+
+		-- Additional fix: Override make_position_params to handle encoding properly
+		local original_make_position_params = vim.lsp.util.make_position_params
+		vim.lsp.util.make_position_params = function(window, offset_encoding)
+			window = window or 0
+			local buf = vim.api.nvim_win_get_buf(window)
+			local clients = vim.lsp.get_clients({ bufnr = buf })
+
+			-- Use the first client's offset encoding or default to utf-16
+			if not offset_encoding and #clients > 0 then
+				offset_encoding = clients[1].offset_encoding or "utf-16"
+			else
+				offset_encoding = offset_encoding or "utf-16"
+			end
+
+			return original_make_position_params(window, offset_encoding)
 		end
 	end,
 }

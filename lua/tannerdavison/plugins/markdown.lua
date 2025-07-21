@@ -92,7 +92,7 @@ return {
 		ft = { "markdown" },
 		config = function()
 			-- Markdown preview keymaps
-			vim.keymap.set("n", "<leader>mp", "<cmd>MarkdownPreviewToggle<CR>", {
+			vim.keymap.set("n", "<leader>md", "<cmd>MarkdownPreviewToggle<CR>", {
 				buffer = true,
 				desc = "Toggle Markdown Preview",
 				silent = true,

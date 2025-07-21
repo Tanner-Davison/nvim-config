@@ -28,6 +28,14 @@ return {
 			-- List settings
 			vim.g.vim_markdown_auto_insert_bullets = 0
 			vim.g.vim_markdown_new_list_item_indent = 0
+			
+			-- Ensure proper filetype detection
+			vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+				pattern = { "*.md", "*.markdown" },
+				callback = function()
+					vim.bo.filetype = "markdown"
+				end,
+			})
 		end,
 	},
 

@@ -13,8 +13,6 @@ return {
 			-- enable syntax highlighting
 			highlight = {
 				enable = true,
-				-- Disable Treesitter highlighting for markdown to avoid conflicts
-				disable = { "markdown" },
 			},
 			-- enable indentation
 			indent = {

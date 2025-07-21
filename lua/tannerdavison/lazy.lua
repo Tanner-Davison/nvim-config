@@ -19,4 +19,29 @@ require("lazy").setup({ { import = "tannerdavison.plugins" }, { import = "tanner
   change_detection = {
     notify = false,
   },
+  -- Performance optimizations
+  performance = {
+    rtp = {
+      reset = false,
+      paths = {},
+      disabled_plugins = {
+        "gzip",
+        "matchit",
+        "matchparen",
+        "netrwPlugin",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "zipPlugin",
+      },
+    },
+  },
+  -- Reduce startup time
+  concurrency = 20,
+  git = {
+    timeout = 120,
+  },
+  install = {
+    colorscheme = { "tokyonight" },
+  },
 })

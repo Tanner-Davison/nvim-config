@@ -1,6 +1,6 @@
 return {
 	"stevearc/conform.nvim",
-	event = { "BufReadPre", "BufNewFile" },
+	event = { "BufWritePre" },
 	config = function()
 		local conform = require("conform")
 
@@ -23,6 +23,7 @@ return {
 				cpp = { "clang-format" }, -- Added this line for C++
 				c = { "clang-format" }, -- Added this line for C++
 			},
+
 			format_on_save = {
 				lsp_fallback = true,
 				async = false,

@@ -17,6 +17,7 @@ return {
 		-- Additional useful sources
 		"hrsh7th/cmp-nvim-lua", -- Neovim Lua API completion
 		"ray-x/cmp-treesitter", -- Treesitter completion
+		"hrsh7th/cmp-omni", -- Omni completion for markdown
 
 		-- UI enhancements
 		"onsails/lspkind.nvim",
@@ -68,9 +69,9 @@ return {
 
 			-- Performance settings
 			performance = {
-				debounce = 60,
-				throttle = 30,
-				max_view_entries = 200,
+				debounce = 150,
+				throttle = 60,
+				max_view_entries = 100,
 			},
 
 			snippet = {
@@ -227,6 +228,15 @@ return {
 		cmp.setup.filetype("gitcommit", {
 			sources = cmp.config.sources({
 				{ name = "buffer" },
+			}),
+		})
+
+		-- Markdown completion
+		cmp.setup.filetype("markdown", {
+			sources = cmp.config.sources({
+				{ name = "omni", priority = 1000 },
+				{ name = "buffer", priority = 500 },
+				{ name = "path", priority = 400 },
 			}),
 		})
 

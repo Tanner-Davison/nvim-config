@@ -1,3 +1,11 @@
+-- Performance optimizations
+vim.opt.updatetime = 100
+vim.opt.timeoutlen = 300
+vim.opt.lazyredraw = true
+vim.opt.synmaxcol = 240
+vim.opt.redrawtime = 1500
+vim.opt.maxmempattern = 2000
+
 require("tannerdavison.core.options")
 require("tannerdavison.core.keymaps")
 require("tannerdavison.core.title")

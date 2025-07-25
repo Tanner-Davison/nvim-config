@@ -5,7 +5,7 @@ return {
 		local c = require("vscode.colors").get_colors()
 		require("vscode").setup({
 			-- Enable transparent background
-			transparent = false,
+			transparent = true,
 			-- Enable italic comments
 			italic_comments = true,
 			-- Disable nvim-tree background color

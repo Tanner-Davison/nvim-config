@@ -1,6 +1,11 @@
 return {
 	"tannerdavison/claude.nvim", -- This name is just for identification, not a real repo
-	lazy = false,
+	lazy = true, -- Only load when needed
+	cmd = { "Claude", "ClaudeSelection", "ClaudeExplain", "ClaudeComplete", "ClaudeRefactor", "ClaudeDocument", "ClaudeFix", "ClaudeTest" },
+	-- keys = {
+	-- 	{ "<leader>k", "<cmd>Claude<CR>", desc = "Ask Claude" },
+	-- 	{ "<leader>kq", "<cmd>ClaudeSelection<CR>", desc = "Ask Claude about selection", mode = "v" },
+	-- },
 	dev = true, -- Mark as development plugin
 	dir = vim.fn.stdpath("config") .. "/lua/tannerdavison/core", -- Directory containing the module
 	config = function()

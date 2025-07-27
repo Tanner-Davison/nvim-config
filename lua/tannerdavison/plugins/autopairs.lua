@@ -14,7 +14,8 @@ return {
 			check_ts = true, -- Enable Tree-sitter for better context
 			disable_filetype = { "TelescopePrompt", "spectre_panel" },
 			enable_check_bracket_line = true,
-			ignored_next_char = "[%w%.]", -- will ignore alphanumeric and `.` symbol
+			-- Improved pattern to work better with tabout
+			ignored_next_char = "[%w%.%s]", -- will ignore alphanumeric, `.`, and whitespace
 			enable_moveright = true,
 			enable_afterquote = true,
 			enable_bracket_in_quote = true,
@@ -26,10 +27,10 @@ return {
 			map_c_t = false,
 			ts_config = {
 				lua = { "string" }, -- Don't add pairs in Lua string nodes
-				javascript = { "template_string" }, -- Don't add pairs in JavaScript template string nodes
-				javascriptreact = { "template_string", "string" },
-				typescript = { "template_string" }, -- Fixed: removed extra space
-				typescriptreact = { "template_string" },
+				javascript = { "template_string", "string", "jsx_element" }, -- Better JS support
+				javascriptreact = { "template_string", "string", "jsx_element" },
+				typescript = { "template_string", "jsx_element" },
+				typescriptreact = { "template_string", "jsx_element" },
 				java = false, -- Disable Tree-sitter for Java
 				cpp = { "string" }, -- Don't add pairs in C++ string nodes
 			},

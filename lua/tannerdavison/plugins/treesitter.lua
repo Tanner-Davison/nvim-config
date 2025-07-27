@@ -22,7 +22,7 @@ return {
 			autotag = {
 				enable = true,
 			},
-			-- ensure these language parsers are installed
+			-- ensure these language parsers are installed (customized for your usage)
 			ensure_installed = {
 				"json",
 				"javascript",
@@ -31,18 +31,13 @@ return {
 				"yaml",
 				"html",
 				"css",
-				"prisma",
 				"markdown",
 				"markdown_inline",
-				"svelte",
 				"graphql",
 				"bash",
 				"lua",
 				"vim",
-				"dockerfile",
 				"gitignore",
-				"query",
-				"vimdoc",
 				"c",
 				"cpp",
 			},
@@ -55,8 +50,7 @@ return {
 					node_decremental = "<bs>",
 				},
 			},
-			-- Add the missing required fields
-			modules = {},
+			-- Performance optimizations
 			sync_install = false,
 			ignore_install = { "haskell", "latex" }, -- List of parsers to ignore installing
 			auto_install = true, -- Automatically install missing parsers when entering buffer

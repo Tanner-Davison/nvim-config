@@ -1,5 +1,6 @@
 return {
 	"rmagatti/auto-session",
+	lazy = false, -- Load on startup since user uses it frequently
 	config = function()
 		local auto_session = require("auto-session")
 

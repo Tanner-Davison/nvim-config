@@ -1,10 +1,17 @@
 -- Performance optimizations
-vim.opt.updatetime = 100
-vim.opt.timeoutlen = 300
-vim.opt.lazyredraw = false
-vim.opt.synmaxcol = 240
-vim.opt.redrawtime = 1500
-vim.opt.maxmempattern = 2000
+vim.opt.updatetime = 50 -- Faster response time for plugins
+vim.opt.timeoutlen = 200 -- Faster key sequence timeout
+vim.opt.lazyredraw = true -- Don't redraw during macro execution
+vim.opt.synmaxcol = 200 -- Limit syntax highlighting to 200 columns
+vim.opt.redrawtime = 1000 -- Faster redraw timeout
+vim.opt.maxmempattern = 1000 -- Reduce memory usage for patterns
+
+-- Additional performance optimizations
+vim.opt.hidden = true -- Don't unload buffers when abandoned
+vim.opt.backup = false -- Don't create backup files
+vim.opt.writebackup = false -- Don't create backup files on write
+vim.opt.swapfile = false -- Don't create swap files
+vim.opt.undofile = true -- Keep undo files (user uses undo frequently)
 
 require("tannerdavison.core.options")
 require("tannerdavison.core.keymaps")

@@ -20,6 +20,17 @@ keymap.set("n", "<leader>nh", ":nohl<CR>", { desc = "Clear search highlights" })
 keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" })
 keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" })
 
+-- Change working directory to current file's directory
+keymap.set("n", "<leader>cd", function()
+	local buf_path = vim.fn.expand("%:p:h")
+	if buf_path ~= "" and vim.fn.isdirectory(buf_path) == 1 then
+		vim.cmd("lcd " .. vim.fn.fnameescape(buf_path))
+		vim.notify("Changed to: " .. buf_path, vim.log.levels.INFO)
+	else
+		vim.notify("Invalid directory: " .. buf_path, vim.log.levels.WARN)
+	end
+end, { desc = "Change to current file's directory" })
+
 -- ================================================================
 -- WINDOW MANAGEMENT
 -- ================================================================

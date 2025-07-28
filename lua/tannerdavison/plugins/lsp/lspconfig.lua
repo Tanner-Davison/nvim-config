@@ -144,6 +144,75 @@ return {
 			keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
 		end
 
+		-- Configure TypeScript server with modern syntax
+		-- Check if ts_ls is already configured to avoid duplicates
+		local ts_clients = vim.lsp.get_clients({ name = "ts_ls" })
+		if #ts_clients == 0 then
+			lspconfig.ts_ls.setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				filetypes = {
+					"typescript",
+					"typescriptreact",
+					"typescript.tsx",
+					"javascript",
+					"javascriptreact",
+					"javascript.jsx",
+				},
+				settings = {
+					typescript = {
+						plugins = {
+							{
+								name = "typescript-styled-plugin",
+								location = "node_modules/typescript-styled-plugin",
+							},
+						},
+						suggest = {
+							enabled = true,
+							includeCompletionsForModuleExports = true,
+							includeCompletionsWithObjectLiteralMethodSnippets = true,
+							autoImports = true,
+							includeAutomaticOptionalChainCompletions = false,
+							includeCompletionsWithInsertText = true,
+							includeCompletionsWithSnippetText = true,
+							includeCompletionsWithClassMemberSnippets = true,
+							includeCompletionsWithImportStatements = true,
+						},
+						preferences = {
+							importModuleSpecifierPreference = "non-relative",
+							quoteStyle = "single",
+						},
+					},
+					javascript = {
+						plugins = {
+							name = "typescript-styled-plugin",
+							location = "node_modules/typescript-styled-plugin",
+						},
+						suggest = {
+							enabled = true,
+							includeCompletionsForModuleExports = true,
+							includeCompletionsWithObjectLiteralMethodSnippets = true,
+							autoImports = true,
+							includeAutomaticOptionalChainCompletions = false,
+							includeCompletionsWithSnippetText = true,
+							includeCompletionsWithImportStatements = true,
+							completeJSDocs = false,
+						},
+						preferences = {
+							importModuleSpecifierPreference = "non-relative",
+							quoteStyle = "single",
+							quotePreference = "single",
+							jsxAttributeCompletionStyle = "html",
+						},
+					},
+				},
+				-- Use Neovim's default timeout (most conservative)
+				init_options = {
+					hostInfo = "neovim",
+				},
+			})
+		end
+
 		-- Configure CSS server
 		lspconfig.cssls.setup({
 			capabilities = capabilities,

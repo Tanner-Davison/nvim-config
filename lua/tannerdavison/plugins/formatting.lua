@@ -24,6 +24,19 @@ return {
 				c = { "clang-format" }, -- Added this line for C++
 			},
 
+			formatter_opts = {
+				prettier = {
+					singleQuote = true,
+					trailingComma = "es5",
+					semi = true,
+					tabWidth = 2,
+					useTabs = false,
+				},
+				["clang-format"] = {
+					style = "Google",
+				},
+			},
+
 			format_on_save = {
 				lsp_fallback = true,
 				async = false,

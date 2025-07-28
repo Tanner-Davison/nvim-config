@@ -76,10 +76,11 @@ return {
 
 			opts.desc = "Show LSP definitions"
 			keymap.set("n", "gd", function()
-				if client and client.server_capabilities and client.server_capabilities.definitionProvider then
-					vim.cmd("Telescope lsp_definitions")
-				else
-					vim.notify("LSP server does not support go to definition", vim.log.levels.WARN)
+				-- Try Telescope first, fallback to vim.lsp.buf.definition
+				local success, result = pcall(vim.cmd, "Telescope lsp_definitions")
+				if not success then
+					-- Fallback to direct LSP call
+					vim.lsp.buf.definition()
 				end
 			end, opts)
 
@@ -148,8 +149,15 @@ return {
 		-- Check if ts_ls is already configured to avoid duplicates
 		local ts_clients = vim.lsp.get_clients({ name = "ts_ls" })
 		if #ts_clients == 0 then
+			-- Ensure definition provider is enabled
+			local ts_capabilities = vim.deepcopy(capabilities)
+			ts_capabilities.textDocument = ts_capabilities.textDocument or {}
+			ts_capabilities.textDocument.definition = {
+				dynamicRegistration = true,
+			}
+			
 			lspconfig.ts_ls.setup({
-				capabilities = capabilities,
+				capabilities = ts_capabilities,
 				on_attach = on_attach,
 				filetypes = {
 					"typescript",

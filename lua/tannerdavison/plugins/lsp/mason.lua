@@ -35,7 +35,7 @@ return {
 				"emmet_ls",
 				"prismals",
 				"pyright",
-				"clangd",
+				-- Removed clangd to prevent duplicate clients
 			},
 		})
 

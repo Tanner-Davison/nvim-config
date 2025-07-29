@@ -12,6 +12,12 @@ return {
 		local lspconfig = require("lspconfig")
 		local keymap = vim.keymap -- for conciseness
 
+		-- Global flag to prevent duplicate clangd setup
+		if _G.clangd_configured then
+			return
+		end
+		_G.clangd_configured = true
+
 		-- Create autocmd for file type detection
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {

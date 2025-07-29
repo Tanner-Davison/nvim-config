@@ -20,8 +20,14 @@ return {
 				liquid = { "prettier" },
 				lua = { "stylua" },
 				python = { "isort", "black" },
-				cpp = { "clang-format" }, -- Added this line for C++
-				c = { "clang-format" }, -- Added this line for C++
+				cpp = { "clang-format" },
+				c = { "clang-format" },
+				h = { "clang-format" },
+				hpp = { "clang-format" },
+				cc = { "clang-format" },
+				cxx = { "clang-format" },
+				objc = { "clang-format" },
+				objcpp = { "clang-format" },
 			},
 
 			formatter_opts = {
@@ -33,23 +39,52 @@ return {
 					useTabs = false,
 				},
 				["clang-format"] = {
-					style = "Google",
+					-- Use project-specific .clang-format file if available, otherwise fallback to LLVM
+					args = { "-style=file" },
+					-- Alternative: use a specific style
+					-- style = "LLVM",
 				},
 			},
 
 			format_on_save = {
 				lsp_fallback = true,
 				async = false,
-				timeout_ms = 1000,
+				timeout_ms = 2000, -- Increased timeout for C++ files
 			},
+
+			-- Notify on format errors
+			notify_on_error = true,
 		})
 
+		-- Enhanced format keymap with better error handling
 		vim.keymap.set({ "n", "v" }, "<leader>mp", function()
 			conform.format({
 				lsp_fallback = true,
 				async = false,
-				timeout_ms = 1000,
-			})
+				timeout_ms = 2000,
+			}, function(err)
+				if err then
+					vim.notify("Format failed: " .. err, vim.log.levels.ERROR)
+				else
+					vim.notify("Format successful", vim.log.levels.INFO)
+				end
+			end)
 		end, { desc = "Format file or range (in visual mode)" })
+
+		-- Add a keymap to format the current buffer
+		vim.keymap.set("n", "<leader>mf", function()
+			conform.format({
+				bufnr = vim.api.nvim_get_current_buf(),
+				lsp_fallback = true,
+				async = false,
+				timeout_ms = 2000,
+			}, function(err)
+				if err then
+					vim.notify("Format failed: " .. err, vim.log.levels.ERROR)
+				else
+					vim.notify("Format successful", vim.log.levels.INFO)
+				end
+			end)
+		end, { desc = "Format current buffer" })
 	end,
 }

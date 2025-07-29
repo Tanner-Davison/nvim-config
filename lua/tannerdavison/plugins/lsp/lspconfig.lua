@@ -48,6 +48,55 @@ return {
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
+		-- Configure diagnostic display to be less noisy
+		vim.diagnostic.config({
+			virtual_text = true,
+			signs = true,
+			underline = true,
+			update_in_insert = false,
+			severity_sort = true,
+			float = {
+				border = "rounded",
+				source = "always",
+				header = "",
+				prefix = "",
+			},
+		})
+
+		-- Filter out problematic diagnostics
+		vim.diagnostic.handlers.virtual_text = {
+			show = function(namespace, bufnr, diagnostics, opts)
+				-- Filter out specific diagnostic messages that are false positives
+				local filtered_diagnostics = {}
+				for _, diagnostic in ipairs(diagnostics) do
+					local message = diagnostic.message:lower()
+					local should_show = true
+					
+					-- Filter out common false positives
+					if message:find("lines should be %d+ characters long") then
+						should_show = false
+					elseif message:find("at least two spaces is best between code and comments") then
+						should_show = false
+					elseif message:find("included header") and message:find("is not used directly") then
+						should_show = false
+					elseif message:find("found c%+%+ system header after other header") then
+						should_show = false
+					elseif message:find("no copyright message found") then
+						should_show = false
+					elseif message:find("include the directory when naming header files") then
+						should_show = false
+					end
+					
+					if should_show then
+						table.insert(filtered_diagnostics, diagnostic)
+					end
+				end
+				
+				-- Call the original handler with filtered diagnostics
+				vim.diagnostic.handlers.virtual_text.show(namespace, bufnr, filtered_diagnostics, opts)
+			end,
+		}
+
 		-- Common on_attach function with improved error handling
 		local on_attach = function(client, bufnr)
 			local opts = { buffer = bufnr, silent = true }
@@ -149,6 +198,19 @@ return {
 
 			opts.desc = "Restart LSP"
 			keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
+
+			-- Toggle diagnostic visibility
+			opts.desc = "Toggle diagnostic visibility"
+			keymap.set("n", "<leader>td", function()
+				local current = vim.diagnostic.config().virtual_text
+				vim.diagnostic.config({ virtual_text = not current })
+			end, opts)
+
+			-- Clear all diagnostics
+			opts.desc = "Clear all diagnostics"
+			keymap.set("n", "<leader>cd", function()
+				vim.diagnostic.reset()
+			end, opts)
 		end
 
 		-- Configure TypeScript server with modern syntax
@@ -338,6 +400,7 @@ return {
 					"--all-scopes-completion",
 					"--pch-storage=memory",
 					"-j=2", -- Reduced from 4 to be less aggressive
+					"--clang-tidy-checks=-*,readability-identifier-naming,modernize-use-trailing-return-type",
 				},
 				filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
 				init_options = {
@@ -358,6 +421,15 @@ return {
 						end
 						return fallback_flags
 					end)(),
+				},
+				-- Suppress problematic diagnostics
+				settings = {
+					clangd = {
+						arguments = {
+							"--clang-tidy-checks=-*,readability-identifier-naming,modernize-use-trailing-return-type",
+							"--header-insertion=never",
+						},
+					},
 				},
 			})
 		end

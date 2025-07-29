@@ -35,7 +35,12 @@ return {
 				"emmet_ls",
 				"prismals",
 				"pyright",
-				"clangd",
+				-- Exclude clangd from automatic setup since we configure it manually
+				-- "clangd",
+			},
+			-- Disable automatic setup for clangd to prevent duplicate clients
+			automatic_installation = {
+				exclude = { "clangd" },
 			},
 		})
 

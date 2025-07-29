@@ -12,6 +12,12 @@ return {
 		local lspconfig = require("lspconfig")
 		local keymap = vim.keymap -- for conciseness
 
+		-- Global flag to prevent duplicate clangd setup
+		if _G.clangd_configured then
+			return
+		end
+		_G.clangd_configured = true
+
 		-- Create autocmd for file type detection
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {
@@ -315,41 +321,46 @@ return {
 		})
 
 		-- Configure Clangd server
-		lspconfig.clangd.setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-			cmd = {
-				"clangd",
-				"--background-index",
-				"--completion-style=detailed",
-				"--header-insertion=iwyu",
-				"--fallback-style=llvm",
-				"--enable-config",
-				"--query-driver=**",
-				"--clang-tidy",
-				"--offset-encoding=utf-16",
-				"--compile-commands-dir=.",
-				"--header-insertion-decorators",
-				"--all-scopes-completion",
-				"--pch-storage=memory",
-				"-j=4",
-			},
-			filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
-			init_options = {
-				clangdFileStatus = true,
-				usePlaceholders = true,
-				completeUnimported = true,
-				semanticHighlighting = true,
-				fallbackFlags = (function()
-					local system_name = vim.loop.os_uname().sysname
-					local fallback_flags = {}
-					if system_name == "Windows_NT" then
-						table.insert(fallback_flags, "-std=c++23")
-					end
-					return fallback_flags
-				end)(),
-			},
-		})
+		-- Check if clangd is already configured to avoid duplicates
+		local clangd_clients = vim.lsp.get_clients({ name = "clangd" })
+		if #clangd_clients == 0 then
+			lspconfig.clangd.setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				cmd = {
+					"clangd",
+					"--background-index",
+					"--completion-style=detailed",
+					"--fallback-style=llvm",
+					"--enable-config",
+					"--offset-encoding=utf-16",
+					"--compile-commands-dir=.",
+					"--all-scopes-completion",
+					"--pch-storage=memory",
+					"-j=2", -- Reduced from 4 to be less aggressive
+				},
+				filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
+				init_options = {
+					clangdFileStatus = true,
+					usePlaceholders = true,
+					completeUnimported = true,
+					semanticHighlighting = true,
+					fallbackFlags = (function()
+						local system_name = vim.loop.os_uname().sysname
+						local fallback_flags = {}
+						if system_name == "Windows_NT" then
+							table.insert(fallback_flags, "-std=c++23")
+						elseif system_name == "Darwin" then
+							-- Mac-specific flags
+							table.insert(fallback_flags, "-std=c++17")
+							table.insert(fallback_flags, "-I/usr/local/include")
+							table.insert(fallback_flags, "-I/opt/homebrew/include")
+						end
+						return fallback_flags
+					end)(),
+				},
+			})
+		end
 
 		-- Configure Lua server
 		lspconfig.lua_ls.setup({

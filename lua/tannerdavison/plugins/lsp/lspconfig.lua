@@ -321,41 +321,45 @@ return {
 		})
 
 		-- Configure Clangd server
-		lspconfig.clangd.setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-			cmd = {
-				"clangd",
-				"--background-index",
-				"--completion-style=detailed",
-				"--header-insertion=iwyu",
-				"--fallback-style=llvm",
-				"--enable-config",
-				"--query-driver=**",
-				"--clang-tidy",
-				"--offset-encoding=utf-16",
-				"--compile-commands-dir=.",
-				"--header-insertion-decorators",
-				"--all-scopes-completion",
-				"--pch-storage=memory",
-				"-j=4",
-			},
-			filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
-			init_options = {
-				clangdFileStatus = true,
-				usePlaceholders = true,
-				completeUnimported = true,
-				semanticHighlighting = true,
-				fallbackFlags = (function()
-					local system_name = vim.loop.os_uname().sysname
-					local fallback_flags = {}
-					if system_name == "Windows_NT" then
-						table.insert(fallback_flags, "-std=c++23")
-					end
-					return fallback_flags
-				end)(),
-			},
-		})
+		-- Check if clangd is already configured to avoid duplicates
+		local clangd_clients = vim.lsp.get_clients({ name = "clangd" })
+		if #clangd_clients == 0 then
+			lspconfig.clangd.setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				cmd = {
+					"clangd",
+					"--background-index",
+					"--completion-style=detailed",
+					"--header-insertion=iwyu",
+					"--fallback-style=llvm",
+					"--enable-config",
+					"--query-driver=**",
+					"--clang-tidy",
+					"--offset-encoding=utf-16",
+					"--compile-commands-dir=.",
+					"--header-insertion-decorators",
+					"--all-scopes-completion",
+					"--pch-storage=memory",
+					"-j=4",
+				},
+				filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
+				init_options = {
+					clangdFileStatus = true,
+					usePlaceholders = true,
+					completeUnimported = true,
+					semanticHighlighting = true,
+					fallbackFlags = (function()
+						local system_name = vim.loop.os_uname().sysname
+						local fallback_flags = {}
+						if system_name == "Windows_NT" then
+							table.insert(fallback_flags, "-std=c++23")
+						end
+						return fallback_flags
+					end)(),
+				},
+			})
+		end
 
 		-- Configure Lua server
 		lspconfig.lua_ls.setup({

@@ -111,6 +111,13 @@ keymap.set("n", "<leader>mq", function()
 end, { desc = "Insert media queries" })
 
 -- ================================================================
+-- LIVE SERVER INTEGRATION
+-- ================================================================
+
+-- Start Live Server
+keymap.set("n", "<leader>ls", ":!live-server --port=8080 --open=/<CR>", { desc = "Start Live Server" })
+
+-- ================================================================
 -- UNIT CONVERSION FOR MEDIA QUERIES
 -- ================================================================
 

@@ -1,6 +1,3 @@
-vim.cmd("let g:netrw_liststyle = 3")
-vim.cmd("let g:netrw_banner = 0")
-vim.cmd("let g:netrw_winsize = 25")
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 local opt = vim.opt -- for conciseness

@@ -53,3 +53,7 @@ opt.splitbelow = true -- split horizontal window to the bottom
 
 -- turn off swapfile
 opt.swapfile = false
+
+-- bracket matching
+opt.showmatch = true -- show matching brackets
+opt.matchtime =  -- show matching brackets for 0.2 seconds

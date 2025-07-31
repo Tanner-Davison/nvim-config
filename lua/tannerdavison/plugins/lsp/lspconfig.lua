@@ -161,7 +161,7 @@ return {
 			ts_capabilities.textDocument.definition = {
 				dynamicRegistration = true,
 			}
-			
+
 			lspconfig.ts_ls.setup({
 				capabilities = ts_capabilities,
 				on_attach = on_attach,
@@ -354,6 +354,12 @@ return {
 						local fallback_flags = {}
 						if system_name == "Windows_NT" then
 							table.insert(fallback_flags, "-std=c++23")
+						elseif system_name == "Darwin" then -- macOS
+							table.insert(fallback_flags, "-std=c++23")
+							table.insert(fallback_flags, "-stdlib=libc++")
+						elseif system_name == "Linux" then
+							table.insert(fallback_flags, "-std=c++23")
+							table.insert(fallback_flags, "-stdlib=libstdc++")
 						end
 						return fallback_flags
 					end)(),

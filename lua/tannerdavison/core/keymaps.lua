@@ -336,6 +336,7 @@ keymap.set("n", "<leader>mr", function()
 	-- Clean, regenerate, and build
 	vim.cmd("!rm -rf build && cmake -S . -B build && cmake --build build")
 end, { desc = "CMake Rebuild" })
+
 -- Run CMake executable
 keymap.set("n", "<leader>mx", function()
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
@@ -347,17 +348,6 @@ keymap.set("n", "<leader>mx", function()
 		vim.cmd("terminal ./build/" .. project_name)
 	end
 end, { desc = "Run CMake executable" })
--- -- Run CMake executable
--- keymap.set("n", "<leader>mx", function()
--- 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
--- 	if vim.fn.has("win32") == 1 then
--- 		-- Windows path with .exe extension
--- 		vim.cmd("!start cmd /k .\\build\\Debug\\" .. project_name .. ".exe")
--- 	else
--- 		-- Unix path
--- 		vim.cmd("!./build/" .. project_name)
--- 	end
--- end, { desc = "Run CMake executable" })
 
 -- ================================================================
 -- CLAUDE AI INTEGRATION

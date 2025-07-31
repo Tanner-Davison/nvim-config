@@ -1,4 +1,3 @@
-vim.cmd("let g:netrw_liststyle = 3")
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 local opt = vim.opt -- for conciseness
@@ -53,3 +52,7 @@ opt.splitbelow = true -- split horizontal window to the bottom
 
 -- turn off swapfile
 opt.swapfile = false
+
+-- bracket matching
+opt.showmatch = true -- show matching brackets
+opt.matchtime = 2 -- show matching brackets for 0.2 seconds

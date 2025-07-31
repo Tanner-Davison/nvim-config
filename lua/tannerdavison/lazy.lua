@@ -26,12 +26,8 @@ require("lazy").setup({ { import = "tannerdavison.plugins" }, { import = "tanner
       paths = {},
       disabled_plugins = {
         "gzip",
-        "matchit",
-        "matchparen",
         "netrwPlugin",
         "tarPlugin",
-        "tohtml",
-        "tutor",
         "zipPlugin",
       },
     },

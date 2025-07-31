@@ -236,8 +236,8 @@ keymap.set("n", "<Space>cv", function()
 end, { desc = "Run compiled C++ code" })
 
 -- C++ cout keymaps
-keymap.set("i", "<leader>cp", "std::cout << ", { desc = "Insert std::cout << " })
-keymap.set("i", "<leader>cm", " << std::endl;", { desc = "Insert << std::endl;" })
+keymap.set("n", "<leader>cp", "istd::cout << ", { desc = "Insert std::cout << " })
+keymap.set("n", "<leader>cm", "i << std::endl;", { desc = "Insert << std::endl;" })
 
 -- ================================================================
 -- CMAKE DEVELOPMENT

@@ -340,12 +340,11 @@ end, { desc = "CMake Rebuild" })
 keymap.set("n", "<leader>mx", function()
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 	if vim.fn.has("win32") == 1 then
-		-- Windows path with .exe extension - full path
-		local cwd = vim.fn.getcwd()
-		vim.cmd('!start "" "' .. cwd .. "\\build\\Debug\\" .. project_name .. '.exe"')
+		-- Windows path with .exe extension - using terminal
+		vim.cmd("terminal cd build\\Debug && .\\" .. project_name .. ".exe")
 	else
 		-- Unix path
-		vim.cmd("!./build/" .. project_name)
+		vim.cmd("terminal ./build/" .. project_name)
 	end
 end, { desc = "Run CMake executable" })
 -- -- Run CMake executable

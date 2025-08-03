@@ -35,7 +35,7 @@ return {
 				"emmet_ls",
 				"prismals",
 				"pyright",
-				-- Removed clangd to prevent duplicate clients
+				-- clangd handled by default nvim-lspconfig setup
 			},
 		})
 
@@ -50,6 +50,7 @@ return {
 				"eslint_d",
 				"cmakelang",
 				"cpplint",
+				-- clangd moved to mason-lspconfig to prevent duplicates
 			},
 		})
 	end,

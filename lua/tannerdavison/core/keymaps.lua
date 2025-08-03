@@ -583,3 +583,54 @@ keymap.set({ "n", "i" }, "<leader>tc", function()
 		print("✓ Autocomplete enabled")
 	end
 end, { desc = "Toggle autocomplete" })
+
+-- ================================================================
+-- Jump Marking
+--
+-- ================================================================
+
+-- Custom function to handle mark jumping
+local function jump_to_mark()
+	local char = vim.fn.getchar()
+	local mark_char = vim.fn.nr2char(char)
+	vim.cmd("normal! '" .. mark_char)
+end
+
+vim.keymap.set("n", "<leader>j", jump_to_mark, { desc = "Jump to mark" })
+
+-- Quick mark deletion keymaps
+vim.keymap.set("n", "<leader>dm", ":delmarks a-z<cr>", { desc = "Delete lowercase marks" })
+vim.keymap.set("n", "<leader>dM", ":delmarks A-Z<cr>", { desc = "Delete uppercase marks" })
+vim.keymap.set("n", "<leader>da", ":delmarks!<cr>:delmarks A-Z<cr>", { desc = "Delete all marks" })
+
+-- LSP log cleanup
+keymap.set("n", "<leader>lc", function()
+	local log_path = vim.lsp.get_log_path()
+	if log_path then
+		local file = io.open(log_path, "w")
+		if file then
+			file:write("-- LSP log file manually cleared\n")
+			file:close()
+			vim.notify("LSP log file cleared", vim.log.levels.INFO)
+		end
+	end
+end, { desc = "Clear LSP log file" })
+
+-- Manual formatting trigger for debugging
+keymap.set("n", "<leader>mf", function()
+	local conform = require("conform")
+	conform.format({
+		lsp_fallback = true,
+		async = false,
+		timeout_ms = 1000,
+	})
+	vim.notify("Manual formatting triggered", vim.log.levels.INFO)
+end, { desc = "Manual format file" })
+-- get current working path to file
+
+vim.keymap.set(
+	"n",
+	"<leader>fp",
+	':let @+ = expand("%:p") | echo "Copied: " . @+<CR>',
+	{ desc = "Copy full file path" }
+)

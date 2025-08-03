@@ -1,0 +1,19 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ColumnLimit: 100
+
+# The magic alignment settings
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AlignTrailingComments: true
+AlignAfterOpenBracket: Align
+AlignOperands: Align
+
+# Spacing and style
+SpaceBeforeParens: Never
+BreakBeforeBraces: Attach
+IndentCaseLabels: true 

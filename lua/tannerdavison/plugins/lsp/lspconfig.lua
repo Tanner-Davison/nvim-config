@@ -12,12 +12,6 @@ return {
 		local lspconfig = require("lspconfig")
 		local keymap = vim.keymap -- for conciseness
 
-		-- Global flag to prevent duplicate clangd setup
-		if _G.clangd_configured then
-			return
-		end
-		_G.clangd_configured = true
-
 		-- Create autocmd for file type detection
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {
@@ -321,51 +315,34 @@ return {
 		})
 
 		-- Configure Clangd server
-		-- Check if clangd is already configured to avoid duplicates
-		local clangd_clients = vim.lsp.get_clients({ name = "clangd" })
-		if #clangd_clients == 0 then
-			lspconfig.clangd.setup({
-				capabilities = capabilities,
-				on_attach = on_attach,
-				cmd = {
-					"clangd",
-					"--background-index",
-					"--completion-style=detailed",
-					"--header-insertion=iwyu",
-					"--fallback-style=llvm",
-					"--enable-config",
-					"--query-driver=**",
-					"--clang-tidy",
-					"--offset-encoding=utf-16",
-					"--compile-commands-dir=.",
-					"--header-insertion-decorators",
-					"--all-scopes-completion",
-					"--pch-storage=memory",
-					"-j=4",
+		-- Use default nvim-lspconfig setup to avoid duplicates
+		lspconfig.clangd.setup({
+			capabilities = capabilities,
+			on_attach = on_attach,
+			-- Enable formatting capabilities with custom style
+			settings = {
+				clangd = {
+					formatting = {
+						style = {
+							BasedOnStyle = "LLVM",
+							IndentWidth = 2,
+							ColumnLimit = 150,
+							AlignConsecutiveDeclarations = "Consecutive",
+							AlignConsecutiveAssignments = "Consecutive",
+							AlignTrailingComments = true,
+							TabWidth = 8,
+							UseTab = "ForIndentation",
+							AlignConsecutiveDeclarationsOptions = {
+								AcrossEmptyLines = true,
+								AcrossComments = true,
+								AlignCompound = true,
+								PadOperators = true,
+							},
+						},
+					},
 				},
-				filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto", "h", "hpp" },
-				init_options = {
-					clangdFileStatus = true,
-					usePlaceholders = true,
-					completeUnimported = true,
-					semanticHighlighting = true,
-					fallbackFlags = (function()
-						local system_name = vim.loop.os_uname().sysname
-						local fallback_flags = {}
-						if system_name == "Windows_NT" then
-							table.insert(fallback_flags, "-std=c++23")
-						elseif system_name == "Darwin" then -- macOS
-							table.insert(fallback_flags, "-std=c++23")
-							table.insert(fallback_flags, "-stdlib=libc++")
-						elseif system_name == "Linux" then
-							table.insert(fallback_flags, "-std=c++23")
-							table.insert(fallback_flags, "-stdlib=libstdc++")
-						end
-						return fallback_flags
-					end)(),
-				},
-			})
-		end
+			},
+		})
 
 		-- Configure Lua server
 		lspconfig.lua_ls.setup({
@@ -423,5 +400,43 @@ return {
 
 			return original_make_position_params(window, offset_encoding)
 		end
+
+		-- Function to clean up large LSP log files
+		local function cleanup_lsp_logs()
+			local log_path = vim.lsp.get_log_path()
+			if log_path then
+				local file = io.open(log_path, "r")
+				if file then
+					local size = file:seek("end")
+					file:close()
+					
+					-- If log file is larger than 10MB, truncate it
+					if size > 10 * 1024 * 1024 then
+						file = io.open(log_path, "w")
+						if file then
+							file:write("-- LSP log file truncated due to large size\n")
+							file:close()
+							vim.notify("LSP log file truncated (was " .. math.floor(size / 1024 / 1024) .. "MB)", vim.log.levels.INFO)
+						end
+					end
+				end
+			end
+		end
+
+		-- Clean up logs on startup
+		cleanup_lsp_logs()
+
+		-- Set up periodic log cleanup (every 30 minutes)
+		vim.api.nvim_create_autocmd({ "VimEnter" }, {
+			callback = function()
+				-- Schedule periodic cleanup
+				vim.defer_fn(function()
+					while true do
+						cleanup_lsp_logs()
+						vim.wait(30 * 60 * 1000) -- 30 minutes
+					end
+				end, 0)
+			end,
+		})
 	end,
 }

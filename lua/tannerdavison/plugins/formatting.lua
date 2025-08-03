@@ -20,8 +20,7 @@ return {
 				liquid = { "prettier" },
 				lua = { "stylua" },
 				python = { "isort", "black" },
-				cpp = { "clang-format" }, -- Added this line for C++
-				c = { "clang-format" }, -- Added this line for C++
+				-- C++ formatting handled by clangd LSP
 			},
 
 			formatter_opts = {
@@ -32,16 +31,28 @@ return {
 					tabWidth = 2,
 					useTabs = false,
 				},
-				["clang-format"] = {
-					style = "Google",
-				},
+				-- clang_format removed - using clangd LSP for C++
 			},
 
+			-- Enable format on save for all file types
 			format_on_save = {
-				lsp_fallback = true,
+				lsp_fallback = true, -- Enable LSP fallback for better C++ formatting
 				async = false,
 				timeout_ms = 1000,
 			},
+		})
+
+		-- Format on save for all file types
+		vim.api.nvim_create_autocmd("BufWritePre", {
+			pattern = "*",
+			callback = function(args)
+				conform.format({
+					bufnr = args.buf,
+					lsp_fallback = true,
+					async = false,
+					timeout_ms = 1000,
+				})
+			end,
 		})
 
 		vim.keymap.set({ "n", "v" }, "<leader>mp", function()

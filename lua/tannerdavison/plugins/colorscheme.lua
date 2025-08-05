@@ -31,21 +31,33 @@ return {
 				vscMediumBlue = "#0A1824", -- Inactive tab
 				vscLightBlue = "#67D4FF", -- Highlights
 			},
-
 			-- Enable group overrides
 			group_overrides = {
-				-- Enhance specific syntax elements
+				-- Your existing overrides...
 				Keyword = { fg = "#FF79C6", bold = true },
 				Type = { fg = "#F1FA8C", bold = true },
 				Function = { fg = "#67D4FF", italic = true },
 				String = { fg = "#50FA7B" },
 				Number = { fg = "#FFB86C" },
 				Comment = { fg = "#6272A4", italic = true },
-
-				-- UI enhancements
 				CursorLine = { bg = "#081016" },
 				Visual = { bg = "#103362" },
 				Search = { bg = "#2C4B8C", fg = "#F1FA8C" },
+
+				-- ADD THESE FOR VISIBLE COMPLETION MENU:
+				Pmenu = { bg = "#1B1B19", fg = "#d4d4d4" },
+				PmenuSel = { bg = "#103362", fg = "#F1FA8C", bold = true },
+				PmenuSbar = { bg = "#405779" },
+				PmenuThumb = { bg = "#67D4FF" },
+
+				-- Define the custom groups your nvim-cmp references:
+				CmpPmenu = { bg = "#1B1B19", fg = "#d4d4d4" },
+				CmpSel = { bg = "#103362", fg = "#F1FA8C", bold = true },
+				CmpDoc = { bg = "#0A1824", fg = "#d4d4d4" },
+
+				CmpItemAbbrMatch = { fg = "#67D4FF", bold = true },
+				CmpItemAbbrMatchFuzzy = { fg = "#67D4FF" },
+				CmpItemKind = { fg = "#BD93F9" },
 			},
 		})
 

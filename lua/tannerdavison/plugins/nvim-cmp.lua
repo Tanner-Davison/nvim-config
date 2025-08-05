@@ -115,7 +115,7 @@ return {
 					behavior = cmp.ConfirmBehavior.Replace,
 					select = true,
 				}),
-				
+
 				-- Don't map Tab to anything - let tabout.nvim handle it
 				-- ["<Tab>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
 			}),
@@ -265,7 +265,7 @@ return {
 		vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 		vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { bg = "NONE", strikethrough = true, fg = "#808080" })
 		vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { bg = "NONE", fg = "#569CD6" })
-		vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { link = "CmpIntemAbbrMatch" })
+		vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { link = "CmpItemAbbrMatch" })
 		vim.api.nvim_set_hl(0, "CmpItemKindVariable", { bg = "NONE", fg = "#9CDCFE" })
 		vim.api.nvim_set_hl(0, "CmpItemKindInterface", { link = "CmpItemKindVariable" })
 		vim.api.nvim_set_hl(0, "CmpItemKindText", { link = "CmpItemKindVariable" })

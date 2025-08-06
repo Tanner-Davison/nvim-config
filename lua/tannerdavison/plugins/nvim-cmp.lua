@@ -18,6 +18,7 @@ return {
 		"hrsh7th/cmp-nvim-lua", -- Neovim Lua API completion
 		"ray-x/cmp-treesitter", -- Treesitter completion
 		"hrsh7th/cmp-omni", -- Omni completion for markdown
+		"lukas-reineke/cmp-under-comparator", -- Better sorting
 
 		-- UI enhancements
 		"onsails/lspkind.nvim",
@@ -120,17 +121,18 @@ return {
 				-- ["<Tab>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
 			}),
 
-			-- Completion sources with priority
-			sources = cmp.config.sources({
-				{ name = "nvim_lsp", priority = 1000 },
-				{ name = "nvim_lsp_signature_help", priority = 900 },
-				{ name = "vsnip", priority = 800 },
-				{ name = "nvim_lua", priority = 700 },
-			}, {
-				{ name = "treesitter", priority = 600 },
-				{ name = "buffer", priority = 500, keyword_length = 3 },
-				{ name = "path", priority = 400 },
-			}),
+					-- Completion sources with priority
+		sources = cmp.config.sources({
+			{ name = "nvim_lsp", priority = 1000 },
+			{ name = "nvim_lsp_signature_help", priority = 900 },
+			{ name = "css", priority = 850 },
+			{ name = "buffer", priority = 800, keyword_length = 3 },
+			{ name = "nvim_lua", priority = 700 },
+		}, {
+			{ name = "treesitter", priority = 600 },
+			{ name = "path", priority = 400 },
+			{ name = "vsnip", priority = 300 },
+		}),
 
 			-- Enhanced formatting
 			formatting = {
@@ -212,6 +214,20 @@ return {
 					cmp.config.compare.score,
 					cmp.config.compare.recently_used,
 					cmp.config.compare.locality,
+					-- Custom comparator to deprioritize snippets
+					function(entry1, entry2)
+						local kind1 = entry1:get_kind()
+						local kind2 = entry2:get_kind()
+						
+						-- If one is a snippet and the other isn't, prioritize the non-snippet
+						if kind1 == cmp.lsp.CompletionItemKind.Snippet and kind2 ~= cmp.lsp.CompletionItemKind.Snippet then
+							return false
+						elseif kind2 == cmp.lsp.CompletionItemKind.Snippet and kind1 ~= cmp.lsp.CompletionItemKind.Snippet then
+							return true
+						end
+						
+						return nil -- Let other comparators handle it
+					end,
 					cmp.config.compare.kind,
 					cmp.config.compare.sort_text,
 					cmp.config.compare.length,
@@ -238,6 +254,48 @@ return {
 				{ name = "buffer", priority = 500 },
 				{ name = "path", priority = 400 },
 			}),
+		})
+
+		-- CSS-in-JS completion for styled-components
+		cmp.setup.filetype({ "javascript", "javascriptreact", "typescript", "typescriptreact" }, {
+			sources = cmp.config.sources({
+				{ name = "nvim_lsp", priority = 1000 },
+				{ name = "nvim_lsp_signature_help", priority = 900 },
+				{ name = "css", priority = 850 },
+				{ name = "buffer", priority = 800, keyword_length = 3 },
+				{ name = "nvim_lua", priority = 700 },
+				{ name = "treesitter", priority = 600 },
+				{ name = "path", priority = 400 },
+				{ name = "vsnip", priority = 300 },
+			}),
+			sorting = {
+				priority_weight = 2,
+				comparators = {
+					cmp.config.compare.offset,
+					cmp.config.compare.exact,
+					cmp.config.compare.score,
+					cmp.config.compare.recently_used,
+					cmp.config.compare.locality,
+					-- Custom comparator to deprioritize snippets
+					function(entry1, entry2)
+						local kind1 = entry1:get_kind()
+						local kind2 = entry2:get_kind()
+						
+						-- If one is a snippet and the other isn't, prioritize the non-snippet
+						if kind1 == cmp.lsp.CompletionItemKind.Snippet and kind2 ~= cmp.lsp.CompletionItemKind.Snippet then
+							return false
+						elseif kind2 == cmp.lsp.CompletionItemKind.Snippet and kind1 ~= cmp.lsp.CompletionItemKind.Snippet then
+							return true
+						end
+						
+						return nil -- Let other comparators handle it
+					end,
+					cmp.config.compare.kind,
+					cmp.config.compare.sort_text,
+					cmp.config.compare.length,
+					cmp.config.compare.order,
+				},
+			},
 		})
 
 		-- Command line completion

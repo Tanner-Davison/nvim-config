@@ -42,8 +42,17 @@ return {
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
-		-- Common on_attach function with improved error handling
+		-- Track which buffers have already had keymaps attached
+		local attached_buffers = {}
+
+		-- Common on_attach function with improved error handling and duplicate prevention
 		local on_attach = function(client, bufnr)
+			-- Prevent duplicate keymap registration
+			if attached_buffers[bufnr] then
+				return
+			end
+			attached_buffers[bufnr] = true
+
 			local opts = { buffer = bufnr, silent = true }
 
 			-- Enhanced keybindings with capability checks and better error handling
@@ -56,49 +65,39 @@ return {
 				end
 			end, opts)
 
+			opts.desc = "Go to definition"
+			keymap.set("n", "gd", function()
+				if client and client.server_capabilities and client.server_capabilities.definitionProvider then
+					vim.lsp.buf.definition()
+				else
+					vim.notify("LSP server does not support definition", vim.log.levels.WARN)
+				end
+			end, opts)
+
 			opts.desc = "Go to declaration"
 			keymap.set("n", "gD", function()
 				if client and client.server_capabilities and client.server_capabilities.declarationProvider then
 					vim.lsp.buf.declaration()
 				else
-					vim.notify("LSP server does not support go to declaration", vim.log.levels.WARN)
-				end
-			end, opts)
-
-			opts.desc = "Show function signature help"
-			keymap.set("n", "<leader>sp", function()
-				if client and client.server_capabilities and client.server_capabilities.signatureHelpProvider then
-					vim.lsp.buf.signature_help()
-				else
-					vim.notify("LSP server does not support signature help", vim.log.levels.WARN)
-				end
-			end, opts)
-
-			opts.desc = "Show LSP definitions"
-			keymap.set("n", "gd", function()
-				-- Try Telescope first, fallback to vim.lsp.buf.definition
-				local success, result = pcall(vim.cmd, "Telescope lsp_definitions")
-				if not success then
-					-- Fallback to direct LSP call
-					vim.lsp.buf.definition()
+					vim.notify("LSP server does not support declaration", vim.log.levels.WARN)
 				end
 			end, opts)
 
 			opts.desc = "Show LSP implementations"
 			keymap.set("n", "gi", function()
 				if client and client.server_capabilities and client.server_capabilities.implementationProvider then
-					vim.cmd("Telescope lsp_implementations")
+					vim.lsp.buf.implementation()
 				else
-					vim.notify("LSP server does not support implementations", vim.log.levels.WARN)
+					vim.notify("LSP server does not support implementation", vim.log.levels.WARN)
 				end
 			end, opts)
 
 			opts.desc = "Show LSP type definitions"
 			keymap.set("n", "gt", function()
 				if client and client.server_capabilities and client.server_capabilities.typeDefinitionProvider then
-					vim.cmd("Telescope lsp_type_definitions")
+					vim.lsp.buf.type_definition()
 				else
-					vim.notify("LSP server does not support type definitions", vim.log.levels.WARN)
+					vim.notify("LSP server does not support type definition", vim.log.levels.WARN)
 				end
 			end, opts)
 
@@ -145,87 +144,78 @@ return {
 			keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
 		end
 
-		-- Configure TypeScript server with modern syntax
-		-- Check if ts_ls is already configured to avoid duplicates
-		local ts_clients = vim.lsp.get_clients({ name = "ts_ls" })
-		if #ts_clients == 0 then
-			-- Ensure definition provider is enabled
-			local ts_capabilities = vim.deepcopy(capabilities)
-			ts_capabilities.textDocument = ts_capabilities.textDocument or {}
-			ts_capabilities.textDocument.definition = {
-				dynamicRegistration = true,
-			}
+		-- Clean up attached_buffers when buffers are deleted
+		vim.api.nvim_create_autocmd("BufDelete", {
+			callback = function(args)
+				attached_buffers[args.buf] = nil
+			end,
+		})
 
-			lspconfig.ts_ls.setup({
-				capabilities = ts_capabilities,
-				on_attach = on_attach,
-				filetypes = {
-					"typescript",
-					"typescriptreact",
-					"typescript.tsx",
-					"javascript",
-					"javascriptreact",
-					"javascript.jsx",
-				},
-				settings = {
-					typescript = {
-						plugins = {
-							{
-								name = "typescript-styled-plugin",
-								location = "node_modules/typescript-styled-plugin",
-							},
-						},
-						suggest = {
-							enabled = true,
-							includeCompletionsForModuleExports = true,
-							includeCompletionsWithObjectLiteralMethodSnippets = true,
-							autoImports = true,
-							includeAutomaticOptionalChainCompletions = false,
-							includeCompletionsWithInsertText = true,
-							includeCompletionsWithSnippetText = true,
-							includeCompletionsWithClassMemberSnippets = true,
-							includeCompletionsWithImportStatements = true,
-						},
-						preferences = {
-							importModuleSpecifierPreference = "non-relative",
-							quoteStyle = "single",
-						},
-					},
-					javascript = {
-						plugins = {
+		-- Configure TypeScript server with enhanced styled-components support
+		-- Ensure definition provider is enabled
+		local ts_capabilities = vim.deepcopy(capabilities)
+		ts_capabilities.textDocument = ts_capabilities.textDocument or {}
+		ts_capabilities.textDocument.definition = {
+			dynamicRegistration = true,
+		}
+
+		lspconfig.ts_ls.setup({
+			capabilities = ts_capabilities,
+			on_attach = on_attach,
+			filetypes = {
+				"typescript",
+				"typescriptreact",
+				"typescript.tsx",
+				"javascript",
+				"javascriptreact",
+				"javascript.jsx",
+			},
+			settings = {
+				typescript = {
+					plugins = {
+						{
 							name = "typescript-styled-plugin",
 							location = "node_modules/typescript-styled-plugin",
 						},
-						suggest = {
-							enabled = true,
-							includeCompletionsForModuleExports = true,
-							includeCompletionsWithObjectLiteralMethodSnippets = true,
-							autoImports = true,
-							includeAutomaticOptionalChainCompletions = false,
-							includeCompletionsWithSnippetText = true,
-							includeCompletionsWithImportStatements = true,
-							completeJSDocs = false,
-						},
-						preferences = {
-							importModuleSpecifierPreference = "non-relative",
-							quoteStyle = "single",
-							quotePreference = "single",
-							jsxAttributeCompletionStyle = "html",
-						},
+					},
+					suggest = {
+						enabled = true,
+						includeCompletionsForModuleExports = true,
+						includeCompletionsWithObjectLiteralMethodSnippets = true,
+						autoImports = true,
+						includeAutomaticOptionalChainCompletions = false,
+						includeCompletionsWithInsertText = true,
+						includeCompletionsWithSnippetText = true,
+						includeCompletionsWithClassMemberSnippets = true,
+						includeCompletionsWithImportStatements = true,
+					},
+					preferences = {
+						importModuleSpecifierPreference = "non-relative",
+						quoteStyle = "single",
+					},
+					-- Enhanced CSS-in-JS support
+					inlayHints = {
+						includeInlayParameterNameHints = "all",
+						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+						includeInlayFunctionParameterTypeHints = true,
+						includeInlayVariableTypeHints = true,
+						includeInlayPropertyDeclarationTypeHints = true,
+						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayEnumMemberValueHints = true,
 					},
 				},
-				-- Use Neovim's default timeout (most conservative)
-				init_options = {
-					hostInfo = "neovim",
-				},
-			})
-		end
+			},
+		})
 
-		-- Configure CSS server
+		-- Configure CSS server with enhanced styled-components support
 		lspconfig.cssls.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
-			filetypes = { "css", "scss", "less", "sass", "javascriptreact", "typescriptreact" },
+			filetypes = { "css", "scss", "less", "sass", "javascriptreact", "typescriptreact", "javascript", "typescript" },
+			-- Ensure CSS LSP works in template literals
+			init_options = {
+				provideFormatter = true,
+			},
 			settings = {
 				css = {
 					validate = true,
@@ -235,6 +225,13 @@ return {
 					completion = {
 						completePropertyWithSemiColon = true,
 						triggerPropertyValueCompletion = true,
+						completePropertyWithColon = true,
+						completePropertyWithSemicolon = true,
+					},
+					-- Enhanced CSS-in-JS support
+					format = {
+						newlineBetweenSelectors = true,
+						newlineBetweenRules = true,
 					},
 				},
 				scss = {
@@ -242,11 +239,19 @@ return {
 					lint = {
 						unknownAtRules = "ignore",
 					},
+					completion = {
+						completePropertyWithSemiColon = true,
+						triggerPropertyValueCompletion = true,
+					},
 				},
 				less = {
 					validate = true,
 					lint = {
 						unknownAtRules = "ignore",
+					},
+					completion = {
+						completePropertyWithSemiColon = true,
+						triggerPropertyValueCompletion = true,
 					},
 				},
 			},
@@ -258,61 +263,139 @@ return {
 			on_attach = on_attach,
 		})
 
-		-- Configure GraphQL server
-		lspconfig.graphql.setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-			filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
-		})
+		-- Debug command to check LSP servers
+		vim.api.nvim_create_user_command("LSPDebug", function()
+			local clients = vim.lsp.get_clients()
+			print("Active LSP clients:")
+			for _, client in ipairs(clients) do
+				print(string.format("  - %s (filetypes: %s)", client.name, table.concat(client.config.filetypes or {}, ", ")))
+			end
+		end, { desc = "Debug LSP servers" })
 
-		-- Configure Emmet server
-		lspconfig.emmet_ls.setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-			filetypes = {
-				"html",
-				"typescriptreact",
-				"javascriptreact",
-				"javascript",
-				"javascript.jsx",
-				"typescript",
-				"css",
-				"sass",
-				"scss",
-				"less",
-				"svelte",
-			},
-			init_options = {
-				html = {
-					options = {
-						["bem.enabled"] = true,
-						["jsx.enabled"] = true,
-					},
-				},
-			},
-			settings = {
-				emmet = {
-					showSuggestionsAsSnippets = true,
-					showExpandedAbbreviation = "always",
-					includedLanguages = {
-						javascript = "html",
-						typescript = "html",
-					},
-					preferences = {
-						["css.intUnit"] = "px",
-						["css.floatUnit"] = "rem",
-						["jsx.enabled"] = true,
-						["markup.selfClosingStyle"] = "xhtml",
-						["tailwind.enable"] = false,
-					},
-					syntaxProfiles = {
-						javascript = {
-							quote_char = "'",
-						},
-					},
-				},
-			},
-		})
+		-- Improved LSP cleanup command with smart client selection
+		vim.api.nvim_create_user_command("LSPCleanup", function()
+			local clients = vim.lsp.get_clients()
+			local client_counts = {}
+			local clients_by_name = {}
+			
+			-- Group clients by name and count them
+			for _, client in ipairs(clients) do
+				if not client_counts[client.name] then
+					client_counts[client.name] = 0
+					clients_by_name[client.name] = {}
+				end
+				client_counts[client.name] = client_counts[client.name] + 1
+				table.insert(clients_by_name[client.name], client)
+			end
+			
+			-- Remove duplicates for each client type with smart selection
+			for client_name, count in pairs(client_counts) do
+				if count > 1 then
+					print("Found " .. count .. " " .. client_name .. " clients. Analyzing configurations...")
+					
+					local client_list = clients_by_name[client_name]
+					local to_remove = {}
+					
+					-- Analyze each client to determine which to keep
+					for i, client in ipairs(client_list) do
+						local has_custom_settings = false
+						local has_custom_on_attach = false
+						
+						-- Check if client has custom settings
+						if client.config and client.config.settings then
+							has_custom_settings = true
+						end
+						
+						-- Check if client has custom on_attach function
+						if client.config and client.config.on_attach then
+							has_custom_on_attach = true
+						end
+						
+						-- Mark for removal if it has fewer customizations
+						-- Priority: keep clients with custom settings/on_attach
+						if not has_custom_settings and not has_custom_on_attach then
+							table.insert(to_remove, { client = client, index = i, reason = "default configuration" })
+						else
+							print("  Keeping client " .. i .. " (has custom configuration)")
+						end
+					end
+					
+					-- If we still have duplicates after prioritizing custom configs, remove the oldest ones
+					if #to_remove < count - 1 then
+						-- Sort remaining clients by creation time (keep newer ones)
+						local remaining = {}
+						for i, client in ipairs(client_list) do
+							local should_remove = false
+							for _, remove_info in ipairs(to_remove) do
+								if remove_info.index == i then
+									should_remove = true
+									break
+								end
+							end
+							if not should_remove then
+								table.insert(remaining, { client = client, index = i })
+							end
+						end
+						
+						-- Sort by client ID (higher ID = newer client)
+						table.sort(remaining, function(a, b)
+							return a.client.id > b.client.id
+						end)
+						
+						-- Remove older clients until we have only one
+						for i = 2, #remaining do
+							table.insert(to_remove, { 
+								client = remaining[i].client, 
+								index = remaining[i].index, 
+								reason = "older duplicate" 
+							})
+						end
+					end
+					
+					-- Remove the marked clients
+					for _, remove_info in ipairs(to_remove) do
+						print("  Removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")")
+						vim.lsp.stop_client(remove_info.client.id)
+					end
+				end
+			end
+			
+			-- Clear attached buffers to allow re-attachment
+			attached_buffers = {}
+			print("LSP cleanup completed!")
+		end, { desc = "Remove duplicate LSP clients" })
+
+		-- Restart LSP servers command
+		vim.api.nvim_create_user_command("LSPRestart", function()
+			-- Stop all current LSP clients
+			local clients = vim.lsp.get_clients()
+			for _, client in ipairs(clients) do
+				vim.lsp.stop_client(client.id)
+			end
+			-- Clear attached buffers
+			attached_buffers = {}
+			-- Restart with our configuration
+			vim.cmd("LspStart")
+			print("LSP servers restarted with manual configuration")
+		end, { desc = "Restart LSP servers" })
+
+		-- Install required LSP servers
+		vim.api.nvim_create_user_command("LSPInstall", function()
+			vim.cmd("MasonInstall ts_ls cssls")
+			print("Installing required LSP servers...")
+		end, { desc = "Install required LSP servers" })
+
+		-- Additional fix: Override make_position_params to handle encoding properly
+		local original_make_position_params = vim.lsp.util.make_position_params
+		vim.lsp.util.make_position_params = function(window, offset_encoding)
+			window = window or 0
+			local buf = vim.api.nvim_win_get_buf(window)
+			local clients = vim.lsp.get_clients({ bufnr = buf })
+			if #clients > 0 then
+				offset_encoding = offset_encoding or clients[1].offset_encoding
+			end
+			return original_make_position_params(window, offset_encoding)
+		end
 
 		-- Configure Clangd server
 		-- Use default nvim-lspconfig setup to avoid duplicates
@@ -384,58 +467,97 @@ return {
 			on_attach = on_attach,
 		})
 
-		-- Additional fix: Override make_position_params to handle encoding properly
-		local original_make_position_params = vim.lsp.util.make_position_params
-		vim.lsp.util.make_position_params = function(window, offset_encoding)
-			window = window or 0
-			local buf = vim.api.nvim_win_get_buf(window)
-			local clients = vim.lsp.get_clients({ bufnr = buf })
-
-			-- Use the first client's offset encoding or default to utf-16
-			if not offset_encoding and #clients > 0 then
-				offset_encoding = clients[1].offset_encoding or "utf-16"
-			else
-				offset_encoding = offset_encoding or "utf-16"
-			end
-
-			return original_make_position_params(window, offset_encoding)
-		end
-
-		-- Function to clean up large LSP log files
-		local function cleanup_lsp_logs()
-			local log_path = vim.lsp.get_log_path()
-			if log_path then
-				local file = io.open(log_path, "r")
-				if file then
-					local size = file:seek("end")
-					file:close()
+		-- Improved auto-cleanup with better timing and logic
+		-- Trigger on any buffer attachment, not just specific file types
+		vim.api.nvim_create_autocmd({ "LspAttach" }, {
+			callback = function()
+				-- Wait a bit for LSP servers to attach
+				vim.defer_fn(function()
+					local clients = vim.lsp.get_clients()
+					local client_counts = {}
+					local clients_by_name = {}
 					
-					-- If log file is larger than 10MB, truncate it
-					if size > 10 * 1024 * 1024 then
-						file = io.open(log_path, "w")
-						if file then
-							file:write("-- LSP log file truncated due to large size\n")
-							file:close()
-							vim.notify("LSP log file truncated (was " .. math.floor(size / 1024 / 1024) .. "MB)", vim.log.levels.INFO)
+					-- Group clients by name and count them
+					for _, client in ipairs(clients) do
+						if not client_counts[client.name] then
+							client_counts[client.name] = 0
+							clients_by_name[client.name] = {}
+						end
+						client_counts[client.name] = client_counts[client.name] + 1
+						table.insert(clients_by_name[client.name], client)
+					end
+					
+					-- Remove duplicates for each client type with smart selection
+					for client_name, count in pairs(client_counts) do
+						if count > 1 then
+							print("Auto-cleanup: Found " .. count .. " " .. client_name .. " clients. Analyzing configurations...")
+							
+							local client_list = clients_by_name[client_name]
+							local to_remove = {}
+							
+							-- Analyze each client to determine which to keep
+							for i, client in ipairs(client_list) do
+								local has_custom_settings = false
+								local has_custom_on_attach = false
+								
+								-- Check if client has custom settings
+								if client.config and client.config.settings then
+									has_custom_settings = true
+								end
+								
+								-- Check if client has custom on_attach function
+								if client.config and client.config.on_attach then
+									has_custom_on_attach = true
+								end
+								
+								-- Mark for removal if it has fewer customizations
+								-- Priority: keep clients with custom settings/on_attach
+								if not has_custom_settings and not has_custom_on_attach then
+									table.insert(to_remove, { client = client, index = i, reason = "default configuration" })
+								end
+							end
+							
+							-- If we still have duplicates after prioritizing custom configs, remove the oldest ones
+							if #to_remove < count - 1 then
+								-- Sort remaining clients by creation time (keep newer ones)
+								local remaining = {}
+								for i, client in ipairs(client_list) do
+									local should_remove = false
+									for _, remove_info in ipairs(to_remove) do
+										if remove_info.index == i then
+											should_remove = true
+											break
+										end
+									end
+									if not should_remove then
+										table.insert(remaining, { client = client, index = i })
+									end
+								end
+								
+								-- Sort by client ID (higher ID = newer client)
+								table.sort(remaining, function(a, b)
+									return a.client.id > b.client.id
+								end)
+								
+								-- Remove older clients until we have only one
+								for i = 2, #remaining do
+									table.insert(to_remove, { 
+										client = remaining[i].client, 
+										index = remaining[i].index, 
+										reason = "older duplicate" 
+									})
+								end
+							end
+							
+							-- Remove the marked clients
+							for _, remove_info in ipairs(to_remove) do
+								print("  Auto-removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")")
+								vim.lsp.stop_client(remove_info.client.id)
+							end
+							print("Duplicate " .. client_name .. " clients automatically removed!")
 						end
 					end
-				end
-			end
-		end
-
-		-- Clean up logs on startup
-		cleanup_lsp_logs()
-
-		-- Set up periodic log cleanup (every 30 minutes)
-		vim.api.nvim_create_autocmd({ "VimEnter" }, {
-			callback = function()
-				-- Schedule periodic cleanup
-				vim.defer_fn(function()
-					while true do
-						cleanup_lsp_logs()
-						vim.wait(30 * 60 * 1000) -- 30 minutes
-					end
-				end, 0)
+				end, 3000) -- Wait 3 seconds for LSP servers to attach
 			end,
 		})
 	end,

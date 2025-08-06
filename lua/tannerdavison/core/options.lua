@@ -32,6 +32,14 @@ opt.smartcase = true -- if you include mixed case in your search, assumes you wa
 -- cursor line
 opt.cursorline = true -- highlight the current cursor line
 
+-- Cursor shapes for different modes (add this anywhere in the file)
+opt.guicursor = {
+	"n-v-c:block", -- Normal, visual, command: block cursor
+	"i-ci-ve:ver25", -- Insert modes: thin vertical bar (25% width)
+	"r-cr:hor20", -- Replace modes: horizontal bar (20% height)
+	"o:hor50", -- Operator-pending: thicker horizontal bar
+	"a:blinkwait700-blinkoff400-blinkon250", -- Blinking settings
+}
 -- appearance
 
 -- turn on termguicolors for nightfly colorscheme to work

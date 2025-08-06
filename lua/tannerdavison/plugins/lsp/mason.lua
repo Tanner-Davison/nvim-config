@@ -19,24 +19,16 @@ return {
 			},
 		})
 
-		-- Configure mason-lspconfig
-		-- Note: With the new LSP configuration system, mason-lspconfig's role
-		-- is primarily to install servers, not to configure them
+		-- Configure mason-lspconfig - ONLY for installation, not configuration
 		require("mason-lspconfig").setup({
-			-- List of servers for mason to install
-			ensure_installed = {
-				"ts_ls",
-				"html",
-				"cssls",
-				"tailwindcss",
-				"svelte",
-				"lua_ls",
-				"graphql",
-				"emmet_ls",
-				"prismals",
-				"pyright",
-				-- clangd handled by default nvim-lspconfig setup
-			},
+			-- Don't automatically configure servers - we'll do it manually
+			automatic_installation = false,
+			-- Explicitly disable automatic setup for all servers
+			ensure_installed = {},
+			-- Don't run any automatic setup
+			handlers = {},
+			-- Disable all automatic configuration
+			automatic_installation = false,
 		})
 
 		-- Configure mason-tool-installer for formatting and linting tools

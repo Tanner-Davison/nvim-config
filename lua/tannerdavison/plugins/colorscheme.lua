@@ -35,11 +35,12 @@ return {
 			group_overrides = {
 				-- Your existing overrides...
 				Keyword = { fg = "#FF79C6", bold = true },
-				Type = { fg = "#F1FA8C", bold = true },
+				Type = { fg = "#67D4FF", bold = true },
+				AlphaHeader = { fg = "#ff6fb7", bold = true }, -- Kirby pink for alpha header
 				Function = { fg = "#67D4FF", italic = true },
 				String = { fg = "#50FA7B" },
 				Number = { fg = "#FFB86C" },
-				Comment = { fg = "#6272A4", italic = true },
+				Comment = { fg = "#98C379", italic = true },
 				CursorLine = { bg = "#081016" },
 				Visual = { bg = "#103362" },
 				Search = { bg = "#2C4B8C", fg = "#F1FA8C" },
@@ -63,5 +64,33 @@ return {
 
 		vim.cmd("colorscheme vscode")
 		vim.g.vscode_style = "dark"
+		
+		-- Force comment color to override Tree-sitter
+		vim.api.nvim_create_autocmd("ColorScheme", {
+			callback = function()
+				vim.api.nvim_set_hl(0, "Comment", { fg = "#98C379", italic = true })
+				vim.api.nvim_set_hl(0, "@comment", { fg = "#98C379", italic = true })
+				vim.api.nvim_set_hl(0, "@comment.documentation", { fg = "#98C379", italic = true })
+			end,
+		})
+		
+		-- Apply immediately
+		vim.api.nvim_set_hl(0, "Comment", { fg = "#98C379", italic = true })
+		vim.api.nvim_set_hl(0, "@comment", { fg = "#98C379", italic = true })
+		vim.api.nvim_set_hl(0, "@comment.documentation", { fg = "#98C379", italic = true })
+		
+		-- nvim-cmp highlight groups
+		vim.api.nvim_set_hl(0, "CmpGhostText", { fg = "#9CA3AF", italic = true })
+		vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { bg = "NONE", strikethrough = true, fg = "#808080" })
+		vim.api.nvim_set_hl(0, "CmpItemAbbrMatch", { bg = "NONE", fg = "#67D4FF" })
+		vim.api.nvim_set_hl(0, "CmpItemAbbrMatchFuzzy", { link = "CmpItemAbbrMatch" })
+		vim.api.nvim_set_hl(0, "CmpItemKindVariable", { bg = "NONE", fg = "#67D4FF" })
+		vim.api.nvim_set_hl(0, "CmpItemKindInterface", { link = "CmpItemKindVariable" })
+		vim.api.nvim_set_hl(0, "CmpItemKindText", { link = "CmpItemKindVariable" })
+		vim.api.nvim_set_hl(0, "CmpItemKindFunction", { bg = "NONE", fg = "#67D4FF" })
+		vim.api.nvim_set_hl(0, "CmpItemKindMethod", { link = "CmpItemKindFunction" })
+		vim.api.nvim_set_hl(0, "CmpItemKindKeyword", { bg = "NONE", fg = "#FF79C6" })
+		vim.api.nvim_set_hl(0, "CmpItemKindProperty", { link = "CmpItemKindKeyword" })
+		vim.api.nvim_set_hl(0, "CmpItemKindUnit", { link = "CmpItemKindKeyword" })
 	end,
 }

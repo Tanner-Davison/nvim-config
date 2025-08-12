@@ -151,65 +151,65 @@ return {
 			end,
 		})
 
-		-- Configure TypeScript server with enhanced styled-components support
-		-- Ensure definition provider is enabled
-		local ts_capabilities = vim.deepcopy(capabilities)
-		ts_capabilities.textDocument = ts_capabilities.textDocument or {}
-		ts_capabilities.textDocument.definition = {
-			dynamicRegistration = true,
-		}
+        -- Configure TypeScript server with enhanced styled-components support
+        -- Ensure definition provider is enabled
+        local ts_capabilities = vim.deepcopy(capabilities)
+        ts_capabilities.textDocument = ts_capabilities.textDocument or {}
+        ts_capabilities.textDocument.definition = {
+            dynamicRegistration = true,
+        }
 
-		lspconfig.ts_ls.setup({
-			capabilities = ts_capabilities,
-			on_attach = on_attach,
-			filetypes = {
-				"typescript",
-				"typescriptreact",
-				"typescript.tsx",
-				"javascript",
-				"javascriptreact",
-				"javascript.jsx",
-			},
-			settings = {
-				typescript = {
-					plugins = {
-						{
-							name = "typescript-styled-plugin",
-							location = "node_modules/typescript-styled-plugin",
-						},
-					},
-					suggest = {
-						enabled = true,
-						includeCompletionsForModuleExports = true,
-						includeCompletionsWithObjectLiteralMethodSnippets = true,
-						autoImports = true,
-						includeAutomaticOptionalChainCompletions = false,
-						includeCompletionsWithInsertText = true,
-						includeCompletionsWithSnippetText = true,
-						includeCompletionsWithClassMemberSnippets = true,
-						includeCompletionsWithImportStatements = true,
-					},
-					preferences = {
-						importModuleSpecifierPreference = "non-relative",
-						quoteStyle = "single",
-					},
-					-- Enhanced CSS-in-JS support
-					inlayHints = {
-						includeInlayParameterNameHints = "all",
-						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-						includeInlayFunctionParameterTypeHints = true,
-						includeInlayVariableTypeHints = true,
-						includeInlayPropertyDeclarationTypeHints = true,
-						includeInlayFunctionLikeReturnTypeHints = true,
-						includeInlayEnumMemberValueHints = true,
-					},
-				},
-			},
-		})
+        lspconfig.ts_ls.setup({
+            capabilities = ts_capabilities,
+            on_attach = on_attach,
+            filetypes = {
+                "typescript",
+                "typescriptreact",
+                "typescript.tsx",
+                "javascript",
+                "javascriptreact",
+                "javascript.jsx",
+            },
+            settings = {
+                typescript = {
+                    plugins = {
+                        {
+                            name = "typescript-styled-plugin",
+                            location = "node_modules/typescript-styled-plugin",
+                        },
+                    },
+                    suggest = {
+                        enabled = true,
+                        includeCompletionsForModuleExports = true,
+                        includeCompletionsWithObjectLiteralMethodSnippets = true,
+                        autoImports = true,
+                        includeAutomaticOptionalChainCompletions = false,
+                        includeCompletionsWithInsertText = true,
+                        includeCompletionsWithSnippetText = true,
+                        includeCompletionsWithClassMemberSnippets = true,
+                        includeCompletionsWithImportStatements = true,
+                    },
+                    preferences = {
+                        importModuleSpecifierPreference = "non-relative",
+                        quoteStyle = "single",
+                    },
+                    -- Enhanced CSS-in-JS support
+                    inlayHints = {
+                        includeInlayParameterNameHints = "all",
+                        includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+                        includeInlayFunctionParameterTypeHints = true,
+                        includeInlayVariableTypeHints = true,
+                        includeInlayPropertyDeclarationTypeHints = true,
+                        includeInlayFunctionLikeReturnTypeHints = true,
+                        includeInlayEnumMemberValueHints = true,
+                    },
+                },
+            },
+        })
 
-		-- Configure CSS server with enhanced styled-components support
-		lspconfig.cssls.setup({
-			capabilities = capabilities,
+        -- Configure CSS server with enhanced styled-components support
+        lspconfig.cssls.setup({
+            capabilities = capabilities,
 			on_attach = on_attach,
 			filetypes = { "css", "scss", "less", "sass", "javascriptreact", "typescriptreact", "javascript", "typescript" },
 			-- Ensure CSS LSP works in template literals
@@ -228,7 +228,7 @@ return {
 						completePropertyWithColon = true,
 						completePropertyWithSemicolon = true,
 					},
-					-- Enhanced CSS-in-JS support
+                    -- Enhanced CSS-in-JS support
 					format = {
 						newlineBetweenSelectors = true,
 						newlineBetweenRules = true,

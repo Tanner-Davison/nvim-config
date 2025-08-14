@@ -151,67 +151,76 @@ return {
 			end,
 		})
 
-        -- Configure TypeScript server with enhanced styled-components support
-        -- Ensure definition provider is enabled
-        local ts_capabilities = vim.deepcopy(capabilities)
-        ts_capabilities.textDocument = ts_capabilities.textDocument or {}
-        ts_capabilities.textDocument.definition = {
-            dynamicRegistration = true,
-        }
+		-- Configure TypeScript server with enhanced styled-components support
+		-- Ensure definition provider is enabled
+		local ts_capabilities = vim.deepcopy(capabilities)
+		ts_capabilities.textDocument = ts_capabilities.textDocument or {}
+		ts_capabilities.textDocument.definition = {
+			dynamicRegistration = true,
+		}
 
-        lspconfig.ts_ls.setup({
-            capabilities = ts_capabilities,
-            on_attach = on_attach,
-            filetypes = {
-                "typescript",
-                "typescriptreact",
-                "typescript.tsx",
-                "javascript",
-                "javascriptreact",
-                "javascript.jsx",
-            },
-            settings = {
-                typescript = {
-                    plugins = {
-                        {
-                            name = "typescript-styled-plugin",
-                            location = "node_modules/typescript-styled-plugin",
-                        },
-                    },
-                    suggest = {
-                        enabled = true,
-                        includeCompletionsForModuleExports = true,
-                        includeCompletionsWithObjectLiteralMethodSnippets = true,
-                        autoImports = true,
-                        includeAutomaticOptionalChainCompletions = false,
-                        includeCompletionsWithInsertText = true,
-                        includeCompletionsWithSnippetText = true,
-                        includeCompletionsWithClassMemberSnippets = true,
-                        includeCompletionsWithImportStatements = true,
-                    },
-                    preferences = {
-                        importModuleSpecifierPreference = "non-relative",
-                        quoteStyle = "single",
-                    },
-                    -- Enhanced CSS-in-JS support
-                    inlayHints = {
-                        includeInlayParameterNameHints = "all",
-                        includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-                        includeInlayFunctionParameterTypeHints = true,
-                        includeInlayVariableTypeHints = true,
-                        includeInlayPropertyDeclarationTypeHints = true,
-                        includeInlayFunctionLikeReturnTypeHints = true,
-                        includeInlayEnumMemberValueHints = true,
-                    },
-                },
-            },
-        })
-
-        -- Configure CSS server with enhanced styled-components support
-        lspconfig.cssls.setup({
-            capabilities = capabilities,
+		lspconfig.ts_ls.setup({
+			capabilities = ts_capabilities,
 			on_attach = on_attach,
-			filetypes = { "css", "scss", "less", "sass", "javascriptreact", "typescriptreact", "javascript", "typescript" },
+			filetypes = {
+				"typescript",
+				"typescriptreact",
+				"typescript.tsx",
+				"javascript",
+				"javascriptreact",
+				"javascript.jsx",
+			},
+			settings = {
+				typescript = {
+					plugins = {
+						{
+							name = "typescript-styled-plugin",
+							location = "node_modules/typescript-styled-plugin",
+						},
+					},
+					suggest = {
+						enabled = true,
+						includeCompletionsForModuleExports = true,
+						includeCompletionsWithObjectLiteralMethodSnippets = true,
+						autoImports = true,
+						includeAutomaticOptionalChainCompletions = false,
+						includeCompletionsWithInsertText = true,
+						includeCompletionsWithSnippetText = true,
+						includeCompletionsWithClassMemberSnippets = true,
+						includeCompletionsWithImportStatements = true,
+					},
+					preferences = {
+						importModuleSpecifierPreference = "non-relative",
+						quoteStyle = "single",
+					},
+					-- Enhanced CSS-in-JS support
+					inlayHints = {
+						includeInlayParameterNameHints = "all",
+						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+						includeInlayFunctionParameterTypeHints = true,
+						includeInlayVariableTypeHints = true,
+						includeInlayPropertyDeclarationTypeHints = true,
+						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayEnumMemberValueHints = true,
+					},
+				},
+			},
+		})
+
+		-- Configure CSS server with enhanced styled-components support
+		lspconfig.cssls.setup({
+			capabilities = capabilities,
+			on_attach = on_attach,
+			filetypes = {
+				"css",
+				"scss",
+				"less",
+				"sass",
+				"javascriptreact",
+				"typescriptreact",
+				"javascript",
+				"typescript",
+			},
 			-- Ensure CSS LSP works in template literals
 			init_options = {
 				provideFormatter = true,
@@ -228,7 +237,7 @@ return {
 						completePropertyWithColon = true,
 						completePropertyWithSemicolon = true,
 					},
-                    -- Enhanced CSS-in-JS support
+					-- Enhanced CSS-in-JS support
 					format = {
 						newlineBetweenSelectors = true,
 						newlineBetweenRules = true,
@@ -268,7 +277,13 @@ return {
 			local clients = vim.lsp.get_clients()
 			print("Active LSP clients:")
 			for _, client in ipairs(clients) do
-				print(string.format("  - %s (filetypes: %s)", client.name, table.concat(client.config.filetypes or {}, ", ")))
+				print(
+					string.format(
+						"  - %s (filetypes: %s)",
+						client.name,
+						table.concat(client.config.filetypes or {}, ", ")
+					)
+				)
 			end
 		end, { desc = "Debug LSP servers" })
 
@@ -277,7 +292,7 @@ return {
 			local clients = vim.lsp.get_clients()
 			local client_counts = {}
 			local clients_by_name = {}
-			
+
 			-- Group clients by name and count them
 			for _, client in ipairs(clients) do
 				if not client_counts[client.name] then
@@ -287,30 +302,30 @@ return {
 				client_counts[client.name] = client_counts[client.name] + 1
 				table.insert(clients_by_name[client.name], client)
 			end
-			
+
 			-- Remove duplicates for each client type with smart selection
 			for client_name, count in pairs(client_counts) do
 				if count > 1 then
 					print("Found " .. count .. " " .. client_name .. " clients. Analyzing configurations...")
-					
+
 					local client_list = clients_by_name[client_name]
 					local to_remove = {}
-					
+
 					-- Analyze each client to determine which to keep
 					for i, client in ipairs(client_list) do
 						local has_custom_settings = false
 						local has_custom_on_attach = false
-						
+
 						-- Check if client has custom settings
 						if client.config and client.config.settings then
 							has_custom_settings = true
 						end
-						
+
 						-- Check if client has custom on_attach function
 						if client.config and client.config.on_attach then
 							has_custom_on_attach = true
 						end
-						
+
 						-- Mark for removal if it has fewer customizations
 						-- Priority: keep clients with custom settings/on_attach
 						if not has_custom_settings and not has_custom_on_attach then
@@ -319,7 +334,7 @@ return {
 							print("  Keeping client " .. i .. " (has custom configuration)")
 						end
 					end
-					
+
 					-- If we still have duplicates after prioritizing custom configs, remove the oldest ones
 					if #to_remove < count - 1 then
 						-- Sort remaining clients by creation time (keep newer ones)
@@ -336,22 +351,22 @@ return {
 								table.insert(remaining, { client = client, index = i })
 							end
 						end
-						
+
 						-- Sort by client ID (higher ID = newer client)
 						table.sort(remaining, function(a, b)
 							return a.client.id > b.client.id
 						end)
-						
+
 						-- Remove older clients until we have only one
 						for i = 2, #remaining do
-							table.insert(to_remove, { 
-								client = remaining[i].client, 
-								index = remaining[i].index, 
-								reason = "older duplicate" 
+							table.insert(to_remove, {
+								client = remaining[i].client,
+								index = remaining[i].index,
+								reason = "older duplicate",
 							})
 						end
 					end
-					
+
 					-- Remove the marked clients
 					for _, remove_info in ipairs(to_remove) do
 						print("  Removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")")
@@ -359,7 +374,7 @@ return {
 					end
 				end
 			end
-			
+
 			-- Clear attached buffers to allow re-attachment
 			attached_buffers = {}
 			print("LSP cleanup completed!")
@@ -396,12 +411,18 @@ return {
 			end
 			return original_make_position_params(window, offset_encoding)
 		end
-
 		-- Configure Clangd server
-		-- Use default nvim-lspconfig setup to avoid duplicates
+		-- Use clangd-14 with clang-tidy disabled to avoid annoying warnings
 		lspconfig.clangd.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
+			cmd = {
+				"/usr/bin/clangd-14",
+				"--clang-tidy=false",
+				"--header-insertion=never",
+				"--compile-commands-dir=/dev/null", -- Don't look for compile_commands.json
+				"--enable-config=false", -- Don't look for .clangd files
+			},
 			-- Enable formatting capabilities with custom style
 			settings = {
 				clangd = {
@@ -426,6 +447,35 @@ return {
 				},
 			},
 		})
+		-- Configure Clangd server
+		-- Use default nvim-lspconfig setup to avoid duplicates
+		-- lspconfig.clangd.setup({
+		-- 	capabilities = capabilities,
+		-- 	on_attach = on_attach,
+		-- 	-- Enable formatting capabilities with custom style
+		-- 	settings = {
+		-- 		clangd = {
+		-- 			formatting = {
+		-- 				style = {
+		-- 					BasedOnStyle = "LLVM",
+		-- 					IndentWidth = 2,
+		-- 					ColumnLimit = 150,
+		-- 					AlignConsecutiveDeclarations = "Consecutive",
+		-- 					AlignConsecutiveAssignments = "Consecutive",
+		-- 					AlignTrailingComments = true,
+		-- 					TabWidth = 8,
+		-- 					UseTab = "ForIndentation",
+		-- 					AlignConsecutiveDeclarationsOptions = {
+		-- 						AcrossEmptyLines = true,
+		-- 						AcrossComments = true,
+		-- 						AlignCompound = true,
+		-- 						PadOperators = true,
+		-- 					},
+		-- 				},
+		-- 			},
+		-- 		},
+		-- 	},
+		-- })
 
 		-- Configure Lua server
 		lspconfig.lua_ls.setup({
@@ -476,7 +526,7 @@ return {
 					local clients = vim.lsp.get_clients()
 					local client_counts = {}
 					local clients_by_name = {}
-					
+
 					-- Group clients by name and count them
 					for _, client in ipairs(clients) do
 						if not client_counts[client.name] then
@@ -486,37 +536,46 @@ return {
 						client_counts[client.name] = client_counts[client.name] + 1
 						table.insert(clients_by_name[client.name], client)
 					end
-					
+
 					-- Remove duplicates for each client type with smart selection
 					for client_name, count in pairs(client_counts) do
 						if count > 1 then
-							print("Auto-cleanup: Found " .. count .. " " .. client_name .. " clients. Analyzing configurations...")
-							
+							print(
+								"Auto-cleanup: Found "
+									.. count
+									.. " "
+									.. client_name
+									.. " clients. Analyzing configurations..."
+							)
+
 							local client_list = clients_by_name[client_name]
 							local to_remove = {}
-							
+
 							-- Analyze each client to determine which to keep
 							for i, client in ipairs(client_list) do
 								local has_custom_settings = false
 								local has_custom_on_attach = false
-								
+
 								-- Check if client has custom settings
 								if client.config and client.config.settings then
 									has_custom_settings = true
 								end
-								
+
 								-- Check if client has custom on_attach function
 								if client.config and client.config.on_attach then
 									has_custom_on_attach = true
 								end
-								
+
 								-- Mark for removal if it has fewer customizations
 								-- Priority: keep clients with custom settings/on_attach
 								if not has_custom_settings and not has_custom_on_attach then
-									table.insert(to_remove, { client = client, index = i, reason = "default configuration" })
+									table.insert(
+										to_remove,
+										{ client = client, index = i, reason = "default configuration" }
+									)
 								end
 							end
-							
+
 							-- If we still have duplicates after prioritizing custom configs, remove the oldest ones
 							if #to_remove < count - 1 then
 								-- Sort remaining clients by creation time (keep newer ones)
@@ -533,25 +592,27 @@ return {
 										table.insert(remaining, { client = client, index = i })
 									end
 								end
-								
+
 								-- Sort by client ID (higher ID = newer client)
 								table.sort(remaining, function(a, b)
 									return a.client.id > b.client.id
 								end)
-								
+
 								-- Remove older clients until we have only one
 								for i = 2, #remaining do
-									table.insert(to_remove, { 
-										client = remaining[i].client, 
-										index = remaining[i].index, 
-										reason = "older duplicate" 
+									table.insert(to_remove, {
+										client = remaining[i].client,
+										index = remaining[i].index,
+										reason = "older duplicate",
 									})
 								end
 							end
-							
+
 							-- Remove the marked clients
 							for _, remove_info in ipairs(to_remove) do
-								print("  Auto-removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")")
+								print(
+									"  Auto-removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")"
+								)
 								vim.lsp.stop_client(remove_info.client.id)
 							end
 							print("Duplicate " .. client_name .. " clients automatically removed!")

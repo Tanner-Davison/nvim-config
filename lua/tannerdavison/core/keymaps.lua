@@ -344,11 +344,10 @@ end, { desc = "CMake Rebuild" })
 keymap.set("n", "<leader>mx", function()
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 	if vim.fn.has("win32") == 1 then
-		-- Windows path with .exe extension
-		vim.cmd("terminal cd build\\Debug && .\\" .. project_name .. ".exe")
+		vim.cmd("!start cmd /k cd build\\Debug && " .. project_name .. ".exe")
 	else
-		-- Unix/Linux/WSL path (no .exe, executable in build root)
-		vim.cmd("terminal ./build/" .. project_name)
+		-- Just run in current terminal (exits Neovim temporarily)
+		vim.cmd("!./build/" .. project_name)
 	end
 end, { desc = "Run CMake executable" })
 

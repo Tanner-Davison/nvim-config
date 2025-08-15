@@ -411,71 +411,15 @@ return {
 			end
 			return original_make_position_params(window, offset_encoding)
 		end
-		-- Configure Clangd server
-		-- Use clangd-14 with clang-tidy disabled to avoid annoying warnings
+
 		lspconfig.clangd.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
 			cmd = {
 				"/usr/bin/clangd-14",
-				"--clang-tidy=false",
-				"--header-insertion=never",
-				"--compile-commands-dir=/dev/null", -- Don't look for compile_commands.json
-				"--enable-config=false", -- Don't look for .clangd files
-			},
-			-- Enable formatting capabilities with custom style
-			settings = {
-				clangd = {
-					formatting = {
-						style = {
-							BasedOnStyle = "LLVM",
-							IndentWidth = 2,
-							ColumnLimit = 150,
-							AlignConsecutiveDeclarations = "Consecutive",
-							AlignConsecutiveAssignments = "Consecutive",
-							AlignTrailingComments = true,
-							TabWidth = 8,
-							UseTab = "ForIndentation",
-							AlignConsecutiveDeclarationsOptions = {
-								AcrossEmptyLines = true,
-								AcrossComments = true,
-								AlignCompound = true,
-								PadOperators = true,
-							},
-						},
-					},
-				},
+				"--fallback-style=file",
 			},
 		})
-		-- Configure Clangd server
-		-- Use default nvim-lspconfig setup to avoid duplicates
-		-- lspconfig.clangd.setup({
-		-- 	capabilities = capabilities,
-		-- 	on_attach = on_attach,
-		-- 	-- Enable formatting capabilities with custom style
-		-- 	settings = {
-		-- 		clangd = {
-		-- 			formatting = {
-		-- 				style = {
-		-- 					BasedOnStyle = "LLVM",
-		-- 					IndentWidth = 2,
-		-- 					ColumnLimit = 150,
-		-- 					AlignConsecutiveDeclarations = "Consecutive",
-		-- 					AlignConsecutiveAssignments = "Consecutive",
-		-- 					AlignTrailingComments = true,
-		-- 					TabWidth = 8,
-		-- 					UseTab = "ForIndentation",
-		-- 					AlignConsecutiveDeclarationsOptions = {
-		-- 						AcrossEmptyLines = true,
-		-- 						AcrossComments = true,
-		-- 						AlignCompound = true,
-		-- 						PadOperators = true,
-		-- 					},
-		-- 				},
-		-- 			},
-		-- 		},
-		-- 	},
-		-- })
 
 		-- Configure Lua server
 		lspconfig.lua_ls.setup({

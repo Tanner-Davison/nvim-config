@@ -41,7 +41,7 @@ return {
 				"pylint",
 				"eslint_d",
 				"cmakelang",
-				"cpplint",
+				-- "cpplint",
 				-- clangd moved to mason-lspconfig to prevent duplicates
 			},
 		})

@@ -214,7 +214,7 @@ keymap.set("n", "<Space>cx", function()
 	if vim.fn.has("win32") == 1 then
 		vim.cmd("!dir /b *.cpp > allcppfiles.txt && g++ -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!ls *.cpp > allcppfiles.txt && clang++ -std=c++23 -Wall -Wextra @allcppfiles.txt -o " .. output_name)
+		vim.cmd("!ls *.cpp > allcppfiles.txt && g++ -std=c++20 -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	else
 		vim.cmd("!ls *.cpp > allcppfiles.txt && g++ @allcppfiles.txt -o " .. output_name)
 	end
@@ -322,11 +322,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 		)
 	)
 end, { desc = "Generate CMakeLists.txt" })
-
 -- CMake build commands
 keymap.set("n", "<leader>mg", function()
-	vim.cmd("!cmake -S . -B build") -- Generate build files
-end, { desc = "CMake Generate" })
+	vim.cmd("!cmake -S . -B build -DCMAKE_CXX_STANDARD=20") -- Generate build files
+end, { desc = "CMake Generate Build Files" })
 
 keymap.set("n", "<leader>mb", function()
 	vim.cmd("!cmake --build build") -- Build project
@@ -336,19 +335,19 @@ keymap.set("n", "<leader>mc", function()
 	vim.cmd("!rm -rf build") -- Clean build directory
 end, { desc = "CMake Clean" })
 
+-- Cmake reubild
 keymap.set("n", "<leader>mr", function()
-	-- Clean, regenerate, and build
-	vim.cmd("!rm -rf build && cmake -S . -B build && cmake --build build")
+	vim.cmd("!rm -rf build && cmake -S . -B build -DCMAKE_CXX_STANDARD=20 && cmake --build build")
 end, { desc = "CMake Rebuild" })
 
 -- Run CMake executable
 keymap.set("n", "<leader>mx", function()
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 	if vim.fn.has("win32") == 1 then
-		-- Windows path with .exe extension - using terminal
+		-- Windows path with .exe extension
 		vim.cmd("terminal cd build\\Debug && .\\" .. project_name .. ".exe")
 	else
-		-- Unix path
+		-- Unix/Linux/WSL path (no .exe, executable in build root)
 		vim.cmd("terminal ./build/" .. project_name)
 	end
 end, { desc = "Run CMake executable" })

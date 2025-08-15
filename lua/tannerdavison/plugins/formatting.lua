@@ -20,7 +20,8 @@ return {
 				liquid = { "prettier" },
 				lua = { "stylua" },
 				python = { "isort", "black" },
-				-- C++ formatting handled by clangd LSP
+				cpp = { "clang_format" }, -- Add this!
+				c = { "clang_format" },
 			},
 
 			formatter_opts = {
@@ -31,7 +32,6 @@ return {
 					tabWidth = 2,
 					useTabs = false,
 				},
-				-- clang_format removed - using clangd LSP for C++
 			},
 
 			-- Enable format on save for all file types

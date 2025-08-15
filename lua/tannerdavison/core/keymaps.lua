@@ -323,22 +323,29 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 	)
 end, { desc = "Generate CMakeLists.txt" })
 -- CMake build commands
+--
+-- CMake build commands with optimization
 keymap.set("n", "<leader>mg", function()
-	vim.cmd("!cmake -S . -B build -DCMAKE_CXX_STANDARD=20") -- Generate build files
-end, { desc = "CMake Generate Build Files" })
+	-- Use Ninja generator for faster builds
+	vim.cmd("!cmake -S . -B build -DCMAKE_CXX_STANDARD=20 -GNinja")
+end, { desc = "CMake Generate" })
 
 keymap.set("n", "<leader>mb", function()
-	vim.cmd("!cmake --build build") -- Build project
+	-- Just build, don't reconfigure
+	vim.cmd("!cmake --build build --parallel $(nproc)")
 end, { desc = "CMake Build" })
 
 keymap.set("n", "<leader>mc", function()
-	vim.cmd("!rm -rf build") -- Clean build directory
+	vim.cmd("!rm -rf build")
 end, { desc = "CMake Clean" })
 
--- Cmake reubild
 keymap.set("n", "<leader>mr", function()
-	vim.cmd("!rm -rf build && cmake -S . -B build -DCMAKE_CXX_STANDARD=20 && cmake --build build")
+	-- Use ninja and parallel builds
+	vim.cmd("!rm -rf build && cmake -S . -B build -DCMAKE_CXX_STANDARD=20 -GNinja && cmake --build build")
 end, { desc = "CMake Rebuild" })
+keymap.set("n", "<leader>mg", function()
+	vim.cmd("!cmake -S . -B build -DCMAKE_CXX_STANDARD=20") -- Generate build files
+end, { desc = "CMake Generate Build Files" })
 
 -- Run CMake executable
 keymap.set("n", "<leader>mx", function()

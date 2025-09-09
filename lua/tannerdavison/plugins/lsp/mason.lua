@@ -38,10 +38,10 @@ return {
 				"stylua", -- lua formatter
 				"isort", -- python formatter
 				"black", -- python formatter
-				"pylint",
 				"eslint_d",
 				"cmakelang",
 				-- "cpplint",
+				-- "pylint"
 				-- clangd moved to mason-lspconfig to prevent duplicates
 			},
 		})

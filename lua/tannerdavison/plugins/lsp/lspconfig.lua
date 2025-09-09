@@ -459,8 +459,40 @@ return {
 		lspconfig.pyright.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
+			settings = {
+				python = {
+					analysis = {
+						autoSearchPaths = true,
+						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace",
+						-- Disable specific diagnostic rules
+						diagnosticSeverityOverrides = {
+							reportMissingImports = "none",
+							reportMissingModuleSource = "none",
+						},
+					},
+				},
+			},
 		})
-
+		vim.diagnostic.config({
+			virtual_text = {
+				filter = function(diagnostic)
+					return not (
+						diagnostic.message:match("Unable to import")
+						or diagnostic.message:match("import.*could not be resolved")
+					)
+				end,
+			},
+		})
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "python",
+			callback = function()
+				local venv_python = vim.fn.getcwd() .. "/venv/bin/python"
+				if vim.fn.executable(venv_python) == 1 then
+					vim.g.python3_host_prog = venv_python
+				end
+			end,
+		})
 		-- Improved auto-cleanup with better timing and logic
 		-- Trigger on any buffer attachment, not just specific file types
 		vim.api.nvim_create_autocmd({ "LspAttach" }, {

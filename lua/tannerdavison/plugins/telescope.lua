@@ -161,26 +161,16 @@ return {
 		-- Set keymaps with better descriptions
 		local keymap = vim.keymap
 
-		-- File pickers
-		keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Fuzzy find files in cwd" })
-		keymap.set("n", "<leader>fr", builtin.oldfiles, { desc = "Fuzzy find recent files" })
+		-- File pickers (non-conflicting)
 		keymap.set("n", "<leader>fs", builtin.live_grep, { desc = "Find string in cwd" })
-		keymap.set("n", "<leader>fc", builtin.grep_string, { desc = "Find string under cursor in cwd" })
-		keymap.set("n", "<leader>fb", builtin.buffers, { desc = "List open buffers" })
 		keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "List available help tags" })
 
-		-- Git pickers
+		-- Git pickers (non-conflicting)
 		keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "List git commits" })
 		keymap.set("n", "<leader>gfc", builtin.git_bcommits, { desc = "List git commits for current buffer" })
-		keymap.set("n", "<leader>gb", builtin.git_branches, { desc = "List git branches" })
-		keymap.set("n", "<leader>gs", builtin.git_status, { desc = "List current changes per file" })
-		keymap.set("n", "<leader>gf", builtin.git_files, { desc = "Fuzzy find git files" })
 
-		-- LSP pickers
-		keymap.set("n", "<leader>lr", builtin.lsp_references, { desc = "List LSP references" })
-		keymap.set("n", "<leader>ld", builtin.lsp_definitions, { desc = "List LSP definitions" })
-		keymap.set("n", "<leader>li", builtin.lsp_implementations, { desc = "List LSP implementations" })
-		keymap.set("n", "<leader>lt", builtin.lsp_type_definitions, { desc = "List LSP type definitions" })
+		-- LSP pickers (changed to non-conflicting keys)
+		keymap.set("n", "<leader>gd", builtin.lsp_definitions, { desc = "Go to definition" })
 		keymap.set("n", "<leader>lws", builtin.lsp_workspace_symbols, { desc = "List LSP workspace symbols" })
 		keymap.set("n", "<leader>lds", builtin.lsp_document_symbols, { desc = "List LSP document symbols" })
 

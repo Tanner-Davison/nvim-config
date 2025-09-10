@@ -63,11 +63,18 @@ return {
 			desc = "Notification History",
 		},
 		{
-			"<leader>e",
+			"<leader>eE",
 			function()
 				Snacks.explorer()
 			end,
-			desc = "File Explorer",
+			desc = "File Explorer (cwd)",
+		},
+		{
+			"<leader>eF",
+			function()
+				Snacks.explorer({ cwd = vim.fn.expand("%:p:h") })
+			end,
+			desc = "File Explorer (current file's directory)",
 		},
 		-- find
 		{
@@ -414,7 +421,7 @@ return {
 			desc = "Select Scratch Buffer",
 		},
 		{
-			"<leader>nh",
+			"<leader>nH",
 			function()
 				Snacks.notifier.show_history()
 			end,

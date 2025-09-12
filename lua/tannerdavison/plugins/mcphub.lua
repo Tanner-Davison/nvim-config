@@ -7,6 +7,7 @@ return {
 	config = function()
 		require("mcphub").setup({
 			-- Required configuration
+			json_decode = require("json5").parse,
 			port = 3000, -- Default hub port
 			config = vim.fn.expand("~/.config/nvim/mcpservers.json"), -- Absolute path required
 

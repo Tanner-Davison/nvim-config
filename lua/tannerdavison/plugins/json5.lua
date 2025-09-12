@@ -1,0 +1,4 @@
+require({
+	"Joakker/lua-json5",
+	build = "./install.sh",
+})

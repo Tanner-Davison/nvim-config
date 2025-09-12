@@ -10,7 +10,7 @@
     "todoist": {
       "command": "npx",
       "args": ["-y", "@abhiz123/todoist-mcp-server"],
-      "disabled": true,
+      "disabled": true,  # Enable manually when needed
       "env": {
         "TODOIST_API_TOKEN": "your_token_here"
       }

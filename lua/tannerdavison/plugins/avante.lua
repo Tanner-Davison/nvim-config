@@ -25,7 +25,7 @@ return {
 				-- MCP integration
 				require("mcphub.extensions.avante").mcp_tool(),
 			}
-			
+
 			-- Add Git integration if available
 			if pcall(require, "gitsigns") then
 				table.insert(tools, {
@@ -41,7 +41,7 @@ return {
 					end,
 				})
 			end
-			
+
 			-- Add LSP integration
 			table.insert(tools, {
 				name = "get_diagnostics",
@@ -52,17 +52,16 @@ return {
 					if #diagnostics == 0 then
 						return "No diagnostics found in current buffer"
 					end
-					
+
 					local result = "LSP Diagnostics:\n"
 					for _, diag in ipairs(diagnostics) do
 						local severity = vim.diagnostic.severity[diag.severity]
-						result = result .. string.format("Line %d [%s]: %s\n", 
-							diag.lnum + 1, severity, diag.message)
+						result = result .. string.format("Line %d [%s]: %s\n", diag.lnum + 1, severity, diag.message)
 					end
 					return result
 				end,
 			})
-			
+
 			-- Add project context tool
 			table.insert(tools, {
 				name = "project_context",
@@ -71,25 +70,31 @@ return {
 					local cwd = vim.fn.getcwd()
 					local result = "Project: " .. vim.fn.fnamemodify(cwd, ":t") .. "\n"
 					result = result .. "Path: " .. cwd .. "\n"
-					
+
 					-- Check for common project files
 					local project_files = {
-						"package.json", "tsconfig.json", "next.config.js", 
-						"Cargo.toml", "go.mod", "requirements.txt", 
-						"composer.json", "pom.xml", "build.gradle"
+						"package.json",
+						"tsconfig.json",
+						"next.config.js",
+						"Cargo.toml",
+						"go.mod",
+						"requirements.txt",
+						"composer.json",
+						"pom.xml",
+						"build.gradle",
 					}
-					
+
 					result = result .. "\nProject files found:\n"
 					for _, file in ipairs(project_files) do
 						if vim.fn.filereadable(file) == 1 then
 							result = result .. "- " .. file .. "\n"
 						end
 					end
-					
+
 					return result
 				end,
 			})
-			
+
 			-- Add buffer context tool
 			table.insert(tools, {
 				name = "buffer_context",
@@ -100,7 +105,7 @@ return {
 					local filetype = vim.bo[bufnr].filetype
 					local line_count = vim.api.nvim_buf_line_count(bufnr)
 					local cursor_pos = vim.api.nvim_win_get_cursor(0)
-					
+
 					local result = string.format(
 						"Buffer Info:\n- File: %s\n- Type: %s\n- Lines: %d\n- Cursor: Line %d, Col %d\n",
 						filename ~= "" and vim.fn.fnamemodify(filename, ":t") or "[No Name]",
@@ -109,19 +114,19 @@ return {
 						cursor_pos[1],
 						cursor_pos[2] + 1
 					)
-					
+
 					-- Add modified status
 					if vim.bo[bufnr].modified then
 						result = result .. "- Status: Modified\n"
 					end
-					
+
 					return result
 				end,
 			})
-			
+
 			return tools
 		end,
-		
+
 		-- Enhanced behavior settings
 		behavior = {
 			auto_suggestions = false, -- Disable auto suggestions for better control
@@ -130,7 +135,7 @@ return {
 			auto_apply_diff_after_generation = false,
 			support_paste_from_clipboard = true,
 		},
-		
+
 		-- Window configuration
 		windows = {
 			position = "right", -- or "left", "top", "bottom"
@@ -141,7 +146,7 @@ return {
 				rounded = true,
 			},
 		},
-		
+
 		disabled_tools = {
 			"list_files",
 			"search_files",
@@ -154,19 +159,19 @@ return {
 			"delete_dir",
 			"bash",
 		},
-		
+
 		prompt = {
 			loading = "🤖 Asking...",
 			result = "✨ Result: ",
 			error = "❌ Error: ",
 		},
-		
+
 		highlight = {
 			prompt = "AvantePrompt",
 			result = "AvanteResult",
 			error = "AvanteError",
 		},
-		
+
 		-- Enhanced keymaps
 		keymaps = {
 			ask = "<leader>aa",
@@ -201,7 +206,7 @@ return {
 		},
 		{
 			-- Better markdown rendering
-			'MeanderingProgrammer/render-markdown.nvim',
+			"MeanderingProgrammer/render-markdown.nvim",
 			opts = {
 				file_types = { "markdown", "Avante" },
 			},

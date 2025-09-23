@@ -324,37 +324,46 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 end, { desc = "Generate CMakeLists.txt" })
 -- CMake build commands
 --
--- CMake build commands with optimization
+-- CMake build commands
 keymap.set("n", "<leader>mg", function()
-	-- Use Ninja generator for faster builds
-	vim.cmd("!cmake -S . -B build -DCMAKE_CXX_STANDARD=20 -GNinja")
+	vim.cmd("!cmake -S . -B build")
 end, { desc = "CMake Generate" })
 
 keymap.set("n", "<leader>mb", function()
-	-- Just build, don't reconfigure
-	vim.cmd("!cmake --build build --parallel $(nproc)")
+	if vim.fn.has("win32") == 1 then
+		vim.cmd("!cmake --build build --parallel %NUMBER_OF_PROCESSORS%")
+	elseif vim.fn.has("mac") == 1 then
+		vim.cmd("!cmake --build build --parallel $(sysctl -n hw.ncpu)")
+	else
+		vim.cmd("!cmake --build build --parallel $(nproc)")
+	end
 end, { desc = "CMake Build" })
 
 keymap.set("n", "<leader>mc", function()
-	vim.cmd("!rm -rf build")
+	if vim.fn.has("win32") == 1 then
+		vim.cmd("!rmdir /s /q build")
+	else
+		vim.cmd("!rm -rf build")
+	end
 end, { desc = "CMake Clean" })
 
 keymap.set("n", "<leader>mr", function()
-	-- Use ninja and parallel builds
-	vim.cmd("!rm -rf build && cmake -S . -B build -DCMAKE_CXX_STANDARD=20 -GNinja && cmake --build build")
+	vim.cmd("!rm -rf build && cmake -S . -B build && cmake --build build")
 end, { desc = "CMake Rebuild" })
-keymap.set("n", "<leader>mg", function()
-	vim.cmd("!cmake -S . -B build ") -- Generate build files
-end, { desc = "CMake Generate Build Files" })
 
--- Run CMake executable
+-- Fixed run command
 keymap.set("n", "<leader>mx", function()
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
 	if vim.fn.has("win32") == 1 then
 		vim.cmd("!start cmd /k cd build\\Debug && " .. project_name .. ".exe")
 	else
-		-- Just run in current terminal (exits Neovim temporarily)
-		vim.cmd("!./build/" .. project_name)
+		-- Check if executable exists before running
+		local exe_path = "./build/" .. project_name
+		if vim.fn.executable(exe_path) == 1 then
+			vim.cmd("!" .. exe_path)
+		else
+			print("Executable not found. Build first with <leader>mb")
+		end
 	end
 end, { desc = "Run CMake executable" })
 

@@ -511,6 +511,19 @@ return {
 				})
 			end,
 		},
+		{
+			"<leader>eo",
+			function()
+				local file = vim.api.nvim_buf_get_name(0) -- Get current buffer's filename
+				if file and file ~= "" then
+					vim.fn.system("xdg-open '" .. file .. "' &")
+					vim.notify("Opened: " .. vim.fn.fnamemodify(file, ":t"))
+				else
+					vim.notify("No file in current buffer", vim.log.levels.WARN)
+				end
+			end,
+			desc = "Open current file externally",
+		},
 	},
 	init = function()
 		vim.api.nvim_create_autocmd("User", {

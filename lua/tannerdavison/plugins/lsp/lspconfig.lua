@@ -7,10 +7,8 @@ return {
 		{ "folke/neodev.nvim", opts = {} },
 	},
 	config = function()
-		-- Import cmp-nvim-lsp plugin for capabilities
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
-		local lspconfig = require("lspconfig")
-		local keymap = vim.keymap -- for conciseness
+		local keymap = vim.keymap
 
 		-- Create autocmd for file type detection
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
@@ -32,7 +30,6 @@ return {
 
 		-- Set up enhanced capabilities for all LSP servers
 		local capabilities = cmp_nvim_lsp.default_capabilities()
-		-- Fix for position encoding warnings
 		capabilities.textDocument.positionEncoding = "utf-16"
 
 		-- Configure diagnostic signs
@@ -45,9 +42,8 @@ return {
 		-- Track which buffers have already had keymaps attached
 		local attached_buffers = {}
 
-		-- Common on_attach function with improved error handling and duplicate prevention
+		-- Common on_attach function
 		local on_attach = function(client, bufnr)
-			-- Prevent duplicate keymap registration
 			if attached_buffers[bufnr] then
 				return
 			end
@@ -55,7 +51,6 @@ return {
 
 			local opts = { buffer = bufnr, silent = true }
 
-			-- Enhanced keybindings with capability checks and better error handling
 			opts.desc = "Show LSP references"
 			keymap.set("n", "gR", function()
 				if client and client.server_capabilities and client.server_capabilities.referencesProvider then
@@ -152,14 +147,14 @@ return {
 		})
 
 		-- Configure TypeScript server with enhanced styled-components support
-		-- Ensure definition provider is enabled
 		local ts_capabilities = vim.deepcopy(capabilities)
 		ts_capabilities.textDocument = ts_capabilities.textDocument or {}
 		ts_capabilities.textDocument.definition = {
 			dynamicRegistration = true,
 		}
 
-		lspconfig.ts_ls.setup({
+		-- NEW SYNTAX: Using vim.lsp.config directly
+		vim.lsp.config("ts_ls", {
 			capabilities = ts_capabilities,
 			on_attach = on_attach,
 			filetypes = {
@@ -193,7 +188,6 @@ return {
 						importModuleSpecifierPreference = "non-relative",
 						quoteStyle = "single",
 					},
-					-- Enhanced CSS-in-JS support
 					inlayHints = {
 						includeInlayParameterNameHints = "all",
 						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
@@ -208,7 +202,7 @@ return {
 		})
 
 		-- Configure CSS server with enhanced styled-components support
-		lspconfig.cssls.setup({
+		vim.lsp.config("cssls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			filetypes = {
@@ -221,7 +215,6 @@ return {
 				"javascript",
 				"typescript",
 			},
-			-- Ensure CSS LSP works in template literals
 			init_options = {
 				provideFormatter = true,
 			},
@@ -237,7 +230,6 @@ return {
 						completePropertyWithColon = true,
 						completePropertyWithSemicolon = true,
 					},
-					-- Enhanced CSS-in-JS support
 					format = {
 						newlineBetweenSelectors = true,
 						newlineBetweenRules = true,
@@ -267,152 +259,13 @@ return {
 		})
 
 		-- Configure Svelte server
-		lspconfig.svelte.setup({
+		vim.lsp.config("svelte", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
-		-- Debug command to check LSP servers
-		vim.api.nvim_create_user_command("LSPDebug", function()
-			local clients = vim.lsp.get_clients()
-			print("Active LSP clients:")
-			for _, client in ipairs(clients) do
-				print(
-					string.format(
-						"  - %s (filetypes: %s)",
-						client.name,
-						table.concat(client.config.filetypes or {}, ", ")
-					)
-				)
-			end
-		end, { desc = "Debug LSP servers" })
-
-		-- Improved LSP cleanup command with smart client selection
-		vim.api.nvim_create_user_command("LSPCleanup", function()
-			local clients = vim.lsp.get_clients()
-			local client_counts = {}
-			local clients_by_name = {}
-
-			-- Group clients by name and count them
-			for _, client in ipairs(clients) do
-				if not client_counts[client.name] then
-					client_counts[client.name] = 0
-					clients_by_name[client.name] = {}
-				end
-				client_counts[client.name] = client_counts[client.name] + 1
-				table.insert(clients_by_name[client.name], client)
-			end
-
-			-- Remove duplicates for each client type with smart selection
-			for client_name, count in pairs(client_counts) do
-				if count > 1 then
-					print("Found " .. count .. " " .. client_name .. " clients. Analyzing configurations...")
-
-					local client_list = clients_by_name[client_name]
-					local to_remove = {}
-
-					-- Analyze each client to determine which to keep
-					for i, client in ipairs(client_list) do
-						local has_custom_settings = false
-						local has_custom_on_attach = false
-
-						-- Check if client has custom settings
-						if client.config and client.config.settings then
-							has_custom_settings = true
-						end
-
-						-- Check if client has custom on_attach function
-						if client.config and client.config.on_attach then
-							has_custom_on_attach = true
-						end
-
-						-- Mark for removal if it has fewer customizations
-						-- Priority: keep clients with custom settings/on_attach
-						if not has_custom_settings and not has_custom_on_attach then
-							table.insert(to_remove, { client = client, index = i, reason = "default configuration" })
-						else
-							print("  Keeping client " .. i .. " (has custom configuration)")
-						end
-					end
-
-					-- If we still have duplicates after prioritizing custom configs, remove the oldest ones
-					if #to_remove < count - 1 then
-						-- Sort remaining clients by creation time (keep newer ones)
-						local remaining = {}
-						for i, client in ipairs(client_list) do
-							local should_remove = false
-							for _, remove_info in ipairs(to_remove) do
-								if remove_info.index == i then
-									should_remove = true
-									break
-								end
-							end
-							if not should_remove then
-								table.insert(remaining, { client = client, index = i })
-							end
-						end
-
-						-- Sort by client ID (higher ID = newer client)
-						table.sort(remaining, function(a, b)
-							return a.client.id > b.client.id
-						end)
-
-						-- Remove older clients until we have only one
-						for i = 2, #remaining do
-							table.insert(to_remove, {
-								client = remaining[i].client,
-								index = remaining[i].index,
-								reason = "older duplicate",
-							})
-						end
-					end
-
-					-- Remove the marked clients
-					for _, remove_info in ipairs(to_remove) do
-						print("  Removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")")
-						vim.lsp.stop_client(remove_info.client.id)
-					end
-				end
-			end
-
-			-- Clear attached buffers to allow re-attachment
-			attached_buffers = {}
-			print("LSP cleanup completed!")
-		end, { desc = "Remove duplicate LSP clients" })
-
-		-- Restart LSP servers command
-		vim.api.nvim_create_user_command("LSPRestart", function()
-			-- Stop all current LSP clients
-			local clients = vim.lsp.get_clients()
-			for _, client in ipairs(clients) do
-				vim.lsp.stop_client(client.id)
-			end
-			-- Clear attached buffers
-			attached_buffers = {}
-			-- Restart with our configuration
-			vim.cmd("LspStart")
-			print("LSP servers restarted with manual configuration")
-		end, { desc = "Restart LSP servers" })
-
-		-- Install required LSP servers
-		vim.api.nvim_create_user_command("LSPInstall", function()
-			vim.cmd("MasonInstall ts_ls cssls")
-			print("Installing required LSP servers...")
-		end, { desc = "Install required LSP servers" })
-
-		-- Additional fix: Override make_position_params to handle encoding properly
-		local original_make_position_params = vim.lsp.util.make_position_params
-		vim.lsp.util.make_position_params = function(window, offset_encoding)
-			window = window or 0
-			local buf = vim.api.nvim_win_get_buf(window)
-			local clients = vim.lsp.get_clients({ bufnr = buf })
-			if #clients > 0 then
-				offset_encoding = offset_encoding or clients[1].offset_encoding
-			end
-			return original_make_position_params(window, offset_encoding)
-		end
-
-		lspconfig.clangd.setup({
+		-- Configure clangd
+		vim.lsp.config("clangd", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			cmd = {
@@ -422,7 +275,7 @@ return {
 		})
 
 		-- Configure Lua server
-		lspconfig.lua_ls.setup({
+		vim.lsp.config("lua_ls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			settings = {
@@ -438,25 +291,25 @@ return {
 		})
 
 		-- Configure HTML server
-		lspconfig.html.setup({
+		vim.lsp.config("html", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- Configure Tailwind CSS server
-		lspconfig.tailwindcss.setup({
+		vim.lsp.config("tailwindcss", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- Configure Prisma server
-		lspconfig.prismals.setup({
+		vim.lsp.config("prismals", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- Configure Python server
-		lspconfig.pyright.setup({
+		vim.lsp.config("pyright", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			settings = {
@@ -465,7 +318,6 @@ return {
 						autoSearchPaths = true,
 						useLibraryCodeForTypes = true,
 						diagnosticMode = "workspace",
-						-- Disable specific diagnostic rules
 						diagnosticSeverityOverrides = {
 							reportMissingImports = "none",
 							reportMissingModuleSource = "none",
@@ -474,6 +326,8 @@ return {
 				},
 			},
 		})
+
+		-- Python diagnostic configuration
 		vim.diagnostic.config({
 			virtual_text = {
 				filter = function(diagnostic)
@@ -484,6 +338,8 @@ return {
 				end,
 			},
 		})
+
+		-- Python virtual environment detection
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = "python",
 			callback = function()
@@ -493,17 +349,127 @@ return {
 				end
 			end,
 		})
-		-- Improved auto-cleanup with better timing and logic
-		-- Trigger on any buffer attachment, not just specific file types
+
+		-- Custom commands
+		vim.api.nvim_create_user_command("LSPDebug", function()
+			local clients = vim.lsp.get_clients()
+			print("Active LSP clients:")
+			for _, client in ipairs(clients) do
+				print(
+					string.format(
+						"  - %s (filetypes: %s)",
+						client.name,
+						table.concat(client.config.filetypes or {}, ", ")
+					)
+				)
+			end
+		end, { desc = "Debug LSP servers" })
+
+		vim.api.nvim_create_user_command("LSPCleanup", function()
+			local clients = vim.lsp.get_clients()
+			local client_counts = {}
+			local clients_by_name = {}
+
+			for _, client in ipairs(clients) do
+				if not client_counts[client.name] then
+					client_counts[client.name] = 0
+					clients_by_name[client.name] = {}
+				end
+				client_counts[client.name] = client_counts[client.name] + 1
+				table.insert(clients_by_name[client.name], client)
+			end
+
+			for client_name, count in pairs(client_counts) do
+				if count > 1 then
+					print("Found " .. count .. " " .. client_name .. " clients. Analyzing configurations...")
+					local client_list = clients_by_name[client_name]
+					local to_remove = {}
+
+					for i, client in ipairs(client_list) do
+						local has_custom_settings = client.config and client.config.settings
+						local has_custom_on_attach = client.config and client.config.on_attach
+
+						if not has_custom_settings and not has_custom_on_attach then
+							table.insert(to_remove, { client = client, index = i, reason = "default configuration" })
+						else
+							print("  Keeping client " .. i .. " (has custom configuration)")
+						end
+					end
+
+					if #to_remove < count - 1 then
+						local remaining = {}
+						for i, client in ipairs(client_list) do
+							local should_remove = false
+							for _, remove_info in ipairs(to_remove) do
+								if remove_info.index == i then
+									should_remove = true
+									break
+								end
+							end
+							if not should_remove then
+								table.insert(remaining, { client = client, index = i })
+							end
+						end
+
+						table.sort(remaining, function(a, b)
+							return a.client.id > b.client.id
+						end)
+
+						for i = 2, #remaining do
+							table.insert(to_remove, {
+								client = remaining[i].client,
+								index = remaining[i].index,
+								reason = "older duplicate",
+							})
+						end
+					end
+
+					for _, remove_info in ipairs(to_remove) do
+						print("  Removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")")
+						vim.lsp.stop_client(remove_info.client.id)
+					end
+				end
+			end
+
+			attached_buffers = {}
+			print("LSP cleanup completed!")
+		end, { desc = "Remove duplicate LSP clients" })
+
+		vim.api.nvim_create_user_command("LSPRestart", function()
+			local clients = vim.lsp.get_clients()
+			for _, client in ipairs(clients) do
+				vim.lsp.stop_client(client.id)
+			end
+			attached_buffers = {}
+			vim.cmd("LspStart")
+			print("LSP servers restarted")
+		end, { desc = "Restart LSP servers" })
+
+		vim.api.nvim_create_user_command("LSPInstall", function()
+			vim.cmd("MasonInstall ts_ls cssls")
+			print("Installing required LSP servers...")
+		end, { desc = "Install required LSP servers" })
+
+		-- Position encoding fix
+		local original_make_position_params = vim.lsp.util.make_position_params
+		vim.lsp.util.make_position_params = function(window, offset_encoding)
+			window = window or 0
+			local buf = vim.api.nvim_win_get_buf(window)
+			local clients = vim.lsp.get_clients({ bufnr = buf })
+			if #clients > 0 then
+				offset_encoding = offset_encoding or clients[1].offset_encoding
+			end
+			return original_make_position_params(window, offset_encoding)
+		end
+
+		-- Auto-cleanup on LSP attach
 		vim.api.nvim_create_autocmd({ "LspAttach" }, {
 			callback = function()
-				-- Wait a bit for LSP servers to attach
 				vim.defer_fn(function()
 					local clients = vim.lsp.get_clients()
 					local client_counts = {}
 					local clients_by_name = {}
 
-					-- Group clients by name and count them
 					for _, client in ipairs(clients) do
 						if not client_counts[client.name] then
 							client_counts[client.name] = 0
@@ -513,37 +479,16 @@ return {
 						table.insert(clients_by_name[client.name], client)
 					end
 
-					-- Remove duplicates for each client type with smart selection
 					for client_name, count in pairs(client_counts) do
 						if count > 1 then
-							print(
-								"Auto-cleanup: Found "
-									.. count
-									.. " "
-									.. client_name
-									.. " clients. Analyzing configurations..."
-							)
-
+							print("Auto-cleanup: Found " .. count .. " " .. client_name .. " clients")
 							local client_list = clients_by_name[client_name]
 							local to_remove = {}
 
-							-- Analyze each client to determine which to keep
 							for i, client in ipairs(client_list) do
-								local has_custom_settings = false
-								local has_custom_on_attach = false
+								local has_custom_settings = client.config and client.config.settings
+								local has_custom_on_attach = client.config and client.config.on_attach
 
-								-- Check if client has custom settings
-								if client.config and client.config.settings then
-									has_custom_settings = true
-								end
-
-								-- Check if client has custom on_attach function
-								if client.config and client.config.on_attach then
-									has_custom_on_attach = true
-								end
-
-								-- Mark for removal if it has fewer customizations
-								-- Priority: keep clients with custom settings/on_attach
 								if not has_custom_settings and not has_custom_on_attach then
 									table.insert(
 										to_remove,
@@ -552,9 +497,7 @@ return {
 								end
 							end
 
-							-- If we still have duplicates after prioritizing custom configs, remove the oldest ones
 							if #to_remove < count - 1 then
-								-- Sort remaining clients by creation time (keep newer ones)
 								local remaining = {}
 								for i, client in ipairs(client_list) do
 									local should_remove = false
@@ -569,12 +512,10 @@ return {
 									end
 								end
 
-								-- Sort by client ID (higher ID = newer client)
 								table.sort(remaining, function(a, b)
 									return a.client.id > b.client.id
 								end)
 
-								-- Remove older clients until we have only one
 								for i = 2, #remaining do
 									table.insert(to_remove, {
 										client = remaining[i].client,
@@ -584,17 +525,12 @@ return {
 								end
 							end
 
-							-- Remove the marked clients
 							for _, remove_info in ipairs(to_remove) do
-								print(
-									"  Auto-removing client " .. remove_info.index .. " (" .. remove_info.reason .. ")"
-								)
 								vim.lsp.stop_client(remove_info.client.id)
 							end
-							print("Duplicate " .. client_name .. " clients automatically removed!")
 						end
 					end
-				end, 3000) -- Wait 3 seconds for LSP servers to attach
+				end, 3000)
 			end,
 		})
 	end,

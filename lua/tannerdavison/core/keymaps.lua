@@ -53,26 +53,32 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 -- TODO GENERATION
 -- ================================================================
 
+-- Insert today's date as comment at top of file
+keymap.set("n", "<leader>tdd", function()
+	local date = os.date("%Y-%m-%d")
+	local comment_prefix = "// " -- Default to JavaScript-style comments
+	local filetype = vim.bo.filetype
+
+	if filetype == "lua" then
+		comment_prefix = "-- "
+	elseif filetype == "python" or filetype == "sh" or filetype == "bash" then
+		comment_prefix = "# "
+	elseif filetype == "html" or filetype == "xml" then
+		comment_prefix = "<!-- "
+		date = date .. " -->"
+	elseif filetype == "c" or filetype == "cpp" or filetype == "javascript" or filetype == "typescript" or filetype == "javascriptreact" or filetype == "typescriptreact" then
+		comment_prefix = "// "
+	end
+
+	-- Insert date comment at the very top of the file
+	local date_comment = comment_prefix .. date
+	vim.api.nvim_buf_set_lines(0, 0, 0, false, { date_comment })
+	
+	vim.notify("Added date comment: " .. date_comment)
+end, { desc = "Insert today's date as comment at top of file" })
+
 -- Insert TODO with date
 keymap.set("n", "<leader>tD", function()
-	local date = os.date("%Y-%m-%d")
-	local todo_text = "// TODO [" .. date .. "]: "
-
-	-- Get current cursor position
-	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-
-	-- Insert the TODO text at current line
-	vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col, { todo_text })
-
-	-- Move cursor to end of inserted text
-	vim.api.nvim_win_set_cursor(0, { row, col + #todo_text })
-
-	-- Enter insert mode
-	vim.cmd("startinsert")
-end, { desc = "Insert a TODO with date" })
-
--- Insert dynamic TODO comment based on filetype
-keymap.set("n", "<leader>td", function()
 	local comment_prefix = "// " -- Default to JavaScript-style comments
 	local filetype = vim.bo.filetype
 

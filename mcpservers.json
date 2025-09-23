@@ -1,26 +1,38 @@
 {
   "mcpServers": {
+    "browser_tools": {
+      "args": [
+        "@agentdeskai/browser-tools-mcp@latest"
+      ],
+      "command": "npx"
+    },
     "filesystem": {
+      "env": {
+        "ALLOWED_DIRECTORIES": "/home/tanner/projects:/home/tanner/.config"
+      },
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "/home/tanner/projects"
-      ],
-      "env": {
-        "ALLOWED_DIRECTORIES": "/home/tanner/projects:/home/tanner/.config"
-      }
-    },
-    "everything": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-everything"]
+      ]
     },
     "tavily": {
-      "command": "npx",
-      "args": ["-y", "tavily-mcp"],
       "env": {
         "TAVILY_API_KEY": "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"
-      }
+      },
+      "command": "npx",
+      "args": [
+        "-y",
+        "tavily-mcp"
+      ]
+    },
+    "everything": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything"
+      ],
+      "command": "npx"
     }
   }
 }

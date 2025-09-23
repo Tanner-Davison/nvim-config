@@ -31,12 +31,10 @@ return {
 					-- Set up keymaps after MCP is ready
 					vim.keymap.set("n", "<leader>ms", ":MCPHub<CR>", { desc = "Open MCP Hub interface" })
 					vim.keymap.set("n", "<leader>mw", function()
-						vim.notify("Use :MCPHub to access search via Tavily, or use @mcp in chat plugins like Avante")
+					vim.notify("Use :MCPHub to access search via Tavily, or use @mcp in chat plugins like Avante")
 					end, { desc = "MCP search info" })
 					vim.keymap.set("n", "<leader>mc", ":MCPHub<CR>", { desc = "Open MCP Hub" })
-					-- Add Avante keymap
-					vim.keymap.set("n", "<leader>aa", ":AvanteAsk<CR>", { desc = "Avante Ask" })
-					vim.keymap.set("v", "<leader>aa", ":AvanteAsk<CR>", { desc = "Avante Ask" })
+					-- Note: Avante keymaps (<leader>aa, etc.) are set in avante.lua to avoid conflicts
 				end,
 			})
 	end,

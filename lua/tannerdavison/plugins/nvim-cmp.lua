@@ -20,6 +20,10 @@ return {
 		"hrsh7th/cmp-omni", -- Omni completion for markdown
 		"lukas-reineke/cmp-under-comparator", -- Better sorting
 
+		-- AI completion integration
+		-- Removed: Avante auto-suggestions (not useful for this workflow)
+		-- Note: Manual AI assistance still available via <leader>aa
+
 		-- UI enhancements
 		"onsails/lspkind.nvim",
 	},

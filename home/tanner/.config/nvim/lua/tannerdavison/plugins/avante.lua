@@ -1,4 +1,4 @@
--- Copyright 2023 Tanner Davison
+2024-01-01
 return {
     "yetone/avante.nvim",
     event = "VeryLazy",

@@ -66,14 +66,21 @@ keymap.set("n", "<leader>tdd", function()
 	elseif filetype == "html" or filetype == "xml" then
 		comment_prefix = "<!-- "
 		date = date .. " -->"
-	elseif filetype == "c" or filetype == "cpp" or filetype == "javascript" or filetype == "typescript" or filetype == "javascriptreact" or filetype == "typescriptreact" then
+	elseif
+		filetype == "c"
+		or filetype == "cpp"
+		or filetype == "javascript"
+		or filetype == "typescript"
+		or filetype == "javascriptreact"
+		or filetype == "typescriptreact"
+	then
 		comment_prefix = "// "
 	end
 
 	-- Insert date comment at the very top of the file
 	local date_comment = comment_prefix .. date
 	vim.api.nvim_buf_set_lines(0, 0, 0, false, { date_comment })
-	
+
 	vim.notify("Added date comment: " .. date_comment)
 end, { desc = "Insert today's date as comment at top of file" })
 
@@ -542,7 +549,6 @@ end, { desc = "Toggle autocomplete" })
 
 -- ================================================================
 -- Jump Marking
---
 -- ================================================================
 
 -- Custom function to handle mark jumping

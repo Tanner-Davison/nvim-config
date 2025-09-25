@@ -1,0 +1,359 @@
+return {
+	"neovim/nvim-lspconfig",
+	event = { "BufReadPre", "BufNewFile" },
+	dependencies = {
+		"hrsh7th/cmp-nvim-lsp",
+		{ "antosha417/nvim-lsp-file-operations", config = true },
+		{ "folke/neodev.nvim", opts = {} },
+	},
+	config = function()
+		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+		local keymap = vim.keymap
+
+		-- File type detection
+		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+			pattern = {
+				"*.h", "*.hpp", "*.cpp", "*.c", "*.dll",
+				"*/include/*", "*/SDL2/*", "**/src/**/*.cpp", "*/MSVC/*",
+			},
+			callback = function()
+				vim.bo.filetype = "cpp"
+			end,
+		})
+
+		-- Enhanced capabilities
+		local capabilities = cmp_nvim_lsp.default_capabilities()
+		capabilities.textDocument.positionEncoding = "utf-16"
+
+		-- Diagnostic signs
+		local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
+		for type, icon in pairs(signs) do
+			local hl = "DiagnosticSign" .. type
+			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
+		end
+
+		-- Track attached buffers
+		local attached_buffers = {}
+
+		-- Common on_attach function
+		local on_attach = function(client, bufnr)
+			if attached_buffers[bufnr] then return end
+			attached_buffers[bufnr] = true
+
+			local opts = { buffer = bufnr, silent = true }
+
+			-- LSP Keymaps
+			keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", vim.tbl_extend("force", opts, { desc = "Show LSP references" }))
+			keymap.set("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
+			keymap.set("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
+			keymap.set("n", "gi", vim.lsp.buf.implementation, vim.tbl_extend("force", opts, { desc = "Show LSP implementations" }))
+			keymap.set("n", "gt", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Show LSP type definitions" }))
+			keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "See available code actions" }))
+			keymap.set("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Smart rename" }))
+			keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", vim.tbl_extend("force", opts, { desc = "Show buffer diagnostics" }))
+			keymap.set("n", "<leader>d", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show line diagnostics" }))
+			keymap.set("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Go to previous diagnostic" }))
+			keymap.set("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Go to next diagnostic" }))
+			keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show documentation for what is under cursor" }))
+			keymap.set("n", "<leader>rs", ":LspRestart<CR>", vim.tbl_extend("force", opts, { desc = "Restart LSP" }))
+		end
+
+		-- Clean up on buffer delete
+		vim.api.nvim_create_autocmd("BufDelete", {
+			callback = function(args)
+				attached_buffers[args.buf] = nil
+			end,
+		})
+
+		-- Modern LSP Configuration using vim.lsp.config (Neovim 0.11+)
+
+		-- TypeScript/JavaScript
+		vim.lsp.config('ts_ls', {
+			cmd = { 'typescript-language-server', '--stdio' },
+			filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' },
+			root_markers = { 'tsconfig.json', 'package.json', '.git' },
+			capabilities = capabilities,
+			on_attach = function(client, bufnr)
+				-- Disable formatting in favor of prettier/conform
+				client.server_capabilities.documentFormattingProvider = false
+				client.server_capabilities.documentRangeFormattingProvider = false
+				on_attach(client, bufnr)
+			end,
+			settings = {
+				typescript = {
+					suggest = { autoImports = true },
+					preferences = {
+						importModuleSpecifier = "non-relative",
+						quoteStyle = "single",
+					},
+					inlayHints = {
+						includeInlayParameterNameHints = "all",
+						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+						includeInlayFunctionParameterTypeHints = true,
+						includeInlayVariableTypeHints = true,
+						includeInlayPropertyDeclarationTypeHints = true,
+						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayEnumMemberValueHints = true,
+					},
+				},
+				javascript = {
+					suggest = { autoImports = true },
+					preferences = {
+						importModuleSpecifier = "non-relative",
+						quoteStyle = "single",
+					},
+				},
+			},
+		})
+
+		-- CSS
+		vim.lsp.config('cssls', {
+			cmd = { 'vscode-css-language-server', '--stdio' },
+			filetypes = { 'css', 'scss', 'less', 'sass' },
+			root_markers = { 'package.json', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+			settings = {
+				css = { validate = true, lint = { unknownAtRules = "ignore" } },
+				scss = { validate = true, lint = { unknownAtRules = "ignore" } },
+				less = { validate = true, lint = { unknownAtRules = "ignore" } },
+			},
+		})
+
+		-- HTML
+		vim.lsp.config('html', {
+			cmd = { 'vscode-html-language-server', '--stdio' },
+			filetypes = { 'html' },
+			root_markers = { 'package.json', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
+
+		-- Tailwind CSS
+		vim.lsp.config('tailwindcss', {
+			cmd = { 'tailwindcss-language-server', '--stdio' },
+			filetypes = { 'html', 'css', 'scss', 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'vue' },
+			root_markers = { 'tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs', 'package.json', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
+
+		-- Lua
+		vim.lsp.config('lua_ls', {
+			cmd = { 'lua-language-server' },
+			filetypes = { 'lua' },
+			root_markers = { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+			settings = {
+				Lua = {
+					diagnostics = { globals = { "vim" } },
+					completion = { callSnippet = "Replace" },
+					workspace = {
+						library = vim.api.nvim_get_runtime_file("", true),
+						checkThirdParty = false,
+					},
+					telemetry = { enable = false },
+				},
+			},
+		})
+
+		-- C/C++ (clangd)
+		vim.lsp.config('clangd', {
+			cmd = { '/usr/bin/clangd-14', '--fallback-style=file' },
+			filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
+			root_markers = { '.clangd', 'compile_commands.json', 'compile_flags.txt', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
+
+		-- Python
+		vim.lsp.config('pyright', {
+			cmd = { 'pyright-langserver', '--stdio' },
+			filetypes = { 'python' },
+			root_markers = { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+			settings = {
+				python = {
+					analysis = {
+						autoSearchPaths = true,
+						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace",
+					},
+				},
+			},
+		})
+
+		-- Prisma
+		vim.lsp.config('prismals', {
+			cmd = { 'prisma-language-server', '--stdio' },
+			filetypes = { 'prisma' },
+			root_markers = { 'package.json', '.git' },
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
+
+		-- ESLint
+		vim.lsp.config('eslint', {
+			cmd = { 'vscode-eslint-language-server', '--stdio' },
+			filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
+			root_markers = { '.eslintrc.js', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'package.json', '.git' },
+			capabilities = capabilities,
+			on_attach = function(client, bufnr)
+				-- Auto-fix on save
+				vim.api.nvim_create_autocmd("BufWritePre", {
+					buffer = bufnr,
+					command = "EslintFixAll",
+				})
+				on_attach(client, bufnr)
+			end,
+			settings = {
+				packageManager = 'npm',
+				useESLintClass = true,
+				experimental = {
+					useFlatConfig = false,
+				},
+			},
+		})
+
+		-- Enable LSP servers using FileType autocmds (most reliable approach)
+		-- This ensures servers start when appropriate files are opened
+		
+		-- TypeScript/JavaScript
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+			callback = function()
+				vim.lsp.enable("ts_ls")
+			end,
+		})
+		
+		-- CSS/SCSS/Less
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "css", "scss", "less", "sass" },
+			callback = function()
+				vim.lsp.enable("cssls")
+			end,
+		})
+		
+		-- HTML
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "html" },
+			callback = function()
+				vim.lsp.enable("html")
+			end,
+		})
+		
+		-- Tailwind (for relevant file types)
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+			callback = function()
+				-- Only enable if tailwind config exists
+				local root_dir = vim.fs.root(0, { "tailwind.config.js", "tailwind.config.ts", "tailwind.config.cjs", "tailwind.config.mjs" })
+				if root_dir then
+					vim.lsp.enable("tailwindcss")
+				end
+			end,
+		})
+		
+		-- Lua
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "lua" },
+			callback = function()
+				vim.lsp.enable("lua_ls")
+			end,
+		})
+		
+		-- C/C++
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "c", "cpp", "objc", "objcpp" },
+			callback = function()
+				vim.lsp.enable("clangd")
+			end,
+		})
+		
+		-- Python
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "python" },
+			callback = function()
+				vim.lsp.enable("pyright")
+			end,
+		})
+		
+		-- Prisma
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "prisma" },
+			callback = function()
+				vim.lsp.enable("prismals")
+			end,
+		})
+		
+		-- ESLint (for JS/TS files in projects with eslint config)
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+			callback = function()
+				-- Only enable if eslint config exists
+				local root_dir = vim.fs.root(0, { ".eslintrc.js", ".eslintrc.json", ".eslintrc.yaml", ".eslintrc.yml", "eslint.config.js" })
+				if root_dir then
+					vim.lsp.enable("eslint")
+				end
+			end,
+		})
+
+		-- Custom commands for debugging and manual control
+		vim.api.nvim_create_user_command("LSPDebug", function()
+			local clients = vim.lsp.get_clients()
+			print("Active LSP clients:")
+			for _, client in ipairs(clients) do
+				print(string.format("  - %s (filetypes: %s)", client.name, table.concat(client.config.filetypes or {}, ", ")))
+			end
+		end, { desc = "Debug LSP servers" })
+
+		vim.api.nvim_create_user_command("LSPStart", function(opts)
+			local server = opts.args
+			if server == "" then
+				print("Usage: LSPStart <server_name>")
+				return
+			end
+			
+			vim.lsp.enable(server)
+			print("Started LSP server: " .. server)
+		end, { 
+			desc = "Start specific LSP server",
+			nargs = 1,
+		})
+
+		vim.api.nvim_create_user_command("LSPRestart", function()
+			local clients = vim.lsp.get_clients()
+			local client_names = {}
+			
+			for _, client in ipairs(clients) do
+				table.insert(client_names, client.name)
+				vim.lsp.stop_client(client.id)
+			end
+			
+			attached_buffers = {}
+			
+			-- Re-enable the same servers that were running
+			if #client_names > 0 then
+				vim.defer_fn(function()
+					vim.lsp.enable(client_names)
+					print("Restarted LSP servers: " .. table.concat(client_names, ", "))
+				end, 1000)
+			end
+		end, { desc = "Restart all LSP servers" })
+
+		-- LSP log cleanup
+		vim.api.nvim_create_user_command("LSPLogClear", function()
+			local log_path = vim.lsp.get_log_path()
+			if log_path then
+				local file = io.open(log_path, "w")
+				if file then
+					file:write("-- LSP log file manually cleared\n")
+					file:close()
+					vim.notify("LSP log file cleared", vim.log.levels.INFO)
+				end
+			end
+		end, { desc = "Clear LSP log file" })
+	end,
+}

@@ -2,15 +2,54 @@ return {
 	"ravitemer/mcphub.nvim",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
-		"Joakker/lua-json5", -- Add this explicit dependency
+		-- Conditionally load json5 dependency based on platform
+		(function()
+			-- Check if we can require json5 (available on Linux)
+			local has_json5 = pcall(require, "json5")
+			if has_json5 then
+				return "Joakker/lua-json5"
+			else
+				-- Fallback: use built-in vim.json or plenary.nvim's json
+				return nil
+			end
+		end)(),
 	},
 	build = "npm install -g mcp-hub@latest",
 	config = function()
-		-- Make sure lua-json5 is loaded first
-		local json5 = require("json5")
+		-- Cross-platform JSON parsing function
+		local json_decode
+		local has_json5, json5 = pcall(require, "json5")
+		
+		if has_json5 then
+			-- Use json5 if available (Linux with lua-json5 installed)
+			json_decode = json5.parse
+		else
+			-- Fallback to vim.json.decode (available in Neovim 0.7+)
+			-- or plenary's json if vim.json is not available
+			if vim.json and vim.json.decode then
+				json_decode = vim.json.decode
+			else
+				-- Use plenary as final fallback
+				local plenary_ok, plenary_json = pcall(require, "plenary.json")
+				if plenary_ok then
+					json_decode = plenary_json.decode
+				else
+					-- If all else fails, use a simple JSON parser
+					json_decode = function(str)
+						-- This is a very basic fallback - you might want to install a proper JSON parser
+						local ok, result = pcall(vim.fn.json_decode, str)
+						if ok then
+							return result
+						else
+							error("No JSON parser available. Please install lua-json5 or ensure vim.json is available.")
+						end
+					end
+				end
+			end
+		end
 
 		require("mcphub").setup({
-			json_decode = json5.parse,
+			json_decode = json_decode,
 			port = 3002,
 			config = vim.fn.expand("~/.config/nvim/mcpservers.json"), -- Use .json instead of .json5
 			log = {

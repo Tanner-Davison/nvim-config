@@ -250,7 +250,7 @@ return {
 			desc = "Buffer Diagnostics",
 		},
 		{
-			"<leader>sh",
+			"<leader>sP",
 			function()
 				Snacks.picker.help()
 			end,

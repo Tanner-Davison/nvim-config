@@ -18,11 +18,7 @@ opt.wrap = true -- disable line wrapping
 -- folding
 opt.foldenable = true -- enable folding
 opt.foldlevel = 99 -- start with all folds open
-
--- Choose ONE of these methods:
--- For treesitter-based folding:
-opt.foldmethod = "expr"
-vim.wo.foldexpr = "nvim_treesitter#foldexpr()"
+opt.foldmethod = "manual" -- use manual folding
 opt.foldtext = ""
 
 -- search settings

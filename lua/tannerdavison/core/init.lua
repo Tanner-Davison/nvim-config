@@ -16,6 +16,7 @@ vim.opt.undofile = true -- Keep undo files (user uses undo frequently)
 require("tannerdavison.core.options")
 require("tannerdavison.core.keymaps")
 require("tannerdavison.core.title")
+require("tannerdavison.core.autocommands")
 
 -- Temporarily suppress deprecation warnings until plugins are updated
 -- These warnings are from telescope.nvim, nvim-cmp, and cmp-path using deprecated APIs

@@ -32,13 +32,81 @@ keymap.set("n", "<leader>cd", function()
 end, { desc = "Change to current file's directory" })
 
 -- ================================================================
--- WINDOW MANAGEMENT
+-- WINDOW MANAGEMENT (WSL-optimized)
 -- ================================================================
 -- Split windows
-keymap.set("n", "<leader>sv", "<C-w>v", { desc = "Split window vertically" })
-keymap.set("n", "<leader>sh", "<C-w>s", { desc = "Split window horizontally" })
-keymap.set("n", "<leader>se", "<C-w>=", { desc = "Make splits equal size" })
+keymap.set("n", "<leader>sv", "<cmd>vsplit<CR>", { desc = "Split window vertically" })
+keymap.set("n", "<leader>sh", "<cmd>split<CR>", { desc = "Split window horizontally" })
+-- WSL-friendly window equalization - back to what actually worked
+keymap.set("n", "<leader>se", function()
+	-- Get all normal windows
+	local wins = {}
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		local config = vim.api.nvim_win_get_config(win)
+		if config.relative == "" then -- Normal window, not floating
+			table.insert(wins, win)
+		end
+	end
+	
+	if #wins < 2 then
+		vim.notify("Only one window - nothing to equalize", vim.log.levels.INFO)
+		return
+	end
+	
+	-- Use the exact method that WAS working before
+	-- Manual equalization as you confirmed worked (but affected cmd line)
+	local total_width = vim.o.columns
+	local total_height = vim.o.lines
+	local win_width = math.floor(total_width / #wins)
+	local win_height = math.floor(total_height / #wins)
+	
+	-- Store original cmdheight before resizing
+	local orig_cmdheight = vim.o.cmdheight
+	
+	for _, win in ipairs(wins) do
+		pcall(vim.api.nvim_win_set_width, win, win_width)
+		pcall(vim.api.nvim_win_set_height, win, win_height)
+	end
+	
+	-- Restore command line height immediately after
+	vim.o.cmdheight = orig_cmdheight
+	
+	vim.notify("Splits equalized (manual method)", vim.log.levels.INFO)
+end, { desc = "Make splits equal size (WSL-friendly)" })
+
+-- Backup method using different key combination
+keymap.set("n", "<leader>s=", "<cmd>wincmd =<CR>", { desc = "Equalize splits (backup)" })
+
+-- Debug version to see window sizes
+keymap.set("n", "<leader>sd", function()
+	local wins = {}
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		local config = vim.api.nvim_win_get_config(win)
+		if config.relative == "" then
+			table.insert(wins, win)
+		end
+	end
+	
+	print("=== WINDOW DEBUG INFO ===")
+	for i, win in ipairs(wins) do
+		local width = vim.api.nvim_win_get_width(win)
+		local height = vim.api.nvim_win_get_height(win)
+		print(string.format("Window %d: %dx%d", i, width, height))
+	end
+	print("Terminal size: " .. vim.o.columns .. "x" .. vim.o.lines)
+end, { desc = "Debug window sizes" })
+
+-- Original mapping (commented for reference):
+-- keymap.set("n", "<leader>se", "<C-w>=", { desc = "Make splits equal size" })
 keymap.set("n", "<leader>sx", "<cmd>close<CR>", { desc = "Close current split" })
+
+-- WSL-friendly window navigation (alternative to Ctrl+W combinations)
+keymap.set("n", "<leader>wh", "<cmd>wincmd h<CR>", { desc = "Move to left window" })
+keymap.set("n", "<leader>wj", "<cmd>wincmd j<CR>", { desc = "Move to bottom window" })
+keymap.set("n", "<leader>wk", "<cmd>wincmd k<CR>", { desc = "Move to top window" })
+keymap.set("n", "<leader>wl", "<cmd>wincmd l<CR>", { desc = "Move to right window" })
+keymap.set("n", "<leader>wo", "<cmd>only<CR>", { desc = "Close all other windows" })
+keymap.set("n", "<leader>wr", "<cmd>wincmd r<CR>", { desc = "Rotate windows" })
 
 -- ================================================================
 -- TAB MANAGEMENT
@@ -564,6 +632,43 @@ vim.keymap.set("n", "<leader>j", jump_to_mark, { desc = "Jump to mark" })
 vim.keymap.set("n", "<leader>dm", ":delmarks a-z<cr>", { desc = "Delete lowercase marks" })
 vim.keymap.set("n", "<leader>dM", ":delmarks A-Z<cr>", { desc = "Delete uppercase marks" })
 vim.keymap.set("n", "<leader>da", ":delmarks!<cr>:delmarks A-Z<cr>", { desc = "Delete all marks" })
+
+-- ================================================================
+-- IMAGE HANDLING
+-- ================================================================
+
+-- Open image externally
+keymap.set("n", "<leader>io", function()
+	local file = vim.fn.expand("<cfile>")
+	if file and file ~= "" then
+		if file:match("%.png$") or file:match("%.jpg$") or file:match("%.jpeg$") or file:match("%.gif$") or file:match("%.webp$") then
+			vim.fn.system("xdg-open '" .. file .. "' &")
+			vim.notify("Opened: " .. file)
+		else
+			-- Only notify if there's actually a filename under cursor
+			if file ~= "" then
+				vim.notify("Not an image file: " .. file, vim.log.levels.WARN)
+			end
+		end
+	else
+		vim.notify("No file under cursor", vim.log.levels.INFO)
+	end
+end, { desc = "Open image under cursor externally" })
+
+-- Open current file externally (if it's an image)
+keymap.set("n", "<leader>eo", function()
+	local file = vim.api.nvim_buf_get_name(0)
+	if file and file ~= "" then
+		vim.fn.system("xdg-open '" .. file .. "' &")
+		vim.notify("Opened: " .. vim.fn.fnamemodify(file, ":t"))
+	else
+		vim.notify("No file in current buffer", vim.log.levels.WARN)
+	end
+end, { desc = "Open current file externally" })
+
+-- ================================================================
+-- LSP UTILITIES
+-- ================================================================
 
 -- LSP log cleanup
 keymap.set("n", "<leader>lc", function()

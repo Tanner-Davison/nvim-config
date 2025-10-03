@@ -1,9 +1,7 @@
 {
   "mcpServers": {
     "browser_tools": {
-      "args": [
-        "@agentdeskai/browser-tools-mcp@latest"
-      ],
+      "args": ["@agentdeskai/browser-tools-mcp@latest"],
       "command": "npx"
     },
     "filesystem": {
@@ -11,27 +9,47 @@
         "ALLOWED_DIRECTORIES": "/home/tanner/projects:/home/tanner/.config"
       },
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"]
     },
     "tavily": {
       "env": {
         "TAVILY_API_KEY": "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"
       },
       "command": "npx",
-      "args": [
-        "-y",
-        "tavily-mcp"
-      ]
+      "args": ["-y", "tavily-mcp"]
     },
     "everything": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
+      "args": ["-y", "@modelcontextprotocol/server-everything"],
       "command": "npx"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite"]
+    },
+    "postgresql": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
   }
 }
+

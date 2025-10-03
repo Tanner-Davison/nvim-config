@@ -176,7 +176,7 @@ return {
 		-- Key mappings for file switching
 		vim.keymap.set("n", "<leader>fa", open_alternate(""), { desc = "Switch to alternate file" })
 		vim.keymap.set("n", "<leader>fv", open_alternate("vsplit"), { desc = "Switch to alternate file (vertical split)" })
-		vim.keymap.set("n", "<leader>fs", open_alternate("split"), { desc = "Switch to alternate file (horizontal split)" })
-		vim.keymap.set("n", "<leader>ft", open_alternate("tabnew"), { desc = "Switch to alternate file (new tab)" })
+		vim.keymap.set("n", "<leader>fh", open_alternate("split"), { desc = "Switch to alternate file (horizontal split)" })
+		vim.keymap.set("n", "<leader>fn", open_alternate("tabnew"), { desc = "Switch to alternate file (new tab)" })
 	end,
 }

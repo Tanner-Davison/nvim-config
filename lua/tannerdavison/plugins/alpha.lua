@@ -71,11 +71,48 @@ return {
 		-- Send config to alpha
 		alpha.setup(dashboard.config)
 
+		-- ONLY close alpha when auto-session SUCCESSFULLY restores a session
+		vim.api.nvim_create_autocmd("User", {
+			pattern = "AutoSessionRestorePost",
+			group = vim.api.nvim_create_augroup("alpha_autoclose", { clear = true }),
+			callback = function()
+				-- Check if session was actually restored with real files
+				local buffers = vim.api.nvim_list_bufs()
+				local has_real_buffers = false
+
+				for _, buf in ipairs(buffers) do
+					if vim.api.nvim_buf_is_loaded(buf) then
+						local bufname = vim.api.nvim_buf_get_name(buf)
+						local buftype = vim.bo[buf].buftype
+						local filetype = vim.bo[buf].filetype
+						-- Check if this is a real file buffer
+						if
+							bufname ~= ""
+							and buftype == ""
+							and filetype ~= "alpha"
+							and not bufname:match("alpha")
+						then
+							has_real_buffers = true
+							break
+						end
+					end
+				end
+
+				-- Only close alpha if we have real buffers from the session
+				if has_real_buffers then
+					local alpha_buf = vim.fn.bufnr("alpha")
+					if alpha_buf ~= -1 and vim.api.nvim_buf_is_valid(alpha_buf) then
+						vim.api.nvim_buf_delete(alpha_buf, { force = true })
+					end
+				end
+			end,
+		})
+
 		-- Disable folding on alpha buffer
 		vim.cmd([[
-      autocmd FileType alpha setlocal nofoldenable
-      autocmd FileType alpha setlocal nonumber
-      autocmd FileType alpha setlocal norelativenumber
-    ]])
+			autocmd FileType alpha setlocal nofoldenable
+			autocmd FileType alpha setlocal nonumber
+			autocmd FileType alpha setlocal norelativenumber
+		]])
 	end,
 }

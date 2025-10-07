@@ -18,7 +18,7 @@ return {
 
 		-- Setup with modern configuration
 		todo_comments.setup({
-			signs = true,
+			signs = false, -- Disabled to prevent sign column crashes
 			sign_priority = 8,
 			-- Modern sign configuration
 			keywords = {

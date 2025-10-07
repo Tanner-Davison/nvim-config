@@ -1,5 +1,6 @@
 return {
 	"lewis6991/gitsigns.nvim",
+	enabled = false, -- DISABLED: Causes crash when deleting last line (Neovim bug)
 	event = { "BufReadPre", "BufNewFile" },
 	config = function()
 		require("gitsigns").setup({

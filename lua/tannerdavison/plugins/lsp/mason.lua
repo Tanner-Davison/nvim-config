@@ -1,7 +1,6 @@
 return {
 	"williamboman/mason.nvim",
 	dependencies = {
-		"williamboman/mason-lspconfig.nvim",
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 	},
 	config = function()
@@ -19,30 +18,21 @@ return {
 			},
 		})
 
-		-- Configure mason-lspconfig - ONLY for installation, not configuration
-		require("mason-lspconfig").setup({
-			-- Don't automatically configure servers - we'll do it manually
-			automatic_installation = false,
-			-- Explicitly disable automatic setup for all servers
-			ensure_installed = {},
-			-- Don't run any automatic setup
-			handlers = {},
-			-- Disable all automatic configuration
-			automatic_installation = false,
-		})
-
-		-- Configure mason-tool-installer for formatting and linting tools
+		-- Configure mason-tool-installer for formatters and linters ONLY
+		-- Language servers are configured separately via vim.lsp.start()
 		require("mason-tool-installer").setup({
 			ensure_installed = {
+				-- Formatters
 				"prettier",
-				"stylua", -- lua formatter
-				"isort", -- python formatter
-				"black", -- python formatter
-				"eslint_d",
+				"stylua",
+				"isort",
+				"black",
 				"cmakelang",
-				-- "cpplint",
-				-- "pylint"
-				-- clangd moved to mason-lspconfig to prevent duplicates
+				-- Linters
+				"eslint_d",
+				-- Note: LSP servers (typescript-language-server, css-lsp, html-lsp, etc.)
+				-- are NOT needed here since we use vim.lsp.start() directly in lspconfig.lua
+				-- Just install them manually via :Mason if needed
 			},
 		})
 	end,

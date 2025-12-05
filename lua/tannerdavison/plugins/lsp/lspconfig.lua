@@ -1,6 +1,6 @@
 return {
 	"neovim/nvim-lspconfig",
-	version = false, -- Use the latest version
+	version = false,
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",
@@ -50,121 +50,135 @@ return {
 			keymap.set("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Go to previous diagnostic" }))
 			keymap.set("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Go to next diagnostic" }))
 			keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show documentation for what is under cursor" }))
-			keymap.set("n", "<leader>rs", ":LspRestart<CR>", vim.tbl_extend("force", opts, { desc = "Restart LSP" }))
 		end
 
-		-- Use vim.lsp.config for modern Neovim 0.11+ setup
-		-- This is the non-deprecated way to configure LSP servers
-		
+		-- Helper function to get util module
+		local function get_lsp_util()
+			return require('lspconfig.util')
+		end
+
 		-- TypeScript/JavaScript
-		vim.lsp.config('ts_ls', {
-			cmd = { "typescript-language-server", "--stdio" },
-			filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-			root_dir = function(fname)
-				local util = require('lspconfig.util')
-				return util.root_pattern('tsconfig.json', 'package.json', '.git')(fname)
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+			callback = function(ev)
+				local util = get_lsp_util()
+				vim.lsp.start({
+					name = "ts_ls",
+					cmd = { "typescript-language-server", "--stdio" },
+					root_dir = util.root_pattern('tsconfig.json', 'package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					capabilities = capabilities,
+					on_attach = function(client, bufnr)
+						client.server_capabilities.documentFormattingProvider = false
+						client.server_capabilities.documentRangeFormattingProvider = false
+						on_attach(client, bufnr)
+					end,
+					settings = {
+						typescript = {
+							suggest = { autoImports = true },
+							preferences = {
+								importModuleSpecifier = "non-relative",
+								quoteStyle = "single",
+							},
+							inlayHints = {
+								includeInlayParameterNameHints = "all",
+								includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+								includeInlayFunctionParameterTypeHints = true,
+								includeInlayVariableTypeHints = true,
+								includeInlayPropertyDeclarationTypeHints = true,
+								includeInlayFunctionLikeReturnTypeHints = true,
+								includeInlayEnumMemberValueHints = true,
+							},
+						},
+						javascript = {
+							suggest = { autoImports = true },
+							preferences = {
+								importModuleSpecifier = "non-relative",
+								quoteStyle = "single",
+							},
+						},
+					},
+				})
 			end,
-			capabilities = capabilities,
-			on_attach = function(client, bufnr)
-				client.server_capabilities.documentFormattingProvider = false
-				client.server_capabilities.documentRangeFormattingProvider = false
-				on_attach(client, bufnr)
-			end,
-			settings = {
-				typescript = {
-					suggest = { autoImports = true },
-					preferences = {
-						importModuleSpecifier = "non-relative",
-						quoteStyle = "single",
-					},
-					inlayHints = {
-						includeInlayParameterNameHints = "all",
-						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-						includeInlayFunctionParameterTypeHints = true,
-						includeInlayVariableTypeHints = true,
-						includeInlayPropertyDeclarationTypeHints = true,
-						includeInlayFunctionLikeReturnTypeHints = true,
-						includeInlayEnumMemberValueHints = true,
-					},
-				},
-				javascript = {
-					suggest = { autoImports = true },
-					preferences = {
-						importModuleSpecifier = "non-relative",
-						quoteStyle = "single",
-					},
-				},
-			},
 		})
-		vim.lsp.enable('ts_ls')
 
 		-- CSS/SCSS/Less/Sass
-		vim.lsp.config('cssls', {
-			cmd = { "vscode-css-language-server", "--stdio" },
-			filetypes = { "css", "scss", "less", "sass" },
-			root_dir = function(fname)
-				local util = require('lspconfig.util')
-				return util.root_pattern('package.json', '.git')(fname)
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "css", "scss", "less", "sass" },
+			callback = function(ev)
+				local util = get_lsp_util()
+				vim.lsp.start({
+					name = "cssls",
+					cmd = { "vscode-css-language-server", "--stdio" },
+					root_dir = util.root_pattern('package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					capabilities = capabilities,
+					on_attach = on_attach,
+					settings = {
+						css = { validate = true, lint = { unknownAtRules = "ignore" } },
+						scss = { validate = true, lint = { unknownAtRules = "ignore" } },
+						less = { validate = true, lint = { unknownAtRules = "ignore" } },
+					},
+				})
 			end,
-			capabilities = capabilities,
-			on_attach = on_attach,
-			settings = {
-				css = { validate = true, lint = { unknownAtRules = "ignore" } },
-				scss = { validate = true, lint = { unknownAtRules = "ignore" } },
-				less = { validate = true, lint = { unknownAtRules = "ignore" } },
-			},
 		})
-		vim.lsp.enable('cssls')
 
 		-- HTML
-		vim.lsp.config('html', {
-			cmd = { "vscode-html-language-server", "--stdio" },
-			filetypes = { "html" },
-			root_dir = function(fname)
-				local util = require('lspconfig.util')
-				return util.root_pattern('package.json', '.git')(fname)
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "html" },
+			callback = function(ev)
+				local util = get_lsp_util()
+				vim.lsp.start({
+					name = "html",
+					cmd = { "vscode-html-language-server", "--stdio" },
+					root_dir = util.root_pattern('package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					capabilities = capabilities,
+					on_attach = on_attach,
+				})
 			end,
-			capabilities = capabilities,
-			on_attach = on_attach,
 		})
-		vim.lsp.enable('html')
 
 		-- Tailwind CSS
-		vim.lsp.config('tailwindcss', {
-			cmd = { "tailwindcss-language-server", "--stdio" },
-			filetypes = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
-			root_dir = function(fname)
-				local util = require('lspconfig.util')
-				return util.root_pattern('tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs')(fname)
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+			callback = function(ev)
+				local util = get_lsp_util()
+				local root = util.root_pattern('tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs')(vim.api.nvim_buf_get_name(ev.buf))
+				if root then
+					vim.lsp.start({
+						name = "tailwindcss",
+						cmd = { "tailwindcss-language-server", "--stdio" },
+						root_dir = root,
+						capabilities = capabilities,
+						on_attach = on_attach,
+					})
+				end
 			end,
-			capabilities = capabilities,
-			on_attach = on_attach,
 		})
-		vim.lsp.enable('tailwindcss')
 
 		-- Lua
-		vim.lsp.config('lua_ls', {
-			cmd = { "lua-language-server" },
-			filetypes = { "lua" },
-			root_dir = function(fname)
-				local util = require('lspconfig.util')
-				return util.root_pattern('.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git')(fname)
-			end,
-			capabilities = capabilities,
-			on_attach = on_attach,
-			settings = {
-				Lua = {
-					diagnostics = { globals = { "vim" } },
-					completion = { callSnippet = "Replace" },
-					workspace = {
-						library = vim.api.nvim_get_runtime_file("", true),
-						checkThirdParty = false,
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "lua" },
+			callback = function(ev)
+				local util = get_lsp_util()
+				vim.lsp.start({
+					name = "lua_ls",
+					cmd = { "lua-language-server" },
+					root_dir = util.root_pattern('.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					capabilities = capabilities,
+					on_attach = on_attach,
+					settings = {
+						Lua = {
+							diagnostics = { globals = { "vim" } },
+							completion = { callSnippet = "Replace" },
+							workspace = {
+								library = vim.api.nvim_get_runtime_file("", true),
+								checkThirdParty = false,
+							},
+							telemetry = { enable = false },
+						},
 					},
-					telemetry = { enable = false },
-				},
-			},
+				})
+			end,
 		})
-		vim.lsp.enable('lua_ls')
 
 		-- C/C++ (clangd)
 		local function setup_clangd()
@@ -208,61 +222,67 @@ return {
 				return
 			end
 
-			vim.lsp.config('clangd', {
-				cmd = { clangd_cmd, "--fallback-style=file" },
-				filetypes = { "c", "cpp", "objc", "objcpp" },
-				root_dir = function(fname)
-					local util = require('lspconfig.util')
-					return util.root_pattern('.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git')(fname)
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "c", "cpp", "objc", "objcpp" },
+				callback = function(ev)
+					local util = get_lsp_util()
+					vim.lsp.start({
+						name = "clangd",
+						cmd = { clangd_cmd, "--fallback-style=file" },
+						root_dir = util.root_pattern('.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+						capabilities = capabilities,
+						on_attach = on_attach,
+						init_options = {
+							clangdFileStatus = true,
+							usePlaceholders = true,
+							completeUnimported = true,
+							semanticHighlighting = true,
+						},
+					})
 				end,
-				capabilities = capabilities,
-				on_attach = on_attach,
-				init_options = {
-					clangdFileStatus = true,
-					usePlaceholders = true,
-					completeUnimported = true,
-					semanticHighlighting = true,
-				},
 			})
-			vim.lsp.enable('clangd')
 		end
 		setup_clangd()
 
 		-- Python
-		vim.lsp.config('pyright', {
-			cmd = { "pyright-langserver", "--stdio" },
-			filetypes = { "python" },
-			root_dir = function(fname)
-				local util = require('lspconfig.util')
-				return util.root_pattern('pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git')(fname)
-			end,
-			capabilities = capabilities,
-			on_attach = on_attach,
-			settings = {
-				python = {
-					analysis = {
-						autoSearchPaths = true,
-						useLibraryCodeForTypes = true,
-						diagnosticMode = "workspace",
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = { "python" },
+			callback = function(ev)
+				local util = get_lsp_util()
+				vim.lsp.start({
+					name = "pyright",
+					cmd = { "pyright-langserver", "--stdio" },
+					root_dir = util.root_pattern('pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					capabilities = capabilities,
+					on_attach = on_attach,
+					settings = {
+						python = {
+							analysis = {
+								autoSearchPaths = true,
+								useLibraryCodeForTypes = true,
+								diagnosticMode = "workspace",
+							},
+						},
 					},
-				},
-			},
+				})
+			end,
 		})
-		vim.lsp.enable('pyright')
 
 		-- Prisma
 		if vim.fn.executable("prisma-language-server") == 1 then
-			vim.lsp.config('prismals', {
-				cmd = { "prisma-language-server", "--stdio" },
-				filetypes = { "prisma" },
-				root_dir = function(fname)
-					local util = require('lspconfig.util')
-					return util.root_pattern('package.json', '.git')(fname)
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "prisma" },
+				callback = function(ev)
+					local util = get_lsp_util()
+					vim.lsp.start({
+						name = "prismals",
+						cmd = { "prisma-language-server", "--stdio" },
+						root_dir = util.root_pattern('package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+						capabilities = capabilities,
+						on_attach = on_attach,
+					})
 				end,
-				capabilities = capabilities,
-				on_attach = on_attach,
 			})
-			vim.lsp.enable('prismals')
 		end
 	end,
 }

@@ -47,30 +47,30 @@ keymap.set("n", "<leader>se", function()
 			table.insert(wins, win)
 		end
 	end
-	
+
 	if #wins < 2 then
 		vim.notify("Only one window - nothing to equalize", vim.log.levels.INFO)
 		return
 	end
-	
+
 	-- Use the exact method that WAS working before
 	-- Manual equalization as you confirmed worked (but affected cmd line)
 	local total_width = vim.o.columns
 	local total_height = vim.o.lines
 	local win_width = math.floor(total_width / #wins)
 	local win_height = math.floor(total_height / #wins)
-	
+
 	-- Store original cmdheight before resizing
 	local orig_cmdheight = vim.o.cmdheight
-	
+
 	for _, win in ipairs(wins) do
 		pcall(vim.api.nvim_win_set_width, win, win_width)
 		pcall(vim.api.nvim_win_set_height, win, win_height)
 	end
-	
+
 	-- Restore command line height immediately after
 	vim.o.cmdheight = orig_cmdheight
-	
+
 	vim.notify("Splits equalized (manual method)", vim.log.levels.INFO)
 end, { desc = "Make splits equal size (WSL-friendly)" })
 
@@ -86,7 +86,7 @@ keymap.set("n", "<leader>sd", function()
 			table.insert(wins, win)
 		end
 	end
-	
+
 	print("=== WINDOW DEBUG INFO ===")
 	for i, win in ipairs(wins) do
 		local width = vim.api.nvim_win_get_width(win)
@@ -284,7 +284,7 @@ end
 -- ================================================================
 
 -- Compile single C++ file
-keymap.set("n", "<Space>cc", ":!g++ -g -O0 -std=c++2b -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
+keymap.set("n", "<Space>cc", ":!g++ -g -O0 -std=c++23 -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
 
 -- Compile all CPP files (cross-platform)
 keymap.set("n", "<Space>cx", function()
@@ -641,7 +641,13 @@ vim.keymap.set("n", "<leader>da", ":delmarks!<cr>:delmarks A-Z<cr>", { desc = "D
 keymap.set("n", "<leader>io", function()
 	local file = vim.fn.expand("<cfile>")
 	if file and file ~= "" then
-		if file:match("%.png$") or file:match("%.jpg$") or file:match("%.jpeg$") or file:match("%.gif$") or file:match("%.webp$") then
+		if
+			file:match("%.png$")
+			or file:match("%.jpg$")
+			or file:match("%.jpeg$")
+			or file:match("%.gif$")
+			or file:match("%.webp$")
+		then
 			vim.fn.system("xdg-open '" .. file .. "' &")
 			vim.notify("Opened: " .. file)
 		else

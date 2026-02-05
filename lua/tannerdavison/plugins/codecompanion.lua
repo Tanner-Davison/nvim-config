@@ -43,6 +43,21 @@ return {
       interactions = {
         chat = {
           adapter = "anthropic",
+          -- SYSTEM PROMPT - Tell Claude about available tools
+          system_prompt = [[
+You have access to MCP tools that extend your capabilities:
+
+- @figma / @get_figma_data: Use this when you see ANY Figma URL (figma.com/design/*, figma.com/file/*). Extracts design specs, colors, typography, spacing, and component structure.
+- @tavily: Use for web searches when you need current information.
+- @filesystem: Use for file operations outside the current project.
+- @sequentialthinking: Use for complex multi-step reasoning tasks.
+
+When you see a Figma URL, ALWAYS use @get_figma_data to fetch the design specifications before implementing components. Extract the fileKey and nodeId from the URL.
+
+Example: For "https://www.figma.com/design/ABC123/MyFile?node-id=123-456"
+- fileKey: ABC123
+- nodeId: 123-456
+]],
           -- TOOLS CONFIG
           tools = {
             opts = {
@@ -170,7 +185,7 @@ return {
             make_tools = true,              -- Create @server tools from MCP servers
             show_server_tools_in_chat = true,
             add_mcp_prefix_to_tool_names = false,
-            show_result_in_chat = true,
+            show_result_in_chat = false,
             -- MCP Resources  
             make_vars = true,               -- Convert MCP resources to #variables
             -- MCP Prompts

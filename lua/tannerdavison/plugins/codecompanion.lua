@@ -7,6 +7,7 @@ return {
     "hrsh7th/nvim-cmp",
     "nvim-telescope/telescope.nvim",
     "stevearc/dressing.nvim",
+    "ravitemer/mcphub.nvim", -- MCP integration
   },
   config = function()
     require("codecompanion").setup({
@@ -157,6 +158,26 @@ return {
         send_code = true,
         log_level = "DEBUG",
       },
+
+      -- ============================================
+      -- EXTENSIONS - MCPHub integration
+      -- ============================================
+      extensions = {
+        mcphub = {
+          callback = "mcphub.extensions.codecompanion",
+          opts = {
+            -- MCP Tools
+            make_tools = true,              -- Create @server tools from MCP servers
+            show_server_tools_in_chat = true,
+            add_mcp_prefix_to_tool_names = false,
+            show_result_in_chat = true,
+            -- MCP Resources  
+            make_vars = true,               -- Convert MCP resources to #variables
+            -- MCP Prompts
+            make_slash_commands = true,     -- Add MCP prompts as /slash commands
+          },
+        },
+      },
     })
 
     -- ============================================
@@ -192,31 +213,32 @@ return {
         local instructions = string.format([[
 === CODECOMPANION TOOLS AVAILABLE ===
 
-FILE OPERATIONS:
+BUILT-IN TOOLS:
   @insert_edit_into_file - Edit existing files
   @read_file            - Read any file
-  @create_file          - Create new files
+  @create_file          - Create new files  
   @delete_file          - Delete files
-
-CODE ANALYSIS:
-  @list_code_usages     - Find LSP references
   @grep_search          - Search project with grep
   @file_search          - Find files by name
-
-EXECUTION:
   @cmd_runner           - Run shell commands
 
-CONTEXT (use these first!):
+MCP TOOLS (via MCPHub):
+  @tavily               - Web search
+  @filesystem           - File operations
+  @sequentialthinking   - Step-by-step reasoning
+  @browser_tools        - Browser automation
+
+CONTEXT:
   #buffer               - Current buffer content
   /file <path>          - Load specific file
   /symbols              - LSP symbols
 
 EXAMPLE PROMPTS:
   "#buffer @insert_edit_into_file - add error handling"
-  "@read_file src/window.hpp then @insert_edit_into_file src/main.cpp - use the Window class"
-  "@grep_search TODO then summarize what needs to be done"
-  "@cmd_runner ls -la src/"
+  "@tavily search for SDL2 best practices for game loops"
+  "@filesystem read ~/projects/myapp/config.json"
 
+Open MCP Hub UI: <leader>ms
 Current file: %s
 ]], relative_path)
         

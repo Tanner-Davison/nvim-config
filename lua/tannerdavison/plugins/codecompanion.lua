@@ -42,19 +42,60 @@ return {
       interactions = {
         chat = {
           adapter = "anthropic",
-          -- TOOLS CONFIG - This is the correct location!
+          -- TOOLS CONFIG
           tools = {
             opts = {
-              auto_submit_errors = true,  -- Send tool errors back to LLM automatically
-              auto_submit_success = true, -- Send tool success back to LLM automatically
-              -- Uncomment to auto-add tools to every chat:
-              -- default_tools = { "insert_edit_into_file", "read_file", "create_file" },
+              auto_submit_errors = true,
+              auto_submit_success = true,
+              -- Auto-add the full_stack_dev tool group to every chat
+              -- This gives Claude access to all file/code tools automatically
+              default_tools = { "full_stack_dev" },
             },
-            -- Tool-specific settings
+            -- ============================================
+            -- BUILT-IN TOOLS - All available tools
+            -- ============================================
+            -- File Operations
             ["insert_edit_into_file"] = {
               opts = {
-                require_approval_before = false,  -- Don't ask before attempting edit
-                require_confirmation_after = true, -- But confirm after seeing the diff
+                require_approval_before = false,
+                require_confirmation_after = true,
+              },
+            },
+            ["read_file"] = {
+              opts = {
+                require_approval_before = false,
+              },
+            },
+            ["create_file"] = {
+              opts = {
+                require_approval_before = true, -- Ask before creating files
+              },
+            },
+            ["delete_file"] = {
+              opts = {
+                require_approval_before = true, -- Always ask before deleting
+              },
+            },
+            -- Code Analysis
+            ["list_code_usages"] = {
+              opts = {
+                require_approval_before = false,
+              },
+            },
+            ["grep_search"] = {
+              opts = {
+                require_approval_before = false,
+              },
+            },
+            ["file_search"] = {
+              opts = {
+                require_approval_before = false,
+              },
+            },
+            -- Execution
+            ["cmd_runner"] = {
+              opts = {
+                require_approval_before = true, -- Ask before running commands
               },
             },
           },
@@ -66,6 +107,11 @@ return {
               },
             },
             ["file"] = {
+              opts = {
+                provider = "telescope",
+              },
+            },
+            ["symbols"] = {
               opts = {
                 provider = "telescope",
               },
@@ -100,7 +146,7 @@ return {
         },
         diff = {
           enabled = true,
-          provider = "default", -- Use built-in diff
+          provider = "mini.diff",
         },
       },
 
@@ -109,32 +155,30 @@ return {
       -- ============================================
       opts = {
         send_code = true,
-        log_level = "DEBUG", -- Set to "TRACE" for maximum debugging
+        log_level = "DEBUG",
       },
     })
 
     -- ============================================
-    -- KEYMAPS
+    -- KEYMAPS - All using <leader>k prefix
     -- ============================================
     local keymap = vim.keymap.set
 
-    -- Main CodeCompanion keymaps (using <leader>C to avoid conflicts)
-    keymap({ "n", "v" }, "<leader>Cc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle CodeCompanion Chat" })
-    keymap({ "n", "v" }, "<leader>Ce", "<cmd>CodeCompanionActions<cr>", { desc = "CodeCompanion Actions" })
-    keymap("v", "<leader>Ca", "<cmd>CodeCompanionChat Add<cr>", { desc = "Add selection to CodeCompanion" })
+    -- Main CodeCompanion keymaps
+    keymap({ "n", "v" }, "<leader>kc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle CodeCompanion Chat" })
+    keymap({ "n", "v" }, "<leader>ka", "<cmd>CodeCompanionActions<cr>", { desc = "CodeCompanion Actions" })
+    keymap("v", "<leader>ks", "<cmd>CodeCompanionChat Add<cr>", { desc = "Add selection to CodeCompanion" })
 
     -- Quick chat with current buffer context
-    keymap("n", "<leader>Cb", function()
-      -- Open chat and include buffer context automatically
+    keymap("n", "<leader>kb", function()
       vim.cmd("CodeCompanionChat")
       vim.defer_fn(function()
-        -- Type #buffer to include the current buffer
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("#buffer ", true, false, true), "n", false)
       end, 200)
     end, { desc = "CodeCompanion with buffer context" })
 
-    -- File editing helper - shows instructions
-    keymap("n", "<leader>Cf", function()
+    -- File editing helper
+    keymap("n", "<leader>kf", function()
       local current_file = vim.api.nvim_buf_get_name(0)
       local relative_path = vim.fn.fnamemodify(current_file, ":~:.")
       
@@ -146,28 +190,42 @@ return {
       vim.cmd("CodeCompanionChat")
       vim.defer_fn(function()
         local instructions = string.format([[
-=== FILE EDITING GUIDE for %s ===
+=== CODECOMPANION TOOLS AVAILABLE ===
 
-STEP 1: Share file context (type one of these):
-  #buffer          <- Current buffer content
-  /file %s         <- Load specific file
+FILE OPERATIONS:
+  @insert_edit_into_file - Edit existing files
+  @read_file            - Read any file
+  @create_file          - Create new files
+  @delete_file          - Delete files
 
-STEP 2: Request edit with @insert_edit_into_file:
-  "@insert_edit_into_file - add a getRenderer() method"
-  "@insert_edit_into_file - fix the bug on line 42"
+CODE ANALYSIS:
+  @list_code_usages     - Find LSP references
+  @grep_search          - Search project with grep
+  @file_search          - Find files by name
 
-EXAMPLE PROMPT:
-  #buffer @insert_edit_into_file - add a destructor that cleans up SDL resources
+EXECUTION:
+  @cmd_runner           - Run shell commands
 
-The LLM will show you a diff before applying changes!
-]], relative_path, relative_path)
+CONTEXT (use these first!):
+  #buffer               - Current buffer content
+  /file <path>          - Load specific file
+  /symbols              - LSP symbols
+
+EXAMPLE PROMPTS:
+  "#buffer @insert_edit_into_file - add error handling"
+  "@read_file src/window.hpp then @insert_edit_into_file src/main.cpp - use the Window class"
+  "@grep_search TODO then summarize what needs to be done"
+  "@cmd_runner ls -la src/"
+
+Current file: %s
+]], relative_path)
         
         vim.notify(instructions, vim.log.levels.INFO)
       end, 300)
-    end, { desc = "Setup file editing with CodeCompanion" })
+    end, { desc = "Show CodeCompanion tools help" })
 
     -- Diagnostic fixer with context
-    keymap("n", "<leader>Cd", function()
+    keymap("n", "<leader>kd", function()
       local diagnostics = vim.diagnostic.get(0)
       if #diagnostics == 0 then
         vim.notify("No diagnostics found")
@@ -179,40 +237,16 @@ The LLM will show you a diff before applying changes!
         table.insert(diag_text, string.format("Line %d: %s", diag.lnum + 1, diag.message))
       end
       
-      -- Open chat with buffer and diagnostics
       vim.cmd("CodeCompanionChat")
       vim.defer_fn(function()
         local prompt = "#buffer @insert_edit_into_file - Fix these diagnostics:\n" .. table.concat(diag_text, "\n")
-        -- Copy to clipboard for easy pasting
         vim.fn.setreg("+", prompt)
         vim.notify("Diagnostic fix prompt copied to clipboard!", vim.log.levels.INFO)
       end, 300)
     end, { desc = "Fix Diagnostics with CodeCompanion" })
 
-    -- Project search and chat
-    keymap("n", "<leader>Cs", function()
-      vim.ui.input({ prompt = "Search project for: " }, function(search_term)
-        if not search_term then return end
-        
-        local search_cmd = "rg -n --type-add 'code:*.{ts,tsx,js,jsx,cpp,h,hpp,lua}' -t code " 
-          .. vim.fn.shellescape(search_term) .. " | head -20"
-        local results = vim.fn.system(search_cmd)
-        
-        if vim.v.shell_error == 0 and results ~= "" then
-          vim.cmd("CodeCompanionChat")
-          vim.defer_fn(function()
-            local prompt = "Search results for '" .. search_term .. "':\n```\n" .. results .. "```\n\nHelp me understand these."
-            vim.fn.setreg("+", prompt)
-            vim.notify("Search results copied to clipboard!", vim.log.levels.INFO)
-          end, 300)
-        else
-          vim.notify("No results found for: " .. search_term)
-        end
-      end)
-    end, { desc = "Search project and discuss" })
-
     -- Inline code generation
-    keymap("n", "<leader>Cg", function()
+    keymap("n", "<leader>kg", function()
       vim.ui.input({ prompt = "Generate code: " }, function(input)
         if input then
           vim.cmd("CodeCompanion " .. input)
@@ -220,10 +254,45 @@ The LLM will show you a diff before applying changes!
       end)
     end, { desc = "Generate Code inline" })
 
+    -- Explain selected code
+    keymap("v", "<leader>ke", ":<C-u>'<,'>CodeCompanion /explain<CR>", { desc = "Explain selected code" })
+
+    -- Refactor selected code
+    keymap("v", "<leader>kr", ":<C-u>'<,'>CodeCompanion /refactor<CR>", { desc = "Refactor selected code" })
+
+    -- Quick agentic mode - let Claude figure out what to do
+    keymap("n", "<leader>kq", function()
+      vim.ui.input({ prompt = "What do you want Claude to do? " }, function(input)
+        if input then
+          vim.cmd("CodeCompanionChat")
+          vim.defer_fn(function()
+            -- Pre-fill the chat with context and the request
+            local prompt = "#buffer " .. input
+            vim.fn.setreg("+", prompt)
+            vim.notify("Prompt copied! Paste with Ctrl+V", vim.log.levels.INFO)
+          end, 300)
+        end
+      end)
+    end, { desc = "Quick Claude request" })
+
+    -- Search project and discuss
+    keymap("n", "<leader>kp", function()
+      vim.ui.input({ prompt = "Search project for: " }, function(input)
+        if input then
+          vim.cmd("CodeCompanionChat")
+          vim.defer_fn(function()
+            local prompt = "@grep_search " .. input .. " - summarize what you find"
+            vim.fn.setreg("+", prompt)
+            vim.notify("Search prompt copied! Paste with Ctrl+V", vim.log.levels.INFO)
+          end, 300)
+        end
+      end)
+    end, { desc = "Search project with Claude" })
+
     -- API key check
     vim.defer_fn(function()
       if os.getenv("ANTHROPIC_API_KEY") then
-        vim.notify("CodeCompanion ready with Claude", vim.log.levels.INFO)
+        vim.notify("CodeCompanion ready with Claude + full_stack_dev tools", vim.log.levels.INFO)
       else
         vim.notify("Set ANTHROPIC_API_KEY environment variable!", vim.log.levels.WARN)
       end

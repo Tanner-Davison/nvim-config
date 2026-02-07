@@ -673,6 +673,42 @@ keymap.set("n", "<leader>eo", function()
 end, { desc = "Open current file externally" })
 
 -- ================================================================
+-- PDF HANDLING
+-- ================================================================
+
+-- Open PDF under cursor externally
+keymap.set("n", "<leader>po", function()
+	local file = vim.fn.expand("<cfile>")
+	if file and file ~= "" then
+		if file:match("%.pdf$") then
+			vim.fn.system("xdg-open '" .. file .. "' &")
+			vim.notify("Opened PDF: " .. file)
+		else
+			if file ~= "" then
+				vim.notify("Not a PDF file: " .. file, vim.log.levels.WARN)
+			end
+		end
+	else
+		vim.notify("No file under cursor", vim.log.levels.INFO)
+	end
+end, { desc = "Open PDF under cursor externally" })
+
+-- Open current PDF file externally
+keymap.set("n", "<leader>pv", function()
+	local file = vim.api.nvim_buf_get_name(0)
+	if file and file ~= "" then
+		if file:match("%.pdf$") then
+			vim.fn.system("xdg-open '" .. file .. "' &")
+			vim.notify("Opened PDF: " .. vim.fn.fnamemodify(file, ":t"))
+		else
+			vim.notify("Current file is not a PDF", vim.log.levels.WARN)
+		end
+	else
+		vim.notify("No file in current buffer", vim.log.levels.WARN)
+	end
+end, { desc = "Open current PDF file externally" })
+
+-- ================================================================
 -- LSP UTILITIES
 -- ================================================================
 

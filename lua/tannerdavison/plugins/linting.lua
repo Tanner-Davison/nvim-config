@@ -22,7 +22,19 @@ return {
 		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, {
 			group = lint_augroup,
 			callback = function()
-				lint.try_lint()
+				-- Only lint if the linter executable exists
+				local linters = lint.linters_by_ft[vim.bo.filetype] or {}
+				for _, linter_name in ipairs(linters) do
+					local linter = lint.linters[linter_name]
+					if linter and linter.cmd then
+						-- Extract command name (could be string or table)
+						local cmd = type(linter.cmd) == "table" and linter.cmd[1] or linter.cmd
+						-- Check if command is executable before trying to lint
+						if type(cmd) == "string" and vim.fn.executable(cmd) == 1 then
+							lint.try_lint(linter_name)
+						end
+					end
+				end
 			end,
 		})
 

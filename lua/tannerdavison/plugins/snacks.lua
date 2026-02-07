@@ -7,6 +7,16 @@ return {
 		bigfile = { enabled = true },
 		dashboard = { enabled = false },
 		explorer = { enabled = true },
+		image = { 
+			enabled = true,
+			-- Explicitly enable inline rendering
+			inline = { enabled = true },
+			-- Force terminal cell dimensions (approximate for your setup)
+			term = {
+				size = { width = 1920, height = 1080 }, -- Your screen resolution
+				cell = { width = 10, height = 20 }, -- Approximate cell size in pixels
+			},
+		},
 		indent = { enabled = true },
 		input = { enabled = true },
 		notifier = {
@@ -523,6 +533,17 @@ return {
 				end
 			end,
 			desc = "Open current file externally",
+		},
+		{
+			"<leader>ei",
+			function()
+				-- Simple image browser - just use files picker
+				-- The filter happens via glob pattern
+				Snacks.picker.files({
+					prompt = "Images",
+				})
+			end,
+			desc = "Browse and open images",
 		},
 	},
 	init = function()

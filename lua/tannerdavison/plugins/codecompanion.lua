@@ -7,70 +7,46 @@ return {
     "hrsh7th/nvim-cmp",
     "nvim-telescope/telescope.nvim",
     "stevearc/dressing.nvim",
-    "ravitemer/mcphub.nvim", -- MCP integration
+    "ravitemer/mcphub.nvim",
   },
   config = function()
     require("codecompanion").setup({
       -- ============================================
-      -- ADAPTERS - Configure your LLM connection
+      -- ADAPTERS
       -- ============================================
       adapters = {
-        http = {
-          anthropic = function()
-            return require("codecompanion.adapters").extend("anthropic", {
-              env = {
-                api_key = "ANTHROPIC_API_KEY",
+        anthropic = function()
+          return require("codecompanion.adapters").extend("anthropic", {
+            env = {
+              api_key = "ANTHROPIC_API_KEY",
+            },
+            schema = {
+              model = {
+                default = "claude-sonnet-4-20250514",
               },
-              schema = {
-                model = {
-                  default = "claude-sonnet-4-20250514",
-                },
-                max_tokens = {
-                  default = 8192,
-                },
-                temperature = {
-                  default = 0.2,
-                },
+              max_tokens = {
+                default = 8192,
               },
-            })
-          end,
-        },
+              temperature = {
+                default = 0.2,
+              },
+            },
+          })
+        end,
       },
 
       -- ============================================
-      -- INTERACTIONS - How you interact with the LLM
+      -- STRATEGIES (was 'interactions' pre-v13)
       -- ============================================
-      interactions = {
+      strategies = {
         chat = {
           adapter = "anthropic",
-          -- SYSTEM PROMPT - Tell Claude about available tools
-          system_prompt = [[
-You have access to MCP tools that extend your capabilities:
-
-- @figma / @get_figma_data: Use this when you see ANY Figma URL (figma.com/design/*, figma.com/file/*). Extracts design specs, colors, typography, spacing, and component structure.
-- @tavily: Use for web searches when you need current information.
-- @filesystem: Use for file operations outside the current project.
-- @sequentialthinking: Use for complex multi-step reasoning tasks.
-
-When you see a Figma URL, ALWAYS use @get_figma_data to fetch the design specifications before implementing components. Extract the fileKey and nodeId from the URL.
-
-Example: For "https://www.figma.com/design/ABC123/MyFile?node-id=123-456"
-- fileKey: ABC123
-- nodeId: 123-456
-]],
-          -- TOOLS CONFIG
+          system_prompt = [[You are an expert full-stack developer. You have access to tools when the user provides them via @mentions. Only use tools that have been explicitly made available in the conversation. Be concise and precise with edits.]],
           tools = {
             opts = {
               auto_submit_errors = true,
               auto_submit_success = true,
-              -- Auto-add the full_stack_dev tool group to every chat
-              -- This gives Claude access to all file/code tools automatically
-              default_tools = { "full_stack_dev" },
             },
-            -- ============================================
-            -- BUILT-IN TOOLS - All available tools
-            -- ============================================
-            -- File Operations
             ["insert_edit_into_file"] = {
               opts = {
                 require_approval_before = false,
@@ -78,60 +54,31 @@ Example: For "https://www.figma.com/design/ABC123/MyFile?node-id=123-456"
               },
             },
             ["read_file"] = {
-              opts = {
-                require_approval_before = false,
-              },
+              opts = { require_approval_before = false },
             },
             ["create_file"] = {
-              opts = {
-                require_approval_before = true, -- Ask before creating files
-              },
+              opts = { require_approval_before = true },
             },
             ["delete_file"] = {
-              opts = {
-                require_approval_before = true, -- Always ask before deleting
-              },
+              opts = { require_approval_before = true },
             },
-            -- Code Analysis
-            ["list_code_usages"] = {
-              opts = {
-                require_approval_before = false,
-              },
+            ["cmd_runner"] = {
+              opts = { require_approval_before = true },
             },
             ["grep_search"] = {
-              opts = {
-                require_approval_before = false,
-              },
+              opts = { require_approval_before = false },
             },
             ["file_search"] = {
-              opts = {
-                require_approval_before = false,
-              },
+              opts = { require_approval_before = false },
             },
-            -- Execution
-            ["cmd_runner"] = {
-              opts = {
-                require_approval_before = true, -- Ask before running commands
-              },
+            ["list_code_usages"] = {
+              opts = { require_approval_before = false },
             },
           },
-          -- Slash commands config
           slash_commands = {
-            ["buffer"] = {
-              opts = {
-                provider = "telescope",
-              },
-            },
-            ["file"] = {
-              opts = {
-                provider = "telescope",
-              },
-            },
-            ["symbols"] = {
-              opts = {
-                provider = "telescope",
-              },
-            },
+            ["buffer"] = { opts = { provider = "telescope" } },
+            ["file"] = { opts = { provider = "telescope" } },
+            ["symbols"] = { opts = { provider = "telescope" } },
           },
         },
         inline = {
@@ -143,7 +90,7 @@ Example: For "https://www.figma.com/design/ABC123/MyFile?node-id=123-456"
       },
 
       -- ============================================
-      -- DISPLAY - UI Configuration
+      -- DISPLAY
       -- ============================================
       display = {
         action_palette = {
@@ -155,7 +102,7 @@ Example: For "https://www.figma.com/design/ABC123/MyFile?node-id=123-456"
           window = {
             layout = "vertical",
             width = 0.45,
-            height = 0.8,
+            height = 0.85,
             relative = "editor",
           },
           show_token_count = true,
@@ -167,172 +114,155 @@ Example: For "https://www.figma.com/design/ABC123/MyFile?node-id=123-456"
       },
 
       -- ============================================
-      -- OPTS - General options
+      -- OPTIONS
       -- ============================================
       opts = {
         send_code = true,
-        log_level = "DEBUG",
+        log_level = "INFO",
       },
 
       -- ============================================
-      -- EXTENSIONS - MCPHub integration
+      -- MCPHUB EXTENSION
       -- ============================================
       extensions = {
         mcphub = {
           callback = "mcphub.extensions.codecompanion",
           opts = {
-            -- MCP Tools
-            make_tools = true,              -- Create @server tools from MCP servers
+            make_tools = true,
             show_server_tools_in_chat = true,
             add_mcp_prefix_to_tool_names = false,
-            show_result_in_chat = false,
-            -- MCP Resources  
-            make_vars = true,               -- Convert MCP resources to #variables
-            -- MCP Prompts
-            make_slash_commands = true,     -- Add MCP prompts as /slash commands
+            show_result_in_chat = true,
+            make_vars = true,
+            make_slash_commands = true,
           },
         },
       },
     })
 
     -- ============================================
-    -- KEYMAPS - All using <leader>k prefix
+    -- KEYMAPS - <leader>k prefix
     -- ============================================
     local keymap = vim.keymap.set
 
-    -- Main CodeCompanion keymaps
-    keymap({ "n", "v" }, "<leader>kc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle CodeCompanion Chat" })
-    keymap({ "n", "v" }, "<leader>ka", "<cmd>CodeCompanionActions<cr>", { desc = "CodeCompanion Actions" })
-    keymap("v", "<leader>ks", "<cmd>CodeCompanionChat Add<cr>", { desc = "Add selection to CodeCompanion" })
+    -- Main actions
+    keymap({ "n", "v" }, "<leader>kc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle Chat" })
+    keymap({ "n", "v" }, "<leader>ka", "<cmd>CodeCompanionActions<cr>", { desc = "Actions" })
+    keymap("v", "<leader>ks", "<cmd>CodeCompanionChat Add<cr>", { desc = "Add to Chat" })
 
-    -- Quick chat with current buffer context
+    -- Context shortcuts
     keymap("n", "<leader>kb", function()
       vim.cmd("CodeCompanionChat")
       vim.defer_fn(function()
         vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("#buffer ", true, false, true), "n", false)
       end, 200)
-    end, { desc = "CodeCompanion with buffer context" })
+    end, { desc = "Chat with buffer" })
 
-    -- File editing helper
-    keymap("n", "<leader>kf", function()
-      local current_file = vim.api.nvim_buf_get_name(0)
-      local relative_path = vim.fn.fnamemodify(current_file, ":~:.")
-      
-      if current_file == "" then
-        vim.notify("No file open in current buffer", vim.log.levels.WARN)
-        return
-      end
-      
-      vim.cmd("CodeCompanionChat")
-      vim.defer_fn(function()
-        local instructions = string.format([[
-=== CODECOMPANION TOOLS AVAILABLE ===
+    -- Tools help
+    keymap("n", "<leader>kh", function()
+      vim.notify([[
+=== CODECOMPANION + MCPHUB ===
 
-BUILT-IN TOOLS:
-  @insert_edit_into_file - Edit existing files
-  @read_file            - Read any file
-  @create_file          - Create new files  
-  @delete_file          - Delete files
-  @grep_search          - Search project with grep
-  @file_search          - Find files by name
-  @cmd_runner           - Run shell commands
+Chat:  <leader>kc    Actions: <leader>ka
+Buffer: <leader>kb   Help: <leader>kh
 
-MCP TOOLS (via MCPHub):
-  @tavily               - Web search
-  @filesystem           - File operations
-  @sequentialthinking   - Step-by-step reasoning
-  @browser_tools        - Browser automation
+MCP Tools (@name):
+  @filesystem  @fetch  @tavily  @context7
+  @github  @git  @figma  @browser_tools
+  @sequentialthinking  @memory  @neovim
 
-CONTEXT:
-  #buffer               - Current buffer content
-  /file <path>          - Load specific file
-  /symbols              - LSP symbols
+Built-in (@name):
+  @insert_edit_into_file  @read_file
+  @grep_search  @file_search  @cmd_runner
 
-EXAMPLE PROMPTS:
-  "#buffer @insert_edit_into_file - add error handling"
-  "@tavily search for SDL2 best practices for game loops"
-  "@filesystem read ~/projects/myapp/config.json"
+Context:  #buffer  /file  /symbols
+MCP Vars: #{mcp:neovim://diagnostics/buffer}
 
-Open MCP Hub UI: <leader>ms
-Current file: %s
-]], relative_path)
-        
-        vim.notify(instructions, vim.log.levels.INFO)
-      end, 300)
-    end, { desc = "Show CodeCompanion tools help" })
+MCP Hub: <leader>ms
+]], vim.log.levels.INFO)
+    end, { desc = "Show tools help" })
 
-    -- Diagnostic fixer with context
+    -- Diagnostic fixer
     keymap("n", "<leader>kd", function()
       local diagnostics = vim.diagnostic.get(0)
       if #diagnostics == 0 then
-        vim.notify("No diagnostics found")
+        vim.notify("No diagnostics found", vim.log.levels.INFO)
         return
       end
-      
+
       local diag_text = {}
       for _, diag in ipairs(diagnostics) do
         table.insert(diag_text, string.format("Line %d: %s", diag.lnum + 1, diag.message))
       end
-      
+
       vim.cmd("CodeCompanionChat")
       vim.defer_fn(function()
         local prompt = "#buffer @insert_edit_into_file - Fix these diagnostics:\n" .. table.concat(diag_text, "\n")
         vim.fn.setreg("+", prompt)
-        vim.notify("Diagnostic fix prompt copied to clipboard!", vim.log.levels.INFO)
+        vim.notify("Diagnostic prompt copied! Paste with Ctrl+V", vim.log.levels.INFO)
       end, 300)
-    end, { desc = "Fix Diagnostics with CodeCompanion" })
+    end, { desc = "Fix Diagnostics" })
 
-    -- Inline code generation
+    -- Quick actions
     keymap("n", "<leader>kg", function()
       vim.ui.input({ prompt = "Generate code: " }, function(input)
         if input then
           vim.cmd("CodeCompanion " .. input)
         end
       end)
-    end, { desc = "Generate Code inline" })
+    end, { desc = "Generate Code" })
 
-    -- Explain selected code
-    keymap("v", "<leader>ke", ":<C-u>'<,'>CodeCompanion /explain<CR>", { desc = "Explain selected code" })
+    keymap("v", "<leader>ke", ":<C-u>'<,'>CodeCompanion /explain<CR>", { desc = "Explain code" })
+    keymap("v", "<leader>kr", ":<C-u>'<,'>CodeCompanion /refactor<CR>", { desc = "Refactor code" })
 
-    -- Refactor selected code
-    keymap("v", "<leader>kr", ":<C-u>'<,'>CodeCompanion /refactor<CR>", { desc = "Refactor selected code" })
-
-    -- Quick agentic mode - let Claude figure out what to do
+    -- Agentic mode
     keymap("n", "<leader>kq", function()
-      vim.ui.input({ prompt = "What do you want Claude to do? " }, function(input)
+      vim.ui.input({ prompt = "What should Claude do? " }, function(input)
         if input then
           vim.cmd("CodeCompanionChat")
           vim.defer_fn(function()
-            -- Pre-fill the chat with context and the request
             local prompt = "#buffer " .. input
             vim.fn.setreg("+", prompt)
-            vim.notify("Prompt copied! Paste with Ctrl+V", vim.log.levels.INFO)
+            vim.notify("Prompt ready! Paste with Ctrl+V", vim.log.levels.INFO)
           end, 300)
         end
       end)
-    end, { desc = "Quick Claude request" })
+    end, { desc = "Quick request" })
 
-    -- Search project and discuss
+    -- Project search
     keymap("n", "<leader>kp", function()
-      vim.ui.input({ prompt = "Search project for: " }, function(input)
+      vim.ui.input({ prompt = "Search project: " }, function(input)
         if input then
           vim.cmd("CodeCompanionChat")
           vim.defer_fn(function()
-            local prompt = "@grep_search " .. input .. " - summarize what you find"
+            local prompt = "@grep_search " .. input .. " - analyze findings"
             vim.fn.setreg("+", prompt)
-            vim.notify("Search prompt copied! Paste with Ctrl+V", vim.log.levels.INFO)
+            vim.notify("Search prompt ready! Paste with Ctrl+V", vim.log.levels.INFO)
           end, 300)
         end
       end)
-    end, { desc = "Search project with Claude" })
+    end, { desc = "Search with Claude" })
 
-    -- API key check
+    -- Web research
+    keymap("n", "<leader>kw", function()
+      vim.ui.input({ prompt = "Research: " }, function(input)
+        if input then
+          vim.cmd("CodeCompanionChat")
+          vim.defer_fn(function()
+            local prompt = "@tavily " .. input .. " - summarize findings"
+            vim.fn.setreg("+", prompt)
+            vim.notify("Research prompt ready! Paste with Ctrl+V", vim.log.levels.INFO)
+          end, 300)
+        end
+      end)
+    end, { desc = "Web research" })
+
+    -- Startup check
     vim.defer_fn(function()
       if os.getenv("ANTHROPIC_API_KEY") then
-        vim.notify("CodeCompanion ready with Claude + full_stack_dev tools", vim.log.levels.INFO)
+        vim.notify("✅ CodeCompanion + MCPHub ready!", vim.log.levels.INFO)
       else
-        vim.notify("Set ANTHROPIC_API_KEY environment variable!", vim.log.levels.WARN)
+        vim.notify("⚠️  Set ANTHROPIC_API_KEY environment variable", vim.log.levels.WARN)
       end
-    end, 1000)
+    end, 1500)
   end,
 }

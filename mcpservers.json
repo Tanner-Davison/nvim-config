@@ -1,55 +1,70 @@
 {
   "mcpServers": {
-    "sequentialthinking": {
+    "everything": {
+      "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "command": "npx"
+        "@modelcontextprotocol/server-everything"
+      ]
     },
     "filesystem": {
-      "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem"
       ],
+      "command": "npx",
       "env": {
         "ALLOWED_DIRECTORIES": "/home/tanner/projects:/home/tanner/.config"
       }
     },
-    "tavily": {
+    "sequentialthinking": {
       "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "fetch": {
+      "command": "/home/tanner/.local/bin/uvx",
+      "args": [
+        "--from",
+        "mcp-server-fetch",
+        "mcp-server-fetch"
+      ]
+    },
+    "browser_tools": {
+      "command": "npx",
+      "args": [
+        "@agentdeskai/browser-tools-mcp@latest"
+      ]
+    },
+    "tavily": {
       "args": [
         "-y",
         "tavily-mcp"
       ],
+      "command": "npx",
       "env": {
         "TAVILY_API_KEY": "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"
       }
     },
-    "everything": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
-      "command": "npx"
-    },
     "figma": {
-      "command": "npx",
       "args": [
         "-y",
         "figma-developer-mcp",
         "--stdio"
       ],
+      "command": "npx",
       "env": {
         "FIGMA_API_KEY": "${FIGMA_API_KEY}"
       }
     },
-    "browser_tools": {
+    "memory": {
+      "command": "npx",
       "args": [
-        "@agentdeskai/browser-tools-mcp@latest"
-      ],
-      "command": "npx"
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
     }
   }
 }

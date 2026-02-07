@@ -52,20 +52,16 @@ return {
 			keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show documentation for what is under cursor" }))
 		end
 
-		-- Helper function to get util module
-		local function get_lsp_util()
-			return require('lspconfig.util')
-		end
-
 		-- TypeScript/JavaScript
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
 			callback = function(ev)
-				local util = get_lsp_util()
+				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'tsconfig.json', 'package.json', '.git' })
+				
 				vim.lsp.start({
 					name = "ts_ls",
 					cmd = { "typescript-language-server", "--stdio" },
-					root_dir = util.root_pattern('tsconfig.json', 'package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					root_dir = root_dir,
 					capabilities = capabilities,
 					on_attach = function(client, bufnr)
 						client.server_capabilities.documentFormattingProvider = false
@@ -105,11 +101,12 @@ return {
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "css", "scss", "less", "sass" },
 			callback = function(ev)
-				local util = get_lsp_util()
+				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
+				
 				vim.lsp.start({
 					name = "cssls",
 					cmd = { "vscode-css-language-server", "--stdio" },
-					root_dir = util.root_pattern('package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					root_dir = root_dir,
 					capabilities = capabilities,
 					on_attach = on_attach,
 					settings = {
@@ -125,11 +122,12 @@ return {
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "html" },
 			callback = function(ev)
-				local util = get_lsp_util()
+				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
+				
 				vim.lsp.start({
 					name = "html",
 					cmd = { "vscode-html-language-server", "--stdio" },
-					root_dir = util.root_pattern('package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					root_dir = root_dir,
 					capabilities = capabilities,
 					on_attach = on_attach,
 				})
@@ -140,13 +138,13 @@ return {
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 			callback = function(ev)
-				local util = get_lsp_util()
-				local root = util.root_pattern('tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs')(vim.api.nvim_buf_get_name(ev.buf))
-				if root then
+				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs' })
+				
+				if root_dir then
 					vim.lsp.start({
 						name = "tailwindcss",
 						cmd = { "tailwindcss-language-server", "--stdio" },
-						root_dir = root,
+						root_dir = root_dir,
 						capabilities = capabilities,
 						on_attach = on_attach,
 					})
@@ -158,11 +156,12 @@ return {
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "lua" },
 			callback = function(ev)
-				local util = get_lsp_util()
+				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git' })
+				
 				vim.lsp.start({
 					name = "lua_ls",
 					cmd = { "lua-language-server" },
-					root_dir = util.root_pattern('.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					root_dir = root_dir,
 					capabilities = capabilities,
 					on_attach = on_attach,
 					settings = {
@@ -225,11 +224,12 @@ return {
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = { "c", "cpp", "objc", "objcpp" },
 				callback = function(ev)
-					local util = get_lsp_util()
+					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git' })
+					
 					vim.lsp.start({
 						name = "clangd",
 						cmd = { clangd_cmd, "--fallback-style=file" },
-						root_dir = util.root_pattern('.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+						root_dir = root_dir,
 						capabilities = capabilities,
 						on_attach = on_attach,
 						init_options = {
@@ -248,11 +248,12 @@ return {
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "python" },
 			callback = function(ev)
-				local util = get_lsp_util()
+				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git' })
+				
 				vim.lsp.start({
 					name = "pyright",
 					cmd = { "pyright-langserver", "--stdio" },
-					root_dir = util.root_pattern('pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+					root_dir = root_dir,
 					capabilities = capabilities,
 					on_attach = on_attach,
 					settings = {
@@ -273,11 +274,12 @@ return {
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = { "prisma" },
 				callback = function(ev)
-					local util = get_lsp_util()
+					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
+					
 					vim.lsp.start({
 						name = "prismals",
 						cmd = { "prisma-language-server", "--stdio" },
-						root_dir = util.root_pattern('package.json', '.git')(vim.api.nvim_buf_get_name(ev.buf)),
+						root_dir = root_dir,
 						capabilities = capabilities,
 						on_attach = on_attach,
 					})

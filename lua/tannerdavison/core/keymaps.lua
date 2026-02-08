@@ -74,28 +74,6 @@ keymap.set("n", "<leader>se", function()
 	vim.notify("Splits equalized (manual method)", vim.log.levels.INFO)
 end, { desc = "Make splits equal size (WSL-friendly)" })
 
--- Backup method using different key combination
-keymap.set("n", "<leader>s=", "<cmd>wincmd =<CR>", { desc = "Equalize splits (backup)" })
-
--- Debug version to see window sizes
-keymap.set("n", "<leader>sd", function()
-	local wins = {}
-	for _, win in ipairs(vim.api.nvim_list_wins()) do
-		local config = vim.api.nvim_win_get_config(win)
-		if config.relative == "" then
-			table.insert(wins, win)
-		end
-	end
-
-	print("=== WINDOW DEBUG INFO ===")
-	for i, win in ipairs(wins) do
-		local width = vim.api.nvim_win_get_width(win)
-		local height = vim.api.nvim_win_get_height(win)
-		print(string.format("Window %d: %dx%d", i, width, height))
-	end
-	print("Terminal size: " .. vim.o.columns .. "x" .. vim.o.lines)
-end, { desc = "Debug window sizes" })
-
 -- Original mapping (commented for reference):
 -- keymap.set("n", "<leader>se", "<C-w>=", { desc = "Make splits equal size" })
 keymap.set("n", "<leader>sx", "<cmd>close<CR>", { desc = "Close current split" })
@@ -121,38 +99,7 @@ keymap.set("n", "<leader>tf", "<cmd>tabnew %<CR>", { desc = "Open current buffer
 -- TODO GENERATION
 -- ================================================================
 
--- Insert today's date as comment at top of file
-keymap.set("n", "<leader>tdd", function()
-	local date = os.date("%Y-%m-%d")
-	local comment_prefix = "// " -- Default to JavaScript-style comments
-	local filetype = vim.bo.filetype
-
-	if filetype == "lua" then
-		comment_prefix = "-- "
-	elseif filetype == "python" or filetype == "sh" or filetype == "bash" then
-		comment_prefix = "# "
-	elseif filetype == "html" or filetype == "xml" then
-		comment_prefix = "<!-- "
-		date = date .. " -->"
-	elseif
-		filetype == "c"
-		or filetype == "cpp"
-		or filetype == "javascript"
-		or filetype == "typescript"
-		or filetype == "javascriptreact"
-		or filetype == "typescriptreact"
-	then
-		comment_prefix = "// "
-	end
-
-	-- Insert date comment at the very top of the file
-	local date_comment = comment_prefix .. date
-	vim.api.nvim_buf_set_lines(0, 0, 0, false, { date_comment })
-
-	vim.notify("Added date comment: " .. date_comment)
-end, { desc = "Insert today's date as comment at top of file" })
-
--- Insert TODO with date
+-- Insert TODO comment
 keymap.set("n", "<leader>tD", function()
 	local comment_prefix = "// " -- Default to JavaScript-style comments
 	local filetype = vim.bo.filetype
@@ -315,10 +262,6 @@ keymap.set("n", "<Space>cv", function()
 		vim.cmd("split | terminal ./" .. output_name)
 	end
 end, { desc = "Run compiled C++ code" })
-
--- C++ cout keymaps
-keymap.set("n", "<leader>cp", "istd::cout << ", { desc = "Insert std::cout << " })
-keymap.set("n", "<leader>cm", "i << std::endl;", { desc = "Insert << std::endl;" })
 
 -- ================================================================
 -- CMAKE DEVELOPMENT
@@ -616,8 +559,11 @@ keymap.set({ "n", "i" }, "<leader>tc", function()
 end, { desc = "Toggle autocomplete" })
 
 -- ================================================================
--- Jump Marking
+-- MARKS (Jump Marking)
 -- ================================================================
+-- Note: Native Vim marks are set with 'm{a-z}' for local marks
+-- and 'm{A-Z}' for global marks. Use native 'm' command or the
+-- <leader>ms helper below.
 
 -- Custom function to handle mark jumping
 local function jump_to_mark()
@@ -626,87 +572,57 @@ local function jump_to_mark()
 	vim.cmd("normal! '" .. mark_char)
 end
 
+-- Jump to mark
 vim.keymap.set("n", "<leader>j", jump_to_mark, { desc = "Jump to mark" })
 
--- Quick mark deletion keymaps
-vim.keymap.set("n", "<leader>dm", ":delmarks a-z<cr>", { desc = "Delete lowercase marks" })
-vim.keymap.set("n", "<leader>dM", ":delmarks A-Z<cr>", { desc = "Delete uppercase marks" })
-vim.keymap.set("n", "<leader>da", ":delmarks!<cr>:delmarks A-Z<cr>", { desc = "Delete all marks" })
+-- Show all marks
+vim.keymap.set("n", "<leader>mM", ":marks<cr>", { desc = "Show all marks" })
+
+-- Set mark helper (prompts for letter)
+vim.keymap.set("n", "<leader>ms", function()
+	-- Use feedkeys to properly enter mark mode
+	vim.notify("Setting mark - press a letter (a-z local, A-Z global)", vim.log.levels.INFO)
+	vim.api.nvim_feedkeys("m", "n", false)
+end, { desc = "Set mark (prompts for letter)" })
+
+-- Quick mark deletion keymaps  
+vim.keymap.set("n", "<leader>md", ":delmarks a-z<cr>", { desc = "Delete lowercase marks" })
+vim.keymap.set("n", "<leader>mD", ":delmarks A-Z<cr>", { desc = "Delete uppercase marks" })
 
 -- ================================================================
--- IMAGE HANDLING
+-- FILE OPENING (Images, PDFs, etc.)
 -- ================================================================
 
--- Open image externally
-keymap.set("n", "<leader>io", function()
+-- Smart open file externally (works for file under cursor OR current buffer)
+keymap.set("n", "<leader>o", function()
+	-- First try to get file under cursor
 	local file = vim.fn.expand("<cfile>")
-	if file and file ~= "" then
-		if
-			file:match("%.png$")
-			or file:match("%.jpg$")
-			or file:match("%.jpeg$")
-			or file:match("%.gif$")
-			or file:match("%.webp$")
-		then
-			vim.fn.system("xdg-open '" .. file .. "' &")
-			vim.notify("Opened: " .. file)
-		else
-			-- Only notify if there's actually a filename under cursor
-			if file ~= "" then
-				vim.notify("Not an image file: " .. file, vim.log.levels.WARN)
-			end
-		end
-	else
-		vim.notify("No file under cursor", vim.log.levels.INFO)
+	
+	-- If no file under cursor, use current buffer
+	if not file or file == "" then
+		file = vim.api.nvim_buf_get_name(0)
 	end
-end, { desc = "Open image under cursor externally" })
-
--- Open current file externally (if it's an image)
-keymap.set("n", "<leader>eo", function()
-	local file = vim.api.nvim_buf_get_name(0)
+	
 	if file and file ~= "" then
 		vim.fn.system("xdg-open '" .. file .. "' &")
 		vim.notify("Opened: " .. vim.fn.fnamemodify(file, ":t"))
 	else
-		vim.notify("No file in current buffer", vim.log.levels.WARN)
+		vim.notify("No file to open", vim.log.levels.WARN)
 	end
-end, { desc = "Open current file externally" })
+end, { desc = "Open file externally (smart)" })
 
 -- ================================================================
--- PDF HANDLING
+-- DOXYGEN DOCUMENTATION
 -- ================================================================
 
--- Open PDF under cursor externally
-keymap.set("n", "<leader>po", function()
-	local file = vim.fn.expand("<cfile>")
-	if file and file ~= "" then
-		if file:match("%.pdf$") then
-			vim.fn.system("xdg-open '" .. file .. "' &")
-			vim.notify("Opened PDF: " .. file)
-		else
-			if file ~= "" then
-				vim.notify("Not a PDF file: " .. file, vim.log.levels.WARN)
-			end
-		end
-	else
-		vim.notify("No file under cursor", vim.log.levels.INFO)
-	end
-end, { desc = "Open PDF under cursor externally" })
+-- Generate Doxygen documentation
+keymap.set("n", "<leader>dg", ":!doxygen<CR>", { desc = "Generate Doxygen docs" })
 
--- Open current PDF file externally
-keymap.set("n", "<leader>pv", function()
-	local file = vim.api.nvim_buf_get_name(0)
-	if file and file ~= "" then
-		if file:match("%.pdf$") then
-			vim.fn.system("xdg-open '" .. file .. "' &")
-			vim.notify("Opened PDF: " .. vim.fn.fnamemodify(file, ":t"))
-		else
-			vim.notify("Current file is not a PDF", vim.log.levels.WARN)
-		end
-	else
-		vim.notify("No file in current buffer", vim.log.levels.WARN)
-	end
-end, { desc = "Open current PDF file externally" })
+-- View Doxygen documentation
+keymap.set("n", "<leader>dv", ":!xdg-open docs/html/index.html &<CR>", { desc = "View Doxygen docs" })
+
+-- Clean Doxygen documentation
+keymap.set("n", "<leader>dc", ":!rm -rf docs<CR>", { desc = "Clean Doxygen docs" })
 
 -- ================================================================
 -- LSP UTILITIES

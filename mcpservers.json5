@@ -1,102 +1,102 @@
 {
   "mcpServers": {
-    "fetch": {
-      "args": [
-        "--from",
-        "mcp-server-fetch",
-        "mcp-server-fetch"
-      ],
-      "command": "/home/tanner/.local/bin/uvx",
+    "sequentialthinking": {
       "disabled": true,
-      "description": "Fetch web content and APIs, returns markdown-formatted content"
+      "description": "Step-by-step reasoning scratchpad for complex multi-step problems",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "command": "npx"
+    },
+    "browser_tools": {
+      "disabled": true,
+      "description": "Browser automation and interaction for scraping and testing",
+      "args": [
+        "@agentdeskai/browser-tools-mcp@latest"
+      ],
+      "command": "npx"
+    },
+    "memory": {
+      "disabled": false,
+      "description": "Persistent key-value memory that persists across sessions",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "npx"
+    },
+    "context7": {
+      "env": {
+        "DEFAULT_MINIMUM_TOKENS": "5000"
+      },
+      "description": "Fetches up-to-date, version-specific library documentation (Next.js, React, SDL2, etc.)",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "disabled": true,
+      "command": "npx"
     },
     "figma": {
-      "command": "npx",
       "env": {
         "FIGMA_API_KEY": "${FIGMA_API_KEY}"
       },
+      "description": "Extract Figma design specs (colors, spacing, typography) from file URLs",
       "args": [
         "-y",
         "figma-developer-mcp",
         "--figma-api-key=${FIGMA_API_KEY}",
         "--stdio"
       ],
-      "description": "Extract Figma design specs (colors, spacing, typography) from file URLs",
-      "disabled": true
-    },
-    "sequentialthinking": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "command": "npx",
       "disabled": true,
-      "description": "Step-by-step reasoning scratchpad for complex multi-step problems"
+      "command": "npx"
     },
-    "github": {
-      "command": "npx",
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
-      },
+    "fetch": {
+      "disabled": true,
+      "description": "Fetch web content and APIs, returns markdown-formatted content",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
+        "--from",
+        "mcp-server-fetch",
+        "mcp-server-fetch"
       ],
-      "description": "GitHub operations: repos, issues, PRs, branches, file contents, search",
-      "disabled": false
+      "command": "/home/tanner/.local/bin/uvx"
     },
     "tavily": {
-      "command": "npx",
       "env": {
         "TAVILY_API_KEY": "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"
       },
+      "description": "Web search for current information, docs, and research",
       "args": [
         "-y",
         "tavily-mcp"
       ],
-      "description": "Web search for current information, docs, and research",
-      "disabled": true
+      "disabled": false,
+      "command": "npx"
     },
-    "memory": {
+    "github": {
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "description": "GitHub operations: repos, issues, PRs, branches, file contents, search",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-memory"
+        "@modelcontextprotocol/server-github"
       ],
-      "command": "npx",
       "disabled": false,
-      "description": "Persistent key-value memory that persists across sessions"
+      "command": "npx"
     },
     "filesystem": {
-      "command": "npx",
       "env": {
         "ALLOWED_DIRECTORIES": "/home/tanner"
       },
+      "description": "Read/write files anywhere under /home/tanner",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem"
       ],
-      "description": "Read/write files anywhere under /home/tanner",
-      "disabled": true
-    },
-    "browser_tools": {
-      "args": [
-        "@agentdeskai/browser-tools-mcp@latest"
-      ],
-      "command": "npx",
       "disabled": true,
-      "description": "Browser automation and interaction for scraping and testing"
-    },
-    "context7": {
-      "command": "npx",
-      "env": {
-        "DEFAULT_MINIMUM_TOKENS": "5000"
-      },
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ],
-      "description": "Fetches up-to-date, version-specific library documentation (Next.js, React, SDL2, etc.)",
-      "disabled": true
+      "command": "npx"
     }
   }
 }

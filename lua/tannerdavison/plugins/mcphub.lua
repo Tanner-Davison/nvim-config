@@ -63,29 +63,8 @@ return {
 			},
 
 			on_ready = function()
-				vim.notify("🚀 MCP Hub ready!", vim.log.levels.INFO)
-
-				vim.keymap.set("n", "<leader>ms", ":MCPHub<CR>", { desc = "Open MCP Hub interface" })
-				vim.keymap.set("n", "<leader>mc", ":MCPHub<CR>", { desc = "Open MCP Hub" })
-
-				vim.keymap.set("n", "<leader>mt", function()
-					vim.notify([[
-=== MCP TOOLS ===
-
-Core:        @filesystem  @fetch  @git
-Search:      @tavily  @context7
-Dev:         @figma  @github  @browser_tools
-Reasoning:   @sequentialthinking  @memory
-
-Built-in:    @neovim (buffers, LSP, diagnostics)
-
-Variables:   #{mcp:neovim://diagnostics/buffer}
-             #{mcp:neovim:buffer}
-
-Use: <leader>kc → type @tool_name
-Hub: <leader>ms
-]], vim.log.levels.INFO)
-				end, { desc = "Show available MCP tools" })
+				vim.notify("🚀 MCP Hub ready! Use :MCPHub to open", vim.log.levels.INFO)
+				-- No keymaps - use :MCPHub command directly
 			end,
 		})
 	end,

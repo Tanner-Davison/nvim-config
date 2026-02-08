@@ -21,6 +21,7 @@ return {
 		"lukas-reineke/cmp-under-comparator", -- Better sorting
 
 		-- AI completion integration
+		"supermaven-inc/supermaven-nvim", -- Supermaven AI completion
 		-- Removed: Avante auto-suggestions (not useful for this workflow)
 		-- Note: Manual AI assistance still available via <leader>aa
 
@@ -127,6 +128,7 @@ return {
 
 					-- Completion sources with priority
 		sources = cmp.config.sources({
+			{ name = "supermaven", priority = 1100, group_index = 1 }, -- AI suggestions first
 			{ name = "nvim_lsp", priority = 1000 },
 			{ name = "nvim_lsp_signature_help", priority = 900 },
 			{ name = "css", priority = 850 },
@@ -150,6 +152,7 @@ return {
 
 					-- Custom menu labels
 					menu = {
+						supermaven = "[AI]",
 						nvim_lsp = "[LSP]",
 						nvim_lua = "[Lua]",
 						vsnip = "[Snippet]",
@@ -161,6 +164,7 @@ return {
 
 					-- Custom kind icons (optional override)
 					symbol_map = {
+						Supermaven = "",
 						Text = "󰉿",
 						Method = "󰆧",
 						Function = "󰊕",
@@ -263,6 +267,7 @@ return {
 		-- CSS-in-JS completion for styled-components
 		cmp.setup.filetype({ "javascript", "javascriptreact", "typescript", "typescriptreact" }, {
 			sources = cmp.config.sources({
+				{ name = "supermaven", priority = 1100, group_index = 1 }, -- AI suggestions first
 				{ name = "nvim_lsp", priority = 1000 },
 				{ name = "nvim_lsp_signature_help", priority = 900 },
 				{ name = "css", priority = 850 },

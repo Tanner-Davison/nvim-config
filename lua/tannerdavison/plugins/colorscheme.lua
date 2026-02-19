@@ -13,7 +13,7 @@ return {
 			-- Override colors
 			color_overrides = {
 				-- Enhanced base colors for OLED
-				vscBack = "#13171a", -- #13171a
+				vscBack = "#13171a",
 				vscLeft = "#1B1B19",
 				vscLineNumber = "#405779",
 				vscSelection = "#103362",
@@ -33,9 +33,8 @@ return {
 			},
 			-- Enable group overrides
 			group_overrides = {
-				-- Your existing overrides...
 				Keyword = { fg = "#FF79C6", bold = true },
-				Type = { fg = "#67D4FF", bold = true },
+				Type = { fg = "#C3A6FF", bold = true },
 				AlphaHeader = { fg = "#ff6fb7", bold = true }, -- Kirby pink for alpha header
 				Function = { fg = "#67D4FF", italic = true },
 				String = { fg = "#50FA7B" },
@@ -45,13 +44,21 @@ return {
 				Visual = { bg = "#103362" },
 				Search = { bg = "#2C4B8C", fg = "#F1FA8C" },
 
-				-- ADD THESE FOR VISIBLE COMPLETION MENU:
+				-- Control flow / statements (purple)
+				Statement = { fg = "#BD93F9", bold = true },
+				Conditional = { fg = "#BD93F9", bold = true },
+				Repeat = { fg = "#BD93F9", bold = true },
+				Exception = { fg = "#BD93F9", bold = true },
+				["@keyword.control"] = { fg = "#BD93F9", bold = true },
+				["@keyword.return"] = { fg = "#BD93F9", bold = true },
+
+				-- Completion menu
 				Pmenu = { bg = "#1B1B19", fg = "#d4d4d4" },
 				PmenuSel = { bg = "#103362", fg = "#F1FA8C", bold = true },
 				PmenuSbar = { bg = "#405779" },
 				PmenuThumb = { bg = "#67D4FF" },
 
-				-- Define the custom groups your nvim-cmp references:
+				-- Custom groups for nvim-cmp
 				CmpPmenu = { bg = "#1B1B19", fg = "#d4d4d4" },
 				CmpSel = { bg = "#103362", fg = "#F1FA8C", bold = true },
 				CmpDoc = { bg = "#0A1824", fg = "#d4d4d4" },
@@ -63,22 +70,59 @@ return {
 		})
 
 		vim.cmd("colorscheme vscode")
-		vim.g.vscode_style = "dark"
-		
-		-- Force comment color to override Tree-sitter
+
+		-- Helper to apply all overrides (called on load and after ColorScheme event)
+		local function apply_overrides()
+			-- Comments
+			vim.api.nvim_set_hl(0, "Comment", { fg = "#98C379", italic = true })
+			vim.api.nvim_set_hl(0, "@comment", { fg = "#98C379", italic = true })
+			vim.api.nvim_set_hl(0, "@comment.documentation", { fg = "#98C379", italic = true })
+
+			-- Types → lavender (covers Tree-sitter C++/TS/general captures)
+			local type_hl = { fg = "#C3A6FF", bold = true }
+			vim.api.nvim_set_hl(0, "Type", type_hl)
+			vim.api.nvim_set_hl(0, "@type", type_hl)
+			vim.api.nvim_set_hl(0, "@type.builtin", type_hl)
+			vim.api.nvim_set_hl(0, "@type.definition", type_hl)
+			vim.api.nvim_set_hl(0, "@type.qualifier", type_hl)
+			-- C++ specific
+			vim.api.nvim_set_hl(0, "@lsp.type.type", type_hl)
+			vim.api.nvim_set_hl(0, "@lsp.type.class", type_hl)
+			vim.api.nvim_set_hl(0, "@lsp.type.struct", type_hl)
+			vim.api.nvim_set_hl(0, "@lsp.type.enum", type_hl)
+			vim.api.nvim_set_hl(0, "@lsp.type.typeParameter", type_hl)
+			vim.api.nvim_set_hl(0, "@lsp.type.interface", type_hl)
+			-- TypeScript/JS specific
+			vim.api.nvim_set_hl(0, "@lsp.type.typescriptType", type_hl)
+
+			-- Keywords → pink
+			local kw_hl = { fg = "#FF79C6", bold = true }
+			vim.api.nvim_set_hl(0, "@keyword", kw_hl)
+			vim.api.nvim_set_hl(0, "@keyword.function", kw_hl)
+			vim.api.nvim_set_hl(0, "@keyword.operator", kw_hl)
+			vim.api.nvim_set_hl(0, "@keyword.modifier", kw_hl) -- virtual, public, static, etc.
+			vim.api.nvim_set_hl(0, "@storageclass", kw_hl) -- static, extern, register
+			vim.api.nvim_set_hl(0, "StorageClass", kw_hl)
+			vim.api.nvim_set_hl(0, "@lsp.type.keyword", kw_hl)
+
+			-- Control flow → purple
+			local ctrl_hl = { fg = "#BD93F9", bold = true }
+			vim.api.nvim_set_hl(0, "@keyword.control", ctrl_hl)
+			vim.api.nvim_set_hl(0, "@keyword.return", ctrl_hl)
+			vim.api.nvim_set_hl(0, "@keyword.conditional", ctrl_hl)
+			vim.api.nvim_set_hl(0, "@keyword.repeat", ctrl_hl)
+			vim.api.nvim_set_hl(0, "@keyword.exception", ctrl_hl)
+			vim.api.nvim_set_hl(0, "@keyword.import", ctrl_hl) -- using namespace
+		end
+
+		-- Apply on first load
+		apply_overrides()
+
+		-- Re-apply after any colorscheme reload
 		vim.api.nvim_create_autocmd("ColorScheme", {
-			callback = function()
-				vim.api.nvim_set_hl(0, "Comment", { fg = "#98C379", italic = true })
-				vim.api.nvim_set_hl(0, "@comment", { fg = "#98C379", italic = true })
-				vim.api.nvim_set_hl(0, "@comment.documentation", { fg = "#98C379", italic = true })
-			end,
+			callback = apply_overrides,
 		})
-		
-		-- Apply immediately
-		vim.api.nvim_set_hl(0, "Comment", { fg = "#98C379", italic = true })
-		vim.api.nvim_set_hl(0, "@comment", { fg = "#98C379", italic = true })
-		vim.api.nvim_set_hl(0, "@comment.documentation", { fg = "#98C379", italic = true })
-		
+
 		-- nvim-cmp highlight groups
 		vim.api.nvim_set_hl(0, "CmpGhostText", { fg = "#9CA3AF", italic = true })
 		vim.api.nvim_set_hl(0, "CmpItemAbbrDeprecated", { bg = "NONE", strikethrough = true, fg = "#808080" })

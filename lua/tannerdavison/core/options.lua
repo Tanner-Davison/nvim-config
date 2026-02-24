@@ -60,3 +60,6 @@ opt.swapfile = false
 -- bracket matching
 opt.showmatch = true -- show matching brackets
 opt.matchtime = 2 -- show matching brackets for 0.2 seconds
+
+-- auto reload files changed outside of nvim
+opt.autoread = true

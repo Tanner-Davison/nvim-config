@@ -1,3 +1,13 @@
+-- Auto reload files when changed outside of nvim
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+	pattern = "*",
+	callback = function()
+		if vim.fn.mode() ~= "c" then
+			vim.cmd("checktime")
+		end
+	end,
+})
+
 -- Autocommand to fold multiline comments on file open
 vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
 	pattern = "*",

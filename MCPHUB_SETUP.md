@@ -12,7 +12,7 @@
                   ▼
 ┌─────────────────────────────────────────────┐
 │         CodeCompanion                        │
-│  - Main AI interface                         │
+│  - Main AI interface (Claude Sonnet)         │
 │  - Built-in tools (@insert_edit_into_file)  │
 │  - Context (#buffer, /file, /symbols)       │
 └─────────────────┬───────────────────────────┘
@@ -22,135 +22,146 @@
 ┌─────────────────────────────────────────────┐
 │         MCPHub (port 3002)                   │
 │  - MCP server orchestrator                   │
-│  - Exposes all MCP tools as @tools           │
-│  - Manages server lifecycle                  │
+│  - Exposes active MCP tools as @tools        │
+│  - Config: ~/.config/nvim/mcpservers.json5  │
 └─────────────────┬───────────────────────────┘
                   │
-        ┌─────────┴─────────┬─────────────┬───────────┐
-        ▼                   ▼             ▼           ▼
-  ┌──────────┐        ┌──────────┐  ┌──────────┐  ┌──────────┐
-  │filesystem│        │  tavily  │  │  figma   │  │  fetch   │
-  └──────────┘        └──────────┘  └──────────┘  └──────────┘
-       MCP                MCP           MCP           MCP
-     Server             Server        Server        Server
+        ┌─────────┴──────────┬──────────┐
+        ▼                    ▼          ▼
+  ┌──────────┐        ┌──────────┐  ┌──────────┐
+  │  tavily  │        │  github  │  │  memory  │
+  └──────────┘        └──────────┘  └──────────┘
+      MCP                 MCP           MCP
+    Server              Server        Server
 ```
 
-## What Changed
+## Active MCP Servers
 
-### 1. mcpservers.json5
-- Added all your MCP Hub tools to CodeCompanion
-- Fixed `fetch` to use full path: `/home/tanner/.local/bin/uvx`
-- Configured filesystem to use `/home/tanner` as base directory
-- Added Tavily (web search), Figma, browser tools, etc.
+These servers are currently **enabled** in `mcpservers.json5`:
 
-### 2. mcphub.lua
-- Enabled CodeCompanion extension (was previously only for Avante)
-- Set `auto_approve = true` for smoother workflow
-- Added helpful keymaps and tool reference
+| Server | Description |
+|--------|-------------|
+| `tavily` | Web search for current info, docs, research |
+| `github` | Repos, issues, PRs, branches, file contents, search |
+| `memory` | Persistent key-value memory across sessions |
 
-### 3. codecompanion.lua
-- Enhanced system prompt to teach Claude about MCP tools
-- Maintained all your existing keymaps
-- Added tool usage guidelines
-- Added new keymaps for web research (`<leader>kw`)
-- Added tools help (`<leader>kh`)
+### Disabled Servers (toggle in mcpservers.json5)
 
-## How It Works
+These exist in the config but are currently off — set `"disabled": false` to enable:
 
-### Tool Discovery
-When CodeCompanion starts:
-1. MCPHub reads `mcpservers.json5`
-2. MCPHub starts all MCP servers
-3. MCPHub extension exposes tools to CodeCompanion
-4. Claude sees both built-in and MCP tools
+| Server | What it does |
+|--------|--------------|
+| `filesystem` | Read/write files under `/home/tanner` |
+| `fetch` | Fetch web content and APIs as markdown |
+| `browser_tools` | Browser automation and scraping |
+| `figma` | Extract design specs from Figma URLs |
+| `sequentialthinking` | Step-by-step reasoning scratchpad |
+| `context7` | Version-specific library docs (React, SDL2, etc.) |
 
-### Available Tools
+## Available Tools
 
-**Built-in CodeCompanion Tools:**
-- `@insert_edit_into_file` - Edit files with precision
-- `@read_file` - Read any workspace file
-- `@create_file` - Create new files
-- `@delete_file` - Delete files
-- `@grep_search` - Search with regex
-- `@file_search` - Find files by name
-- `@cmd_runner` - Run shell commands
+### Built-in CodeCompanion Tools
 
-**MCP Tools (via MCPHub):**
-- `@filesystem` - Files outside workspace
-- `@fetch` - Fetch web content/APIs
-- `@tavily` - Web search
-- `@browser_tools` - Browser automation
-- `@figma` - Extract Figma designs
-- `@sequentialthinking` - Step-by-step reasoning
-- `@everything` - Fast file search
-- `@memory` - Persistent memory
+| Tool | Approval | Description |
+|------|----------|-------------|
+| `@insert_edit_into_file` | After | Edit files with precision |
+| `@read_file` | None | Read any workspace file |
+| `@create_file` | Before | Create new files |
+| `@delete_file` | Before | Delete files |
+| `@cmd_runner` | Before | Run shell commands |
+| `@grep_search` | None | Regex search across project |
+| `@file_search` | None | Find files by name |
+| `@list_code_usages` | None | Find symbol usages via LSP |
+
+### MCP Tools (via MCPHub)
+
+| Tool | Status | Description |
+|------|--------|-------------|
+| `@tavily` | ✅ Active | Web search |
+| `@github` | ✅ Active | GitHub operations |
+| `@memory` | ✅ Active | Persistent memory |
+| `@filesystem` | ⛔ Disabled | Files outside workspace |
+| `@fetch` | ⛔ Disabled | Fetch URLs as markdown |
+| `@browser_tools` | ⛔ Disabled | Browser automation |
+| `@figma` | ⛔ Disabled | Extract Figma designs |
+| `@sequentialthinking` | ⛔ Disabled | Complex reasoning |
+| `@context7` | ⛔ Disabled | Library documentation |
 
 ### Context Commands
-- `#buffer` - Current buffer content
-- `/file <path>` - Load specific file
-- `/symbols` - LSP symbols in current file
+
+- `#buffer` — Include current buffer content
+- `/file <path>` — Load a specific file
+- `/symbols` — LSP symbols in current file
+
+## Keymaps Reference
+
+### Main Actions
+
+| Keymap | Mode | Description |
+|--------|------|-------------|
+| `<leader>kc` | n/v | Toggle chat |
+| `<leader>ka` | n/v | Actions menu |
+| `<leader>kb` | n | Chat with buffer context |
+| `<leader>ks` | v | Add selection to chat |
+| `<leader>kh` | n | Show tools help |
+
+### Quick Actions
+
+| Keymap | Mode | Description |
+|--------|------|-------------|
+| `<leader>kg` | n | Generate code inline |
+| `<leader>kd` | n | Fix buffer diagnostics |
+| `<leader>kq` | n | Quick agentic request |
+| `<leader>kp` | n | Search project with Claude |
+| `<leader>kw` | n | Web research via Tavily |
+
+### Visual Mode
+
+| Keymap | Description |
+|--------|-------------|
+| `<leader>ks` | Add selection to chat |
+| `<leader>ke` | Explain selected code |
+| `<leader>kr` | Refactor selected code |
 
 ## Usage Examples
 
 ### Basic Chat
 ```
-<leader>kc - Open chat
-Type: "#buffer explain this code"
-```
-
-### Using MCP Tools
-```
-<leader>kc - Open chat
-Type: "@tavily latest React 19 features - summarize"
-Type: "@figma extract https://figma.com/design/ABC123?node-id=1-2"
-Type: "@filesystem read ~/.bashrc"
-```
-
-### Combining Tools
-```
-Type: "#buffer @insert_edit_into_file - add error handling @tavily search for best practices"
-```
-
-### File Editing
-```
-Type: "#buffer @insert_edit_into_file - convert this to TypeScript"
-Type: "@read_file ../utils/helpers.ts @insert_edit_into_file - use similar patterns"
+<leader>kc
+#buffer explain this code
 ```
 
 ### Web Research
 ```
-<leader>kw - Quick web research
-Enter: "SDL2 game loop best practices"
+<leader>kw → type query
+-- or manually:
+<leader>kc
+@tavily SDL2 game loop best practices 2025 - summarize
+```
+
+### GitHub Operations
+```
+<leader>kc
+@github list open issues in Tanner-Davison/ai-quiz-generator
 ```
 
 ### Fix Diagnostics
 ```
-<leader>kd - Auto-generate diagnostic fix prompt
+<leader>kd  -- auto-builds diagnostic prompt, paste into chat
 ```
 
-## Keymaps Reference
+### File Editing
+```
+<leader>kc
+#buffer @insert_edit_into_file - add error handling to this function
+```
 
-### Main Actions
-- `<leader>kc` - Toggle chat
-- `<leader>ka` - Actions menu
-- `<leader>kb` - Chat with buffer context
-- `<leader>kh` - Show tools help
-
-### Quick Actions
-- `<leader>kg` - Generate code inline
-- `<leader>kd` - Fix diagnostics
-- `<leader>kq` - Quick agentic request
-- `<leader>kp` - Search project
-- `<leader>kw` - Web research
-
-### Visual Mode
-- `<leader>ks` - Add selection to chat
-- `<leader>ke` - Explain selected code
-- `<leader>kr` - Refactor selected code
-
-### MCPHub Management
-- `<leader>ms` - Open MCP Hub interface
-- `<leader>mt` - Show available tools
+### Enabling a Disabled Server
+Edit `~/.config/nvim/mcpservers.json5` and change:
+```json
+"disabled": true  →  "disabled": false
+```
+Then restart Neovim.
 
 ## Environment Variables
 
@@ -159,131 +170,41 @@ Required:
 export ANTHROPIC_API_KEY="your-key-here"
 ```
 
-Optional (for specific tools):
+Optional (for specific MCP servers):
 ```bash
-export TAVILY_API_KEY="your-key"           # For @tavily web search
-export FIGMA_PERSONAL_ACCESS_TOKEN="..."  # For @figma
+export TAVILY_API_KEY="your-key"             # tavily server
+export GITHUB_PERSONAL_ACCESS_TOKEN="..."   # github server
+export FIGMA_API_KEY="..."                  # figma server (if enabled)
 ```
 
 Add to `~/.bashrc` or `~/.zshrc` and restart terminal.
 
+## Model & Settings
+
+- **Model**: `claude-sonnet-4-20250514`
+- **Max tokens**: `8192`
+- **Temperature**: `0.2`
+- **Chat layout**: Vertical, 45% width
+
 ## Troubleshooting
 
-### "spawn uvx ENOENT"
-This should be fixed now with the full path. If it still happens:
+### MCP Tools Not Appearing
+1. Run `:MCPHub` to check server status
+2. Check `:messages` for errors
+3. Check log: `~/.local/state/nvim/mcphub.log`
+4. Restart Neovim completely
+
+### "spawn uvx ENOENT" (fetch server)
 ```bash
-echo $PATH  # Verify /home/tanner/.local/bin is in PATH
-which uvx   # Should show /home/tanner/.local/bin/uvx
+which uvx  # Should return /home/tanner/.local/bin/uvx
+```
+The fetch server uses the full path `/home/tanner/.local/bin/uvx` — if uvx moved, update `mcpservers.json5`.
+
+### API Key Warning on Startup
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+# Add to ~/.bashrc or ~/.zshrc
 ```
 
-### Tools Not Appearing
-1. Restart Neovim completely
-2. Check `:MCPHub` to see server status
-3. Look for errors in `:messages`
-4. Check log: `~/.local/state/nvim/mcphub.log`
-
-### Claude Not Using MCP Tools
-The system prompt now explicitly teaches Claude about:
-1. When to use each tool
-2. How to combine tools
-3. Figma URL parsing
-4. Web search best practices
-
-If Claude forgets, remind it: "Use @tavily to search for that"
-
-## Best Practices
-
-### When to Use MCP vs Built-in Tools
-
-**Use Built-in Tools:**
-- Editing files in current workspace
-- Reading project files
-- Searching within project
-
-**Use MCP Tools:**
-- Files outside workspace (`@filesystem`)
-- Web research (`@tavily`)
-- Fetching APIs (`@fetch`)
-- Browser automation (`@browser_tools`)
-- Complex reasoning (`@sequentialthinking`)
-
-### Combining Tools Effectively
-
-**Research + Implementation:**
-```
-@tavily modern React patterns 2025
-@fetch https://react.dev/blog/latest
-#buffer @insert_edit_into_file - apply these patterns
-```
-
-**Design to Code:**
-```
-@figma extract https://figma.com/design/...
-@read_file src/components/Button.tsx
-@insert_edit_into_file - match the Figma design
-```
-
-**Complex Problems:**
-```
-@sequentialthinking break down this architecture problem
-@grep_search similar patterns in codebase
-@insert_edit_into_file - implement the solution
-```
-
-## What's Different from Before
-
-1. **Unified Interface**: Everything goes through CodeCompanion (no switching between Avante/CodeCompanion)
-2. **More Tools**: You now have access to 8+ MCP servers through one interface
-3. **Better Prompting**: Claude knows exactly when and how to use each tool
-4. **Smoother Workflow**: `auto_approve = true` means fewer confirmation dialogs
-5. **Tool Combinations**: Claude can chain tools intelligently
-
-## Next Steps
-
-1. **Restart Neovim** - Required to load new configuration
-2. **Test**: `<leader>kc` then type `@tavily test search`
-3. **Check Status**: `<leader>ms` to see all servers
-4. **Learn**: `<leader>kh` for quick reference
-
-## Advanced Configuration
-
-### Adding More MCP Servers
-
-Edit `~/.config/nvim/mcpservers.json5`:
-```json
-{
-  "mcpServers": {
-    "your_server": {
-      "command": "npx",
-      "args": ["-y", "@scope/your-mcp-server"],
-      "env": {
-        "API_KEY": "${YOUR_API_KEY}"
-      }
-    }
-  }
-}
-```
-
-Then restart Neovim. The tool will automatically appear in CodeCompanion.
-
-### Customizing Tool Behavior
-
-Edit `~/.config/nvim/lua/tannerdavison/plugins/mcphub.lua`:
-```lua
-extensions = {
-  codecompanion = {
-    make_tools = true,
-    show_server_tools_in_chat = true,
-    add_mcp_prefix_to_tool_names = false,  -- Set true for @mcp_toolname
-    show_result_in_chat = false,            -- Set true to see raw results
-  },
-},
-```
-
-## Support
-
-If you run into issues:
-1. Check `:messages` for errors
-2. Look at `~/.local/state/nvim/mcphub.log`
-3. Verify MCPHub is running: `<leader>ms`
-4. Test individual tools: `@toolname help`
+### Claude Not Using a Tool
+Explicitly mention it: `@tavily search for that` or `@github find that repo`

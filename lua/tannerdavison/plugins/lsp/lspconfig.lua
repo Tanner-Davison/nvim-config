@@ -37,7 +37,6 @@ return {
 		local on_attach = function(client, bufnr)
 			local opts = { buffer = bufnr, silent = true }
 
-			-- LSP Keymaps
 			keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", vim.tbl_extend("force", opts, { desc = "Show LSP references" }))
 			keymap.set("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
 			keymap.set("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
@@ -57,7 +56,7 @@ return {
 			pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
 			callback = function(ev)
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'tsconfig.json', 'package.json', '.git' })
-				
+
 				vim.lsp.start({
 					name = "ts_ls",
 					cmd = { "typescript-language-server", "--stdio" },
@@ -102,7 +101,7 @@ return {
 			pattern = { "css", "scss", "less", "sass" },
 			callback = function(ev)
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
-				
+
 				vim.lsp.start({
 					name = "cssls",
 					cmd = { "vscode-css-language-server", "--stdio" },
@@ -123,7 +122,7 @@ return {
 			pattern = { "html" },
 			callback = function(ev)
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
-				
+
 				vim.lsp.start({
 					name = "html",
 					cmd = { "vscode-html-language-server", "--stdio" },
@@ -139,7 +138,7 @@ return {
 			pattern = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
 			callback = function(ev)
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs' })
-				
+
 				if root_dir then
 					vim.lsp.start({
 						name = "tailwindcss",
@@ -157,7 +156,7 @@ return {
 			pattern = { "lua" },
 			callback = function(ev)
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git' })
-				
+
 				vim.lsp.start({
 					name = "lua_ls",
 					cmd = { "lua-language-server" },
@@ -169,7 +168,7 @@ return {
 							diagnostics = { globals = { "vim" } },
 							completion = { callSnippet = "Replace" },
 							workspace = {
-								library = vim.api.nvim_get_runtime_file("", true),
+								library = { vim.env.VIMRUNTIME },
 								checkThirdParty = false,
 							},
 							telemetry = { enable = false },
@@ -182,12 +181,12 @@ return {
 		-- C/C++ (clangd)
 		local function setup_clangd()
 			local clangd_cmd
-			
+
 			if vim.fn.has('macunix') == 1 or (vim.fn.has('unix') == 1 and vim.fn.system('uname -s'):match('Darwin')) then
 				local macos_paths = {
 					"/usr/bin/clangd",
 					"/opt/homebrew/bin/clangd",
-					"/usr/local/bin/clangd"
+					"/usr/local/bin/clangd",
 				}
 				for _, path in ipairs(macos_paths) do
 					if vim.fn.executable(path) == 1 then
@@ -200,14 +199,14 @@ return {
 				end
 			elseif vim.fn.has('win32') == 1 then
 				clangd_cmd = "clangd"
-			else 
+			else
 				local linux_paths = {
 					"/usr/bin/clangd-18",
 					"/usr/bin/clangd-17",
 					"/usr/bin/clangd-16",
 					"/usr/bin/clangd-15",
 					"/usr/bin/clangd-14",
-					"clangd"
+					"clangd",
 				}
 				for _, path in ipairs(linux_paths) do
 					if vim.fn.executable(path) == 1 then
@@ -216,7 +215,7 @@ return {
 					end
 				end
 			end
-			
+
 			if not clangd_cmd or vim.fn.executable(clangd_cmd) == 0 then
 				return
 			end
@@ -225,7 +224,7 @@ return {
 				pattern = { "c", "cpp", "objc", "objcpp" },
 				callback = function(ev)
 					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git' })
-					
+
 					vim.lsp.start({
 						name = "clangd",
 						cmd = { clangd_cmd, "--fallback-style=file" },
@@ -249,7 +248,7 @@ return {
 			pattern = { "python" },
 			callback = function(ev)
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git' })
-				
+
 				vim.lsp.start({
 					name = "pyright",
 					cmd = { "pyright-langserver", "--stdio" },
@@ -275,7 +274,7 @@ return {
 				pattern = { "prisma" },
 				callback = function(ev)
 					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
-					
+
 					vim.lsp.start({
 						name = "prismals",
 						cmd = { "prisma-language-server", "--stdio" },

@@ -16,14 +16,11 @@ return {
 
 		-- Additional useful sources
 		"hrsh7th/cmp-nvim-lua", -- Neovim Lua API completion
-		"ray-x/cmp-treesitter", -- Treesitter completion
 		"hrsh7th/cmp-omni", -- Omni completion for markdown
 		"lukas-reineke/cmp-under-comparator", -- Better sorting
 
 		-- AI completion integration
 		"supermaven-inc/supermaven-nvim", -- Supermaven AI completion
-		-- Removed: Avante auto-suggestions (not useful for this workflow)
-		-- Note: Manual AI assistance still available via <leader>aa
 
 		-- UI enhancements
 		"onsails/lspkind.nvim",
@@ -77,7 +74,7 @@ return {
 			performance = {
 				debounce = 150,
 				throttle = 60,
-				max_view_entries = 100,
+				max_view_entries = 20,
 			},
 
 			snippet = {
@@ -135,7 +132,6 @@ return {
 			{ name = "buffer", priority = 800, keyword_length = 3 },
 			{ name = "nvim_lua", priority = 700 },
 		}, {
-			{ name = "treesitter", priority = 600 },
 			{ name = "path", priority = 400 },
 			{ name = "vsnip", priority = 300 },
 		}),
@@ -158,7 +154,6 @@ return {
 						vsnip = "[Snippet]",
 						buffer = "[Buffer]",
 						path = "[Path]",
-						treesitter = "[TS]",
 						cmdline = "[Cmd]",
 					},
 
@@ -273,7 +268,6 @@ return {
 				{ name = "css", priority = 850 },
 				{ name = "buffer", priority = 800, keyword_length = 3 },
 				{ name = "nvim_lua", priority = 700 },
-				{ name = "treesitter", priority = 600 },
 				{ name = "path", priority = 400 },
 				{ name = "vsnip", priority = 300 },
 			}),

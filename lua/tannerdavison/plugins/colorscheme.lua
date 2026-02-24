@@ -50,7 +50,7 @@ return {
 				Repeat = { fg = "#BD93F9", bold = true },
 				Exception = { fg = "#BD93F9", bold = true },
 				["@keyword.control"] = { fg = "#BD93F9", bold = true },
-				["@keyword.return"] = { fg = "#BD93F9", bold = true },
+				["@keyword.return"] = { fg = "#8E07B8", bold = true },
 
 				-- Completion menu
 				Pmenu = { bg = "#1B1B19", fg = "#d4d4d4" },
@@ -108,7 +108,7 @@ return {
 			-- Control flow → purple
 			local ctrl_hl = { fg = "#BD93F9", bold = true }
 			vim.api.nvim_set_hl(0, "@keyword.control", ctrl_hl)
-			vim.api.nvim_set_hl(0, "@keyword.return", ctrl_hl)
+			vim.api.nvim_set_hl(0, "@keyword.return", { fg = "#8E07B8", bold = true })
 			vim.api.nvim_set_hl(0, "@keyword.conditional", ctrl_hl)
 			vim.api.nvim_set_hl(0, "@keyword.repeat", ctrl_hl)
 			vim.api.nvim_set_hl(0, "@keyword.exception", ctrl_hl)

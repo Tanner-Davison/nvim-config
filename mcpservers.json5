@@ -35,7 +35,7 @@
         "-y",
         "@upstash/context7-mcp"
       ],
-      "disabled": true,
+      "disabled": false,
       "command": "npx"
     },
     "figma": {
@@ -53,7 +53,7 @@
       "command": "npx"
     },
     "fetch": {
-      "disabled": true,
+      "disabled": false,
       "description": "Fetch web content and APIs, returns markdown-formatted content",
       "args": [
         "--from",

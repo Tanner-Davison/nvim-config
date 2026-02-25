@@ -350,12 +350,26 @@ end, { desc = "Generate CMakeLists.txt" })
 --
 -- CMake build commands
 keymap.set("n", "<leader>mg", function()
-	vim.cmd("!cmake -S . -B build")
+	if vim.fn.filereadable("CMakePresets.json") == 1 then
+		if vim.fn.has("mac") == 1 then
+			vim.cmd("!cmake --preset mac-arm")
+		else
+			vim.cmd("!cmake --preset linux")
+		end
+	else
+		vim.cmd("!cmake -S . -B build")
+	end
 end, { desc = "CMake Generate" })
 
 keymap.set("n", "<leader>mb", function()
 	if vim.fn.has("win32") == 1 then
 		vim.cmd("!cmake --build build --parallel %NUMBER_OF_PROCESSORS%")
+	elseif vim.fn.filereadable("CMakePresets.json") == 1 then
+		if vim.fn.has("mac") == 1 then
+			vim.cmd("!cmake --build --preset mac-arm --parallel $(sysctl -n hw.ncpu)")
+		else
+			vim.cmd("!cmake --build --preset linux --parallel $(nproc)")
+		end
 	elseif vim.fn.has("mac") == 1 then
 		vim.cmd("!cmake --build build --parallel $(sysctl -n hw.ncpu)")
 	else

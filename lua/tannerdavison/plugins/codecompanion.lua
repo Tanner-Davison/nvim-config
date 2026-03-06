@@ -33,6 +33,26 @@ return {
             },
           })
         end,
+        groq = function()
+          return require("codecompanion.adapters").extend("openai_compatible", {
+            name = "groq",
+            env = {
+              api_key = "GROQ_API_KEY",
+              url = "https://api.groq.com/openai/v1",
+            },
+            schema = {
+              model = {
+                default = "llama-3.1-8b-instant",
+              },
+              max_tokens = {
+                default = 8192,
+              },
+              temperature = {
+                default = 0.2,
+              },
+            },
+          })
+        end,
       },
 
       -- ============================================
@@ -41,7 +61,26 @@ return {
       strategies = {
         chat = {
           adapter = "anthropic",
-          system_prompt = [[You are an expert full-stack developer. You have access to tools when the user provides them via @mentions. Only use tools that have been explicitly made available in the conversation. Be concise and precise with edits.]],
+          system_prompt = [[You are an expert full-stack developer assistant in Neovim.
+
+Built-in tools (use directly):
+- @insert_edit_into_file, @read_file, @create_file, @delete_file
+- @grep_search, @file_search, @list_code_usages, @cmd_runner
+
+MCP tools (use @server__toolname syntax ONLY - never use @{mcphub} group for file operations):
+- @filesystem__write_file, @filesystem__read_file, @filesystem__edit_file, @filesystem__create_directory, @filesystem__list_directory
+- @neovim__write_file, @neovim__read_file, @neovim__edit_file, @neovim__execute_lua, @neovim__execute_command
+- @github__create_issue, @github__get_issue, @github__create_pull_request, @github__get_file_contents, @github__search_code, @github__push_files
+- @tavily__tavily_search
+- @memory__create_entities, @memory__search_nodes
+- @fetch__fetch
+- @context7__resolve-library-id, @context7__query-docs
+
+CRITICAL: To write files use @filesystem__write_file or @neovim__write_file directly. NEVER loop on mcphub__get_current_servers. If you have filesystem or neovim connected, use them immediately to write files without checking server status first.
+
+Context variables: #buffer, /file, /symbols
+
+Always use the correct @server__tool syntax for MCP tools. Be concise and precise with edits.]],
           tools = {
             opts = {
               auto_submit_errors = true,
@@ -144,10 +183,29 @@ return {
     -- ============================================
     local keymap = vim.keymap.set
 
+    -- Adapter toggle state
+    vim.g.codecompanion_adapter = "anthropic"
+
     -- Main actions
     keymap({ "n", "v" }, "<leader>kc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle Chat" })
     keymap({ "n", "v" }, "<leader>ka", "<cmd>CodeCompanionActions<cr>", { desc = "Actions" })
     keymap("v", "<leader>ks", "<cmd>CodeCompanionChat Add<cr>", { desc = "Add to Chat" })
+
+    -- Adapter toggle
+    keymap("n", "<leader>km", function()
+      if vim.g.codecompanion_adapter == "anthropic" then
+        vim.g.codecompanion_adapter = "groq"
+        vim.notify("CodeCompanion → Groq (llama-3.1-8b-instant) ⚡", vim.log.levels.INFO)
+      else
+        vim.g.codecompanion_adapter = "anthropic"
+        vim.notify("CodeCompanion → Anthropic (claude-sonnet-4) 🤖", vim.log.levels.INFO)
+      end
+      -- Update the active chat adapter if a chat is open
+      local cc = require("codecompanion")
+      if cc.last_chat and cc.last_chat() then
+        cc.last_chat():set_adapter(vim.g.codecompanion_adapter)
+      end
+    end, { desc = "Toggle Anthropic / Groq" })
 
     -- Context shortcuts
     keymap("n", "<leader>kb", function()

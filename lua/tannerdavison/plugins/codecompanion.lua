@@ -114,6 +114,7 @@ Always use the correct @server__tool syntax for MCP tools. Be concise and precis
               opts = { require_approval_before = false },
             },
           },
+          variables = {},
           slash_commands = {
             ["buffer"] = { opts = { provider = "telescope" } },
             ["file"] = { opts = { provider = "telescope" } },

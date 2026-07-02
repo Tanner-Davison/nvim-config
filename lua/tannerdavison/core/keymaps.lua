@@ -352,30 +352,30 @@ end, { desc = "Generate CMakeLists.txt" })
 keymap.set("n", "<leader>mg", function()
 	if vim.fn.filereadable("CMakePresets.json") == 1 then
 		if vim.fn.has("mac") == 1 then
-			vim.cmd("!cmake --preset mac-arm")
+			vim.cmd("!cmake --preset mac-arm -DCMAKE_BUILD_TYPE=Debug")
 		else
-			vim.cmd("!cmake --preset linux")
+			vim.cmd("!cmake --preset linux -DCMAKE_BUILD_TYPE=Debug")
 		end
 	else
-		vim.cmd("!cmake -S . -B build")
+		vim.cmd("!cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug")
 	end
-end, { desc = "CMake Generate" })
+end, { desc = "CMake Generate (Debug)" })
 
 keymap.set("n", "<leader>mb", function()
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!cmake --build build --parallel %NUMBER_OF_PROCESSORS%")
+		vim.cmd("!cmake --build build --config Debug --parallel %NUMBER_OF_PROCESSORS%")
 	elseif vim.fn.filereadable("CMakePresets.json") == 1 then
 		if vim.fn.has("mac") == 1 then
-			vim.cmd("!cmake --build --preset mac-arm --parallel $(sysctl -n hw.ncpu)")
+			vim.cmd("!cmake --build --preset mac-arm --config Debug --parallel $(sysctl -n hw.ncpu)")
 		else
-			vim.cmd("!cmake --build --preset linux --parallel $(nproc)")
+			vim.cmd("!cmake --build --preset linux --config Debug --parallel $(nproc)")
 		end
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!cmake --build build --parallel $(sysctl -n hw.ncpu)")
+		vim.cmd("!cmake --build build --config Debug --parallel $(sysctl -n hw.ncpu)")
 	else
-		vim.cmd("!cmake --build build --parallel $(nproc)")
+		vim.cmd("!cmake --build build --config Debug --parallel $(nproc)")
 	end
-end, { desc = "CMake Build" })
+end, { desc = "CMake Build (Debug)" })
 
 keymap.set("n", "<leader>mc", function()
 	if vim.fn.has("win32") == 1 then

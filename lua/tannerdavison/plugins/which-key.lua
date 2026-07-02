@@ -23,6 +23,7 @@ return {
 		-- Register group labels
 		wk.add({
 			-- Main leader groups
+			{ "<leader>b", group = "Debug/Breakpoints" },
 			{ "<leader>c", group = "C++/Code" },
 			{ "<leader>d", group = "Doxygen/Desktop" },
 			{ "<leader>e", group = "Explorer" },

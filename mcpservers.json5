@@ -21,7 +21,7 @@
     "tavily": {
       "description": "Web search for current information, docs, and research",
       "env": {
-        "TAVILY_API_KEY": "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"
+        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
       },
       "disabled": false,
       "command": "npx",

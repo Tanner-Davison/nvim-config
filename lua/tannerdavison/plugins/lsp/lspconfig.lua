@@ -15,6 +15,7 @@ return {
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {
 				"*.h", "*.hpp", "*.cpp", "*.c", "*.dll",
+				"*.ino",                                       -- Arduino sketches treated as C++
 				"*/include/*", "*/SDL2/*", "**/src/**/*.cpp", "*/MSVC/*",
 			},
 			callback = function()
@@ -221,13 +222,18 @@ return {
 			end
 
 			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "c", "cpp", "objc", "objcpp" },
+				pattern = { "c", "cpp", "objc", "objcpp" },  -- *.ino is remapped to cpp above
 				callback = function(ev)
 					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git' })
 
 					vim.lsp.start({
 						name = "clangd",
-						cmd = { clangd_cmd, "--fallback-style=file" },
+						cmd = {
+							clangd_cmd,
+							"--fallback-style=file",
+							"--background-index=false",        -- don't index files clangd can't find
+							"--query-driver=/home/tanner/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/*/bin/arm-none-eabi-g*,/usr/bin/arm-none-eabi-g*,/usr/bin/g++,/usr/bin/gcc",
+						},
 						root_dir = root_dir,
 						capabilities = capabilities,
 						on_attach = on_attach,

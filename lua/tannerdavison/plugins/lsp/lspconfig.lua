@@ -231,7 +231,7 @@ return {
 						cmd = {
 							clangd_cmd,
 							"--fallback-style=file",
-							"--background-index=false",        -- don't index files clangd can't find
+							"--background-index=false",
 							"--query-driver=/home/tanner/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/*/bin/arm-none-eabi-g*,/usr/bin/arm-none-eabi-g*,/usr/bin/g++,/usr/bin/gcc",
 						},
 						root_dir = root_dir,
@@ -270,6 +270,75 @@ return {
 							},
 						},
 					},
+				})
+			end,
+		})
+
+		-- Arduino .ino: filter AVR false-positive diagnostics from clangd.
+		-- Uses a reentrance guard to prevent DiagnosticChanged → set → DiagnosticChanged loops.
+		local arduino_fp_patterns = {
+			"undeclared identifier 'OUTPUT'",
+			"undeclared identifier 'INPUT'",
+			"undeclared identifier 'INPUT_PULLUP'",
+			"undeclared identifier 'HIGH'",
+			"undeclared identifier 'LOW'",
+			"undeclared identifier 'pinMode'",
+			"undeclared identifier 'digitalWrite'",
+			"undeclared identifier 'digitalRead'",
+			"undeclared identifier 'analogWrite'",
+			"undeclared identifier 'analogRead'",
+			"undeclared identifier 'delay'",
+			"undeclared identifier 'delayMicroseconds'",
+			"undeclared identifier 'millis'",
+			"undeclared identifier 'micros'",
+			"undeclared identifier 'tone'",
+			"undeclared identifier 'noTone'",
+			"undeclared identifier 'Serial'",
+			"undeclared identifier 'Wire'",
+			"undeclared identifier 'SPI'",
+		}
+
+		local function is_arduino_fp(msg)
+			for _, pat in ipairs(arduino_fp_patterns) do
+				if msg:find(pat, 1, true) then return true end
+			end
+			if msg:find("unknown type name '__", 1, true) then return true end
+			return false
+		end
+
+		local ino_ns = vim.api.nvim_create_namespace("arduino_filtered_diag")
+		-- Per-buffer reentrance guard: bufnr -> bool
+		local _ino_filtering = {}
+
+		vim.api.nvim_create_autocmd("LspAttach", {
+			callback = function(ev)
+				if not vim.api.nvim_buf_get_name(ev.buf):match("%.ino$") then return end
+
+				vim.api.nvim_create_autocmd("DiagnosticChanged", {
+					buffer = ev.buf,
+					callback = function()
+						local bufnr = ev.buf
+						-- Guard: if we're already inside filtering for this buf, bail out
+						if _ino_filtering[bufnr] then return end
+						_ino_filtering[bufnr] = true
+
+						local all = vim.diagnostic.get(bufnr)
+						local filtered = vim.tbl_filter(function(d)
+							-- Only keep diagnostics NOT from our own namespace AND not false positives
+							return d.namespace ~= ino_ns and not is_arduino_fp(d.message)
+						end, all)
+
+						vim.diagnostic.reset(ino_ns, bufnr)
+						vim.diagnostic.set(ino_ns, bufnr, filtered)
+
+						-- Hide clangd's raw diagnostics so only our filtered set shows
+						for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, name = "clangd" })) do
+							local clangd_ns = vim.lsp.diagnostic.get_namespace(client.id)
+							vim.diagnostic.hide(clangd_ns, bufnr)
+						end
+
+						_ino_filtering[bufnr] = false
+					end,
 				})
 			end,
 		})

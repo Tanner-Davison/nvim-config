@@ -8,6 +8,14 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHo
 	end,
 })
 
+-- Notify when a file was reloaded because it changed on disk (e.g. edits from Claude Code)
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+	pattern = "*",
+	callback = function()
+		vim.notify("File changed on disk. Buffer reloaded.", vim.log.levels.WARN, { title = "nvim" })
+	end,
+})
+
 -- Autocommand to fold multiline comments on file open
 vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
 	pattern = "*",

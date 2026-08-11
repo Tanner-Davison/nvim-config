@@ -113,6 +113,25 @@ return {
 			vim.api.nvim_set_hl(0, "@keyword.repeat", ctrl_hl)
 			vim.api.nvim_set_hl(0, "@keyword.exception", ctrl_hl)
 			vim.api.nvim_set_hl(0, "@keyword.import", ctrl_hl) -- using namespace
+
+			-- Diff highlights (fix vscode.nvim's overly-aggressive default diff colors)
+			-- DiffChange must be transparent so unchanged lines in changed hunks aren't
+			-- flooded red. DiffText carries the actual character-level highlight.
+			vim.api.nvim_set_hl(0, "DiffAdd", { bg = "#14342a", fg = "NONE" })
+			vim.api.nvim_set_hl(0, "DiffChange", { bg = "NONE", fg = "NONE" })
+			vim.api.nvim_set_hl(0, "DiffDelete", { bg = "#3a1a1a", fg = "#6b3a3a" })
+			vim.api.nvim_set_hl(0, "DiffText", { bg = "#1e5a3a", fg = "NONE", bold = true })
+
+			-- Gitsigns sign column colors (the +/~/- markers in the left gutter)
+			vim.api.nvim_set_hl(0, "GitSignsAdd", { fg = "#50FA7B" })
+			vim.api.nvim_set_hl(0, "GitSignsChange", { fg = "#F1FA8C" })
+			vim.api.nvim_set_hl(0, "GitSignsDelete", { fg = "#FF5555" })
+			vim.api.nvim_set_hl(0, "GitSignsAddNr", { fg = "#50FA7B" })
+			vim.api.nvim_set_hl(0, "GitSignsChangeNr", { fg = "#F1FA8C" })
+			vim.api.nvim_set_hl(0, "GitSignsDeleteNr", { fg = "#FF5555" })
+			-- Preview/inline diff popups (used by <leader>hp)
+			vim.api.nvim_set_hl(0, "GitSignsAddPreview", { link = "DiffAdd" })
+			vim.api.nvim_set_hl(0, "GitSignsDeletePreview", { link = "DiffDelete" })
 		end
 
 		-- Apply on first load

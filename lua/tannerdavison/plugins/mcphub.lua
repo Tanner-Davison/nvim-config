@@ -1,5 +1,6 @@
 return {
 	"ravitemer/mcphub.nvim",
+	commit = "7ca9930b085f616fd9da99cbb15589d999a02f33", -- pinned: fix for nil config path (PR #280)
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 	},

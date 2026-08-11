@@ -6,8 +6,20 @@ return {
 		auto_session.setup({
 			auto_restore = true,
 			suppressed_dirs = { "~/", "~/Dev/", "~/Downloads", "~/Documents", "~/Desktop/" },
-			-- Set legacy_cmds to false to remove deprecated command warnings
 			legacy_cmds = false,
+			bypass_save_filetypes = { "dap-repl", "dap-terminal", "dapui_scopes", "dapui_breakpoints", "dapui_stacks", "dapui_watches", "dapui_console" },
+			pre_save_cmds = {
+				function()
+					local ok_dap, dap_mod = pcall(require, "dap")
+					if ok_dap then
+						pcall(dap_mod.terminate)
+					end
+					local ok_ui, dapui = pcall(require, "dapui")
+					if ok_ui then
+						pcall(dapui.close)
+					end
+				end,
+			},
 		})
 		local keymap = vim.keymap
 		-- Use the new AutoSession commands (note the capital 'A')

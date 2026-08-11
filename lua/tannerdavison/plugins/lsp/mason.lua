@@ -30,9 +30,8 @@ return {
 				"cmakelang",
 				-- Linters
 				"eslint_d",
-				-- Note: LSP servers (typescript-language-server, css-lsp, html-lsp, etc.)
-				-- are NOT needed here since we use vim.lsp.start() directly in lspconfig.lua
-				-- Just install them manually via :Mason if needed
+				-- Debug adapters
+				"codelldb",
 			},
 		})
 	end,

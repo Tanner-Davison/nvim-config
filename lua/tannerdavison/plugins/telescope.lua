@@ -163,7 +163,7 @@ return {
 
 		-- File pickers (non-conflicting)
 		keymap.set("n", "<leader>fs", builtin.live_grep, { desc = "Find string in cwd" })
-		keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "List available help tags" })
+		keymap.set("n", "<leader>fH", builtin.help_tags, { desc = "List available help tags" })
 
 		-- Git pickers (non-conflicting)
 		keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "List git commits" })

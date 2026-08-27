@@ -36,6 +36,32 @@ return {
 			},
 			-- C++ projects
 			["CMakeLists.txt|*.cpp"] = {
+				-- Forge3D-style layered layout: explicit per-module mapping (reliable,
+				-- no dirname/basename splitting needed since each pattern has exactly
+				-- one wildcard covering just the filename stem).
+				-- Add a new pair of entries here when a new module folder
+				-- (gameplay/, editor/, etc.) is introduced.
+				["core/src/*.cpp"] = {
+					alternate = {
+						"core/include/{}.hpp",
+						"core/include/{}.h",
+					},
+					type = "source",
+				},
+				["core/include/*.hpp"] = {
+					alternate = {
+						"core/src/{}.cpp",
+					},
+					type = "header",
+				},
+				["core/include/*.h"] = {
+					alternate = {
+						"core/src/{}.cpp",
+						"core/src/{}.c",
+					},
+					type = "header",
+				},
+				-- Flat layout fallback: root-level src/*.cpp <-> include/*.hpp (no module folder)
 				["src/*.cpp"] = {
 					alternate = {
 						"include/{}.hpp",

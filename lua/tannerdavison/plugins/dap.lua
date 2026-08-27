@@ -329,7 +329,7 @@ return {
 		keymap.set("n", "<leader>br", dap.repl.toggle, { desc = "Toggle REPL" })
 		keymap.set("n", "<leader>bL", dap.run_last, { desc = "Run last config" })
 		keymap.set("n", "<leader>bt", dap.terminate, { desc = "Terminate session" })
-		keymap.set("n", "<leader>bd", dap.disconnect, { desc = "Disconnect" })
+		keymap.set("n", "<leader>bD", dap.disconnect, { desc = "Disconnect" })
 		keymap.set("n", "<leader>bu", dapui.toggle, { desc = "Toggle DAP UI" })
 		local hover_border = {
 			{ "╭", "DapUIFloatBorder" },

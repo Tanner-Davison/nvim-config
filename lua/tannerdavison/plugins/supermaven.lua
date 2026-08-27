@@ -28,15 +28,16 @@ return {
 
 		local suggestion = require("supermaven-nvim.completion_preview")
 
-		-- Smart Tab: accept full multi-line suggestion if present, else fall through
+		-- Smart Tab: accept full multi-line suggestion if present, else hand off
+		-- to tabout.nvim's real tabout() (jumps out of brackets/quotes, and
+		-- falls back to a normal tab itself if there's nothing to jump out of).
 		vim.keymap.set("i", "<Tab>", function()
 			if suggestion.has_suggestion() then
 				suggestion.on_accept_suggestion()
-				return ""
+			else
+				require("tabout").tabout()
 			end
-			-- Fall through to default tab behavior (tabout, indent, etc.)
-			return vim.api.nvim_replace_termcodes("<Tab>", true, true, true)
-		end, { expr = true, silent = true, desc = "Accept full AI suggestion or tab" })
+		end, { silent = true, desc = "Accept full AI suggestion, else tabout" })
 
 		-- Accept just the next word of the suggestion
 		vim.keymap.set("i", "<C-j>", function()

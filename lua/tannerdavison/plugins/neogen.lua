@@ -88,24 +88,24 @@ return {
 		local keymap = vim.keymap
 
 		-- Main documentation generation
-		keymap.set("n", "<leader>cd", function()
+		keymap.set("n", "<leader>cg", function()
 			require("neogen").generate()
 		end, { desc = "Generate documentation" })
 
 		-- Specific documentation types
-		keymap.set("n", "<leader>cdf", function()
+		keymap.set("n", "<leader>cgf", function()
 			require("neogen").generate({ type = "func" })
 		end, { desc = "Generate function documentation" })
 
-		keymap.set("n", "<leader>cdc", function()
+		keymap.set("n", "<leader>cgc", function()
 			require("neogen").generate({ type = "class" })
 		end, { desc = "Generate class documentation" })
 
-		keymap.set("n", "<leader>cdt", function()
+		keymap.set("n", "<leader>cgt", function()
 			require("neogen").generate({ type = "type" })
 		end, { desc = "Generate type documentation" })
 
-		keymap.set("n", "<leader>cdF", function()
+		keymap.set("n", "<leader>cgF", function()
 			require("neogen").generate({ type = "file" })
 		end, { desc = "Generate file documentation" })
 	end,

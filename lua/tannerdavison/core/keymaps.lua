@@ -84,7 +84,7 @@ keymap.set("n", "<leader>wj", "<cmd>wincmd j<CR>", { desc = "Move to bottom wind
 keymap.set("n", "<leader>wk", "<cmd>wincmd k<CR>", { desc = "Move to top window" })
 keymap.set("n", "<leader>wl", "<cmd>wincmd l<CR>", { desc = "Move to right window" })
 keymap.set("n", "<leader>wo", "<cmd>only<CR>", { desc = "Close all other windows" })
-keymap.set("n", "<leader>wr", "<cmd>wincmd r<CR>", { desc = "Rotate windows" })
+keymap.set("n", "<leader>wR", "<cmd>wincmd r<CR>", { desc = "Rotate windows" })
 
 -- ================================================================
 -- TAB MANAGEMENT

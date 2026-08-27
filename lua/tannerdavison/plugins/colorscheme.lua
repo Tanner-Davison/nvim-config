@@ -129,7 +129,7 @@ return {
 			vim.api.nvim_set_hl(0, "GitSignsAddNr", { fg = "#50FA7B" })
 			vim.api.nvim_set_hl(0, "GitSignsChangeNr", { fg = "#F1FA8C" })
 			vim.api.nvim_set_hl(0, "GitSignsDeleteNr", { fg = "#FF5555" })
-			-- Preview/inline diff popups (used by <leader>hp)
+			-- Preview/inline diff popups (used by <leader>hv)
 			vim.api.nvim_set_hl(0, "GitSignsAddPreview", { link = "DiffAdd" })
 			vim.api.nvim_set_hl(0, "GitSignsDeletePreview", { link = "DiffDelete" })
 		end

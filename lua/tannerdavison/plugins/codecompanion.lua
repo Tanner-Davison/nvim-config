@@ -60,7 +60,7 @@ return {
       -- ============================================
       strategies = {
         chat = {
-          adapter = "anthropic",
+          adapter = "groq",
           system_prompt = [[You are an expert full-stack developer assistant in Neovim.
 
 Built-in tools (use directly):
@@ -122,10 +122,10 @@ Always use the correct @server__tool syntax for MCP tools. Be concise and precis
           },
         },
         inline = {
-          adapter = "anthropic",
+          adapter = "groq",
         },
         cmd = {
-          adapter = "anthropic",
+          adapter = "groq",
         },
       },
 
@@ -185,7 +185,7 @@ Always use the correct @server__tool syntax for MCP tools. Be concise and precis
     local keymap = vim.keymap.set
 
     -- Adapter toggle state
-    vim.g.codecompanion_adapter = "anthropic"
+    vim.g.codecompanion_adapter = "groq"
 
     -- Main actions
     keymap({ "n", "v" }, "<leader>kc", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle Chat" })
@@ -194,12 +194,12 @@ Always use the correct @server__tool syntax for MCP tools. Be concise and precis
 
     -- Adapter toggle
     keymap("n", "<leader>km", function()
-      if vim.g.codecompanion_adapter == "anthropic" then
-        vim.g.codecompanion_adapter = "groq"
-        vim.notify("CodeCompanion → Groq (llama-3.1-8b-instant) ⚡", vim.log.levels.INFO)
-      else
+      if vim.g.codecompanion_adapter == "groq" then
         vim.g.codecompanion_adapter = "anthropic"
         vim.notify("CodeCompanion → Anthropic (claude-sonnet-4) 🤖", vim.log.levels.INFO)
+      else
+        vim.g.codecompanion_adapter = "groq"
+        vim.notify("CodeCompanion → Groq (llama-3.1-8b-instant) ⚡", vim.log.levels.INFO)
       end
       -- Update the active chat adapter if a chat is open
       local cc = require("codecompanion")
@@ -317,10 +317,10 @@ MCP Hub: <leader>ms
 
     -- Startup check
     vim.defer_fn(function()
-      if os.getenv("ANTHROPIC_API_KEY") then
-        vim.notify("✅ CodeCompanion + MCPHub ready!", vim.log.levels.INFO)
+      if os.getenv("GROQ_API_KEY") then
+        vim.notify("✅ CodeCompanion + MCPHub ready! (Groq default)", vim.log.levels.INFO)
       else
-        vim.notify("⚠️  Set ANTHROPIC_API_KEY environment variable", vim.log.levels.WARN)
+        vim.notify("⚠️  Set GROQ_API_KEY environment variable", vim.log.levels.WARN)
       end
     end, 1500)
   end,

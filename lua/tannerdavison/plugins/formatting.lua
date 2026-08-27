@@ -22,6 +22,7 @@ return {
 				python = { "isort", "black" },
 				cpp = { "clang_format" }, -- Add this!
 				c = { "clang_format" },
+				cmake = { "cmake_format" },
 			},
 
 			formatter_opts = {
@@ -42,18 +43,8 @@ return {
 			},
 		})
 
-		-- Format on save for all file types
-		vim.api.nvim_create_autocmd("BufWritePre", {
-			pattern = "*",
-			callback = function(args)
-				conform.format({
-					bufnr = args.buf,
-					lsp_fallback = true,
-					async = false,
-					timeout_ms = 1000,
-				})
-			end,
-		})
+		-- (format_on_save above already handles formatting on every write —
+		-- no need for a duplicate manual BufWritePre autocmd here)
 
 		vim.keymap.set({ "n", "v" }, "<leader>mp", function()
 			conform.format({

@@ -3,7 +3,13 @@ return {
 	lazy = false,
 	config = function()
 		require("tabout").setup({
-			tabkey = "<Tab>",
+			-- Left empty: tabout's own load order isn't guaranteed to run after
+			-- Supermaven's (both get deferred to the shared InsertEnter event
+			-- since tabout depends on nvim-cmp, which also loads on InsertEnter),
+			-- so letting tabout self-bind <Tab> creates a race that intermittently
+			-- overwrites Supermaven's mapping. Supermaven's fallback branch calls
+			-- require("tabout").tabout() directly instead, so this key is unused.
+			tabkey = "",
 			backwards_tabkey = "<S-Tab>",
 			act_as_tab = true,
 			completion = true,

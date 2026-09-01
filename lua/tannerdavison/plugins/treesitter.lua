@@ -1,7 +1,15 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
 	branch = "main",
-	event = { "BufReadPost", "BufNewFile" },
+	-- Was event-loaded on BufReadPost/BufNewFile, but auto-session restores
+	-- (synchronously, at VimEnter) open buffers that fire those same events --
+	-- creating a race where Neovim's *own* bundled ftplugin/lua.lua calls
+	-- vim.treesitter.start() before this plugin's queries are on 'runtimepath',
+	-- falls back to Nvim's stale bundled query, and throws the "Invalid field
+	-- name operator" error. Loading eagerly (like snacks/auto-session already
+	-- do) closes that race.
+	lazy = false,
+	priority = 1000,
 	build = ":TSUpdate",
 	dependencies = {
 		"windwp/nvim-ts-autotag",

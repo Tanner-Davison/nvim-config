@@ -32,6 +32,9 @@ return {
 				"eslint_d",
 				-- Debug adapters
 				"codelldb",
+				-- Language servers started manually via vim.lsp.start() in lspconfig.lua,
+				-- but still need Mason to actually install the binary
+				"lua-language-server",
 			},
 		})
 	end,

@@ -7,7 +7,7 @@ return {
 		bigfile = { enabled = true },
 		dashboard = { enabled = false },
 		explorer = { enabled = true },
-		image = { 
+		image = {
 			enabled = true,
 			-- Explicitly enable inline rendering
 			inline = { enabled = true },

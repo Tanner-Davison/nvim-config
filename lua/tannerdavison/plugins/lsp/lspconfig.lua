@@ -156,6 +156,10 @@ return {
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = { "lua" },
 			callback = function(ev)
+				if vim.fn.executable("lua-language-server") == 0 then
+					return
+				end
+
 				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git' })
 
 				vim.lsp.start({

@@ -357,9 +357,9 @@ keymap.set("n", "<leader>mg", function()
 			vim.cmd("!cmake --preset linux -DCMAKE_BUILD_TYPE=Debug")
 		end
 	else
-		vim.cmd("!cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug")
+		vim.cmd("!cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug")
 	end
-end, { desc = "CMake Generate (Debug)" })
+end, { desc = "CMake Generate (Debug, Ninja)" })
 
 keymap.set("n", "<leader>mb", function()
 	if vim.fn.has("win32") == 1 then
@@ -386,8 +386,8 @@ keymap.set("n", "<leader>mc", function()
 end, { desc = "CMake Clean" })
 
 keymap.set("n", "<leader>mr", function()
-	vim.cmd("!rm -rf build && cmake -S . -B build && cmake --build build")
-end, { desc = "CMake Rebuild" })
+	vim.cmd("!rm -rf build && cmake -S . -B build -G Ninja && cmake --build build")
+end, { desc = "CMake Rebuild (Ninja)" })
 
 -- Fixed run command
 keymap.set("n", "<leader>mx", function()

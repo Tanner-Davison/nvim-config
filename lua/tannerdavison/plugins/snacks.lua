@@ -9,12 +9,10 @@ return {
 		explorer = { enabled = true },
 		image = {
 			enabled = true,
-			-- Explicitly enable inline rendering
-			inline = { enabled = true },
-			-- Force terminal cell dimensions (approximate for your setup)
-			term = {
-				size = { width = 1920, height = 1080 }, -- Your screen resolution
-				cell = { width = 10, height = 20 }, -- Approximate cell size in pixels
+			inline = true,
+			doc = {
+				inline = true,
+				float = true,
 			},
 		},
 		indent = { enabled = true },
@@ -541,6 +539,27 @@ return {
 		},
 	},
 	init = function()
+		-- Snacks' image placement sets `self.hidden = true` when its window
+		-- closes (via placement:hide()), but nothing ever resets that flag
+		-- back to false when the buffer becomes visible again -- _render()
+		-- keeps blanking the virt_text because `hidden` is still true.
+		-- <C-o>/<C-i> (jumplist) re-enter the buffer without firing
+		-- BufReadCmd/FileType, so Snacks never gets a natural trigger to
+		-- fix this. Forcing Snacks.image.buf.attach() on BufWinEnter builds
+		-- a brand new placement (hidden defaults to false), sidestepping
+		-- the stuck flag entirely.
+		vim.api.nvim_create_autocmd("BufWinEnter", {
+			pattern = { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif", "*.bmp" },
+			callback = function(ev)
+				vim.schedule(function()
+					if package.loaded["snacks"] and Snacks.image and Snacks.image.buf then
+						pcall(Snacks.image.buf.attach, ev.buf)
+					end
+				end)
+			end,
+			desc = "Rebuild Snacks image placement when returning to an image buffer",
+		})
+
 		vim.api.nvim_create_autocmd("User", {
 			pattern = "VeryLazy",
 			callback = function()

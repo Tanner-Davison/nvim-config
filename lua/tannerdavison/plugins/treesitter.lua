@@ -43,7 +43,13 @@ return {
 			"c",
 			"cpp",
 			"cmake",
+			"glsl",
+			"hlsl",
 		})
+
+		-- Shader language injection targets (added for embedded-string highlighting
+		-- via tree-sitter-language-injection.nvim in plugins/injection.lua).
+		require("nvim-treesitter").install({ "slang" })
 
 		-- Start highlighting + treesitter-based indentation per-buffer. This
 		-- replaces the old `highlight.enable`/`indent.enable` config table --

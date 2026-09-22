@@ -267,6 +267,21 @@ end, { desc = "Run compiled C++ code" })
 -- CMAKE DEVELOPMENT
 -- ================================================================
 
+-- Walk up from the current buffer's directory (falling back to cwd) to
+-- find the nearest CMakeLists.txt, so mg/mb/mc/mr/mx target whichever C++
+-- project you're actually editing rather than one hardcoded path.
+local function find_project_root()
+	local start = vim.fn.expand("%:p:h")
+	if start == "" then
+		start = vim.fn.getcwd()
+	end
+	local found = vim.fs.find("CMakeLists.txt", { path = start, upward = true })[1]
+	if found then
+		return vim.fn.fnamemodify(found, ":h")
+	end
+	return start
+end
+
 -- Generate CMakeLists.txt
 keymap.set("n", "<leader>mf", function()
 	-- Check for existing CMakeLists.txt
@@ -350,58 +365,87 @@ end, { desc = "Generate CMakeLists.txt" })
 --
 -- CMake build commands
 keymap.set("n", "<leader>mg", function()
-	if vim.fn.filereadable("CMakePresets.json") == 1 then
+	local project_root = find_project_root()
+	if vim.fn.filereadable(project_root .. "/CMakePresets.json") == 1 then
 		if vim.fn.has("mac") == 1 then
-			vim.cmd("!cmake --preset mac-arm -DCMAKE_BUILD_TYPE=Debug")
+			vim.cmd("!cd " .. project_root .. " && cmake --preset mac-arm -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 		else
-			vim.cmd("!cmake --preset linux -DCMAKE_BUILD_TYPE=Debug")
+			vim.cmd("!cd " .. project_root .. " && cmake --preset linux -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 		end
 	else
-		vim.cmd("!cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug")
+		vim.cmd("!cd " .. project_root .. " && cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 	end
+	vim.fn.system("cd " .. project_root .. " && ln -sf build/compile_commands.json compile_commands.json")
 end, { desc = "CMake Generate (Debug, Ninja)" })
 
 keymap.set("n", "<leader>mb", function()
+	local project_root = find_project_root()
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!cmake --build build --config Debug --parallel %NUMBER_OF_PROCESSORS%")
-	elseif vim.fn.filereadable("CMakePresets.json") == 1 then
+		vim.cmd("!cd " .. project_root .. " && cmake --build build --config Debug --parallel %NUMBER_OF_PROCESSORS%")
+	elseif vim.fn.filereadable(project_root .. "/CMakePresets.json") == 1 then
 		if vim.fn.has("mac") == 1 then
-			vim.cmd("!cmake --build --preset mac-arm --config Debug --parallel $(sysctl -n hw.ncpu)")
+			vim.cmd("!cd " .. project_root .. " && cmake --build --preset mac-arm --config Debug --parallel $(sysctl -n hw.ncpu)")
 		else
-			vim.cmd("!cmake --build --preset linux --config Debug --parallel $(nproc)")
+			vim.cmd("!cd " .. project_root .. " && cmake --build --preset linux --config Debug --parallel $(nproc)")
 		end
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!cmake --build build --config Debug --parallel $(sysctl -n hw.ncpu)")
+		vim.cmd("!cd " .. project_root .. " && cmake --build build --config Debug --parallel $(sysctl -n hw.ncpu)")
 	else
-		vim.cmd("!cmake --build build --config Debug --parallel $(nproc)")
+		vim.cmd("!cd " .. project_root .. " && cmake --build build --config Debug --parallel $(nproc)")
 	end
 end, { desc = "CMake Build (Debug)" })
 
 keymap.set("n", "<leader>mc", function()
+	local project_root = find_project_root()
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!rmdir /s /q build")
+		vim.cmd("!rmdir /s /q " .. project_root .. "\\build")
 	else
-		vim.cmd("!rm -rf build")
+		vim.cmd("!rm -rf " .. project_root .. "/build")
 	end
 end, { desc = "CMake Clean" })
 
 keymap.set("n", "<leader>mr", function()
-	vim.cmd("!rm -rf build && cmake -S . -B build -G Ninja && cmake --build build")
+	local project_root = find_project_root()
+	vim.cmd("!cd " .. project_root .. " && rm -rf build && cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build")
+	vim.fn.system("cd " .. project_root .. " && ln -sf build/compile_commands.json compile_commands.json")
 end, { desc = "CMake Rebuild (Ninja)" })
 
--- Fixed run command
+-- Run whatever executable lives in the current project's build/ directory
+-- (found via find_project_root() above), instead of one hardcoded project.
 keymap.set("n", "<leader>mx", function()
-	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+	local project_root = find_project_root()
+	local build_dir = project_root .. "/build"
+
+	if vim.fn.isdirectory(build_dir) == 0 then
+		print("No build/ directory found under " .. project_root .. ". Build first with <leader>mb")
+		return
+	end
+
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!start cmd /k cd build\\Debug && " .. project_name .. ".exe")
-	else
-		-- Check if executable exists before running
-		local exe_path = "./build/" .. project_name
-		if vim.fn.executable(exe_path) == 1 then
-			vim.cmd("!" .. exe_path)
-		else
-			print("Executable not found. Build first with <leader>mb")
+		local candidates = vim.fn.glob(build_dir .. "/**/*.exe", true, true)
+		if #candidates == 0 then
+			print("No .exe found under " .. build_dir)
+			return
 		end
+		vim.cmd('!start cmd /k "' .. candidates[1] .. '"')
+		return
+	end
+
+	-- Find the first executable file directly inside build/ (skips
+	-- CMake's own generated subdirectories like CMakeFiles/)
+	local entries = vim.fn.glob(build_dir .. "/*", false, true)
+	local exe = nil
+	for _, entry in ipairs(entries) do
+		if vim.fn.isdirectory(entry) == 0 and vim.fn.executable(entry) == 1 then
+			exe = entry
+			break
+		end
+	end
+
+	if exe then
+		vim.cmd("!" .. exe)
+	else
+		print("No executable found in " .. build_dir .. ". Build first with <leader>mb")
 	end
 end, { desc = "Run CMake executable" })
 

@@ -236,6 +236,7 @@ return {
 							clangd_cmd,
 							"--fallback-style=file",
 							"--background-index=false",
+							"--header-insertion=never",
 							"--query-driver=/home/tanner/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/*/bin/arm-none-eabi-g*,/usr/bin/arm-none-eabi-g*,/usr/bin/g++,/usr/bin/gcc",
 						},
 						root_dir = root_dir,
@@ -346,6 +347,42 @@ return {
 				})
 			end,
 		})
+
+		-- GLSL (glsl_analyzer)
+		if vim.fn.executable("glsl_analyzer") == 1 then
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "glsl", "vert", "frag", "comp", "geom", "tesc", "tese" },
+				callback = function(ev)
+					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.git' }) or vim.fn.getcwd()
+
+					vim.lsp.start({
+						name = "glsl_analyzer",
+						cmd = { "glsl_analyzer" },
+						root_dir = root_dir,
+						capabilities = capabilities,
+						on_attach = on_attach,
+					})
+				end,
+			})
+		end
+
+		-- Slang (slangd) -- shader language used in forge3d; ships with the Vulkan SDK / Slang SDK
+		if vim.fn.executable("slangd") == 1 then
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = { "slang" },
+				callback = function(ev)
+					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.git' }) or vim.fn.getcwd()
+
+					vim.lsp.start({
+						name = "slangd",
+						cmd = { "slangd" },
+						root_dir = root_dir,
+						capabilities = capabilities,
+						on_attach = on_attach,
+					})
+				end,
+			})
+		end
 
 		-- Prisma
 		if vim.fn.executable("prisma-language-server") == 1 then

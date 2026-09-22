@@ -102,8 +102,11 @@ return {
 					if cmp.visible() then
 						cmp.close()
 					end
-					-- Always return to normal mode
-					vim.cmd("stopinsert")
+					-- Let the real Esc keypress go through natively so things like
+					-- visual-block append/insert (Ctrl-v/Ctrl-q + A/I + Esc) still
+					-- propagate to every selected line. Calling :stopinsert here
+					-- instead of falling back would swallow that.
+					fallback()
 				end, { "i", "s" }),
 
 				-- Confirm selection

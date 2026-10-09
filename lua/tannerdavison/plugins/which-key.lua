@@ -39,8 +39,10 @@ return {
 			{ "<leader>r", group = "React/Replace" },
 			{ "<leader>s", group = "Split/Session/Snacks" },
 			{ "<leader>t", group = "Tab/TODO/Toggle/Tablet" },
+			{ "<leader>v", group = "Flash Jump" },
 			{ "<leader>w", group = "Window" },
 			{ "<leader>x", group = "Trouble/Diagnostics" },
+			{ "<leader>y", group = "Agents (worktree + tmux)" },
 			
 			-- Subgroups
 			{ "<leader>lw", group = "LSP Workspace" },

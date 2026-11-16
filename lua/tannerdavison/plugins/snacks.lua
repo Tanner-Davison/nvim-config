@@ -532,7 +532,7 @@ return {
 			function()
 				local file = vim.api.nvim_buf_get_name(0) -- Get current buffer's filename
 				if file and file ~= "" then
-					vim.fn.system("xdg-open '" .. file .. "' &")
+					vim.fn.system((vim.fn.has("mac") == 1 and "open" or "xdg-open") .. " '" .. file .. "' &")
 					vim.notify("Opened: " .. vim.fn.fnamemodify(file, ":t"))
 				else
 					vim.notify("No file in current buffer", vim.log.levels.WARN)

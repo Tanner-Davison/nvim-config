@@ -15,7 +15,7 @@
         "mcp-server-fetch",
         "mcp-server-fetch"
       ],
-      "command": "/home/tanner/.local/bin/uvx",
+      "command": "uvx",
       "description": "Fetch web content and APIs, returns markdown-formatted content"
     },
     "tavily": {
@@ -87,9 +87,9 @@
       "description": "Persistent key-value memory that persists across sessions"
     },
     "filesystem": {
-      "description": "Read/write files anywhere under /home/tanner",
+      "description": "Read/write files anywhere under your home directory",
       "env": {
-        "ALLOWED_DIRECTORIES": "/home/tanner"
+        "ALLOWED_DIRECTORIES": "${HOME}"
       },
       "disabled": false,
       "command": "npx",

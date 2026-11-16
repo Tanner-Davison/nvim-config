@@ -150,7 +150,14 @@ return {
 			end
 			local candidates
 			if vim.fn.has("mac") == 1 then
-				candidates = { "/usr/bin/clangd", "/opt/homebrew/bin/clangd", "/usr/local/bin/clangd", "clangd" }
+				candidates = {
+					"/opt/homebrew/opt/llvm/bin/clangd", -- Homebrew LLVM (Apple Silicon)
+					"/usr/local/opt/llvm/bin/clangd", -- Homebrew LLVM (Intel)
+					"/opt/homebrew/bin/clangd",
+					"/usr/local/bin/clangd",
+					"/usr/bin/clangd", -- Apple/Xcode clangd
+					"clangd",
+				}
 			else
 				candidates = {
 					"/usr/bin/clangd-18", "/usr/bin/clangd-17", "/usr/bin/clangd-16",

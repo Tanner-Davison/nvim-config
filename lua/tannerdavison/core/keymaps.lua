@@ -538,7 +538,7 @@ keymap.set("n", "<leader>o", function()
 	end
 	
 	if file and file ~= "" then
-		vim.fn.system("xdg-open '" .. file .. "' &")
+		vim.fn.system((vim.fn.has("mac") == 1 and "open" or "xdg-open") .. " '" .. file .. "' &")
 		vim.notify("Opened: " .. vim.fn.fnamemodify(file, ":t"))
 	else
 		vim.notify("No file to open", vim.log.levels.WARN)
@@ -553,7 +553,9 @@ end, { desc = "Open file externally (smart)" })
 keymap.set("n", "<leader>dg", ":!doxygen<CR>", { desc = "Generate Doxygen docs" })
 
 -- View Doxygen documentation
-keymap.set("n", "<leader>dv", ":!xdg-open docs/html/index.html &<CR>", { desc = "View Doxygen docs" })
+keymap.set("n", "<leader>dv", function()
+	vim.fn.system((vim.fn.has("mac") == 1 and "open" or "xdg-open") .. " docs/html/index.html &")
+end, { desc = "View Doxygen docs" })
 
 -- Clean Doxygen documentation
 keymap.set("n", "<leader>dc", ":!rm -rf docs<CR>", { desc = "Clean Doxygen docs" })

@@ -19,7 +19,7 @@ return {
 		})
 
 		-- Configure mason-tool-installer for formatters and linters ONLY
-		-- Language servers are configured separately via vim.lsp.start()
+		-- Language servers are configured separately via vim.lsp.config()/vim.lsp.enable()
 		require("mason-tool-installer").setup({
 			ensure_installed = {
 				-- Formatters
@@ -32,7 +32,7 @@ return {
 				"eslint_d",
 				-- Debug adapters
 				"codelldb",
-				-- Language servers started manually via vim.lsp.start() in lspconfig.lua,
+				-- Language servers are declared in lspconfig.lua (vim.lsp.config/enable),
 				-- but still need Mason to actually install the binary
 				"lua-language-server",
 			},

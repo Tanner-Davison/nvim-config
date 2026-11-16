@@ -4,9 +4,8 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
-    "hrsh7th/nvim-cmp",
-    "nvim-telescope/telescope.nvim",
-    "stevearc/dressing.nvim",
+    "saghen/blink.cmp", -- chat-buffer completion source (see blink-cmp.lua)
+    "folke/snacks.nvim", -- pickers + vim.ui.select/input
     "ravitemer/mcphub.nvim",
   },
   config = function()
@@ -116,9 +115,9 @@ Always use the correct @server__tool syntax for MCP tools. Be concise and precis
           },
           variables = {},
           slash_commands = {
-            ["buffer"] = { opts = { provider = "telescope" } },
-            ["file"] = { opts = { provider = "telescope" } },
-            ["symbols"] = { opts = { provider = "telescope" } },
+            ["buffer"] = { opts = { provider = "snacks" } },
+            ["file"] = { opts = { provider = "snacks" } },
+            ["symbols"] = { opts = { provider = "snacks" } },
           },
         },
         inline = {
@@ -136,7 +135,7 @@ Always use the correct @server__tool syntax for MCP tools. Be concise and precis
         action_palette = {
           width = 95,
           height = 10,
-          provider = "telescope",
+          provider = "snacks",
         },
         chat = {
           window = {

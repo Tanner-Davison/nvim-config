@@ -33,13 +33,13 @@ return {
 		dashboard.section.header.opts = dashboard.section.header.opts or {}
 		dashboard.section.header.opts.hl = "AlphaHeader"
 
-		-- Menu with your original working icons + a few additions
+		-- Menu (pickers/explorer are Snacks)
 		dashboard.section.buttons.val = {
 			dashboard.button("e", "  > New File", "<cmd>ene<CR>"),
-			dashboard.button("SPC ee", "  > Toggle file explorer", "<cmd>NvimTreeToggle<CR>"),
-			dashboard.button("SPC ff", "󰱼 > Find File", "<cmd>Telescope find_files<CR>"),
-			dashboard.button("SPC fr", "  > Recent Files", "<cmd>Telescope oldfiles<CR>"),
-			dashboard.button("SPC fs", "  > Find Word", "<cmd>Telescope live_grep<CR>"),
+			dashboard.button("SPC ee", "  > Toggle file explorer", "<cmd>lua Snacks.explorer()<CR>"),
+			dashboard.button("SPC ff", "󰱼 > Find File", "<cmd>lua Snacks.picker.files()<CR>"),
+			dashboard.button("SPC fr", "  > Recent Files", "<cmd>lua Snacks.picker.recent()<CR>"),
+			dashboard.button("SPC fs", "  > Find Word", "<cmd>lua Snacks.picker.grep()<CR>"),
 			dashboard.button("SPC wr", "󰁯  > Restore Session For Current Directory", "<cmd>SessionRestore<CR>"),
 			dashboard.button("c", "  > Config", "<cmd>edit $MYVIMRC<CR>"),
 			dashboard.button("u", "  > Update Plugins", "<cmd>Lazy update<CR>"),

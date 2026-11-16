@@ -1,26 +1,3 @@
-return {
-	"lukas-reineke/indent-blankline.nvim",
-	event = { "BufReadPre", "BufNewFile" },
-	main = "ibl",
-	config = function()
-		-- Set up custom highlights for indent lines
-		vim.api.nvim_set_hl(0, "IndentBlanklineChar", { fg = "#2D3A4A" }) -- Normal indent
-		vim.api.nvim_set_hl(0, "IndentBlanklineContextChar", { fg = "#3B4D63" }) -- Active indent
-
-		require("ibl").setup({
-			indent = {
-				char = "",
-				highlight = "IndentBlanklineChar",
-			},
-			whitespace = {
-				highlight = { "Whitespace" },
-				remove_blankline_trail = false,
-			},
-			scope = {
-				enabled = true,
-				char = "│",
-				highlight = "IndentBlanklineContextChar",
-			},
-		})
-	end,
-}
+-- indent-blankline.nvim was removed: indent guides/scope now come from snacks.nvim indent (see snacks.lua).
+-- This file is intentionally empty and can be deleted.
+return {}

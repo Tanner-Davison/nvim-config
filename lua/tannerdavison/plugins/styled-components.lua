@@ -27,15 +27,4 @@ return {
 			}
 		end,
 	},
-	
-	-- CSS completion for styled-components
-	{
-		"hrsh7th/cmp-omni",
-		lazy = true,
-		ft = { "css", "scss", "less", "javascriptreact", "typescriptreact" },
-		config = function()
-			-- Configure omni completion for CSS
-			vim.g.omni_sql_no_default_maps = 1
-		end,
-	},
 }

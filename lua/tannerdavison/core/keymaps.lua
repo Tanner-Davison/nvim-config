@@ -230,8 +230,36 @@ end
 -- C++ DEVELOPMENT - COMPILATION
 -- ================================================================
 
+-- Run a shell command in a bottom terminal split. Output streams in live and stays
+-- scrollable afterwards (normal mode: j/k, <C-u>/<C-d>, gg/G, /search). Press q to close.
+-- This replaces `:!cmd`, whose "Press ENTER" prompt disappears on any keypress.
+local function run_in_terminal(cmd)
+	vim.cmd("botright 15new")
+	local buf = vim.api.nvim_get_current_buf()
+	-- Paint stderr red (like the old :! output did) when the shell supports process
+	-- substitution; stdout keeps its own colors. Falls back to the plain command otherwise.
+	local sh = vim.fn.fnamemodify(vim.o.shell, ":t")
+	if sh == "bash" or sh == "zsh" then
+		cmd = "{ "
+			.. cmd
+			.. "; } 2> >(sed -u 's/.*/\x1b[31m&\x1b[0m/'); rc=$?; sleep 0.1; exit $rc"
+	end
+	vim.fn.jobstart({ vim.o.shell, vim.o.shellcmdflag, cmd }, { term = true })
+	vim.bo[buf].bufhidden = "wipe"
+	vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf, desc = "Close output window" })
+	-- <Esc> leaves terminal-insert mode so you can scroll while a program is still running
+	vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { buffer = buf, desc = "Normal mode" })
+	vim.cmd("stopinsert")
+	vim.cmd("normal! G")
+end
+
 -- Compile single C++ file
-keymap.set("n", "<Space>cc", ":!g++ -g -O0 -std=c++23 -Wall -Wextra % -o %:t:r <CR>", { desc = "Compile C++ code" })
+keymap.set("n", "<Space>cc", function()
+	vim.cmd("silent! update")
+	local src = vim.fn.shellescape(vim.fn.expand("%"))
+	local out = vim.fn.shellescape(vim.fn.expand("%:t:r"))
+	run_in_terminal("g++ -g -O0 -std=c++23 -Wall -Wextra " .. src .. " -o " .. out)
+end, { desc = "Compile C++ code" })
 
 -- Compile all CPP files (cross-platform)
 keymap.set("n", "<Space>cx", function()
@@ -240,11 +268,11 @@ keymap.set("n", "<Space>cx", function()
 
 	-- Adjust command based on the operating system
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!dir /b *.cpp > allcppfiles.txt && g++ -Wall -Wextra @allcppfiles.txt -o " .. output_name)
+		run_in_terminal("dir /b *.cpp > allcppfiles.txt && g++ -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!ls *.cpp > allcppfiles.txt && g++ -std=c++20 -Wall -Wextra @allcppfiles.txt -o " .. output_name)
+		run_in_terminal("ls *.cpp > allcppfiles.txt && g++ -std=c++20 -Wall -Wextra @allcppfiles.txt -o " .. output_name)
 	else
-		vim.cmd("!ls *.cpp > allcppfiles.txt && g++ @allcppfiles.txt -o " .. output_name)
+		run_in_terminal("ls *.cpp > allcppfiles.txt && g++ @allcppfiles.txt -o " .. output_name)
 	end
 end, { desc = "Compile all C++ files" })
 
@@ -368,12 +396,12 @@ keymap.set("n", "<leader>mg", function()
 	local project_root = find_project_root()
 	if vim.fn.filereadable(project_root .. "/CMakePresets.json") == 1 then
 		if vim.fn.has("mac") == 1 then
-			vim.cmd("!cd " .. project_root .. " && cmake --preset mac-arm -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+			run_in_terminal("cd " .. project_root .. " && cmake --preset mac-arm -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_COLOR_DIAGNOSTICS=ON")
 		else
-			vim.cmd("!cd " .. project_root .. " && cmake --preset linux -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+			run_in_terminal("cd " .. project_root .. " && cmake --preset linux -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_COLOR_DIAGNOSTICS=ON")
 		end
 	else
-		vim.cmd("!cd " .. project_root .. " && cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
+		run_in_terminal("cd " .. project_root .. " && cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_COLOR_DIAGNOSTICS=ON")
 	end
 	vim.fn.system("cd " .. project_root .. " && ln -sf build/compile_commands.json compile_commands.json")
 end, { desc = "CMake Generate (Debug, Ninja)" })
@@ -381,17 +409,17 @@ end, { desc = "CMake Generate (Debug, Ninja)" })
 keymap.set("n", "<leader>mb", function()
 	local project_root = find_project_root()
 	if vim.fn.has("win32") == 1 then
-		vim.cmd("!cd " .. project_root .. " && cmake --build build --config Debug --parallel %NUMBER_OF_PROCESSORS%")
+		run_in_terminal("cd " .. project_root .. " && cmake --build build --config Debug --parallel %NUMBER_OF_PROCESSORS%")
 	elseif vim.fn.filereadable(project_root .. "/CMakePresets.json") == 1 then
 		if vim.fn.has("mac") == 1 then
-			vim.cmd("!cd " .. project_root .. " && cmake --build --preset mac-arm --config Debug --parallel $(sysctl -n hw.ncpu)")
+			run_in_terminal("cd " .. project_root .. " && cmake --build --preset mac-arm --config Debug --parallel $(sysctl -n hw.ncpu)")
 		else
-			vim.cmd("!cd " .. project_root .. " && cmake --build --preset linux --config Debug --parallel $(nproc)")
+			run_in_terminal("cd " .. project_root .. " && cmake --build --preset linux --config Debug --parallel $(nproc)")
 		end
 	elseif vim.fn.has("mac") == 1 then
-		vim.cmd("!cd " .. project_root .. " && cmake --build build --config Debug --parallel $(sysctl -n hw.ncpu)")
+		run_in_terminal("cd " .. project_root .. " && cmake --build build --config Debug --parallel $(sysctl -n hw.ncpu)")
 	else
-		vim.cmd("!cd " .. project_root .. " && cmake --build build --config Debug --parallel $(nproc)")
+		run_in_terminal("cd " .. project_root .. " && cmake --build build --config Debug --parallel $(nproc)")
 	end
 end, { desc = "CMake Build (Debug)" })
 
@@ -406,7 +434,7 @@ end, { desc = "CMake Clean" })
 
 keymap.set("n", "<leader>mr", function()
 	local project_root = find_project_root()
-	vim.cmd("!cd " .. project_root .. " && rm -rf build && cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && cmake --build build")
+	run_in_terminal("cd " .. project_root .. " && rm -rf build && cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_COLOR_DIAGNOSTICS=ON && cmake --build build")
 	vim.fn.system("cd " .. project_root .. " && ln -sf build/compile_commands.json compile_commands.json")
 end, { desc = "CMake Rebuild (Ninja)" })
 
@@ -443,175 +471,23 @@ keymap.set("n", "<leader>mx", function()
 	end
 
 	if exe then
-		vim.cmd("!" .. exe)
+		run_in_terminal(vim.fn.shellescape(exe))
 	else
 		print("No executable found in " .. build_dir .. ". Build first with <leader>mb")
 	end
 end, { desc = "Run CMake executable" })
 
--- React Storyblok Component Boilerplate
-keymap.set("n", "<leader>rsc", function()
-	local filename = vim.fn.expand("%:t:r") -- Get filename without extension
-	local component_name = filename:gsub("^%l", string.upper) -- Capitalize first letter
-
-	local lines = {
-		'"use client";',
-		'import React from "react";',
-		'import styled, { ThemeProvider } from "styled-components";',
-		'import RichTextRenderer from "@/components/renderers/RichTextRenderer";',
-		'import { useAvailableThemes } from "@/context/ThemeContext";',
-		'import { storyblokEditable } from "@storyblok/react/rsc";',
-		'import media from "@/styles/media";',
-		'import useMedia from "@/functions/useMedia";',
-		"",
-		"const " .. component_name .. " = ({ blok }) => {",
-		"  // console.log(blok);",
-		"  const themes = useAvailableThemes();",
-		"  const selectedTheme = themes[blok.theme] || themes.default;",
-		"",
-		"  return (",
-		"    <ThemeProvider theme={selectedTheme}>",
-		"      <Wrapper",
-		"        spacing={blok.section_spacing}",
-		"        spacingOffset={blok.offset_spacing}",
-		"      >",
-		"<CopyWrapper>",
-		"          {blok?.copy_section[0]?.copy ? (",
-		"<RichTextRenderer document={blok.copy_section[0].copy} />",
-		"         ) : ",
-		"       <h1>{'No Copy_Section... Default Hello World'}</h1>",
-		"     }",
-		"</CopyWrapper>",
-
-		"        <h1>Hello World! :) </h1>",
-		"      </Wrapper>",
-		"    </ThemeProvider>",
-		"  );",
-		"};",
-		"",
-		"export default " .. component_name .. ";",
-		"",
-		"const CopyWrapper = styled.div``;",
-		"const Wrapper = styled.div`",
-		"  display: flex;",
-		"  flex-direction: column;",
-		"  align-items: center;",
-		"  justify-content: center;",
-		"  padding: ${(props) => {",
-		'    if (props.spacingOffset === "top") {',
-		'      return props.spacing === "default"',
-		'        ? "3.75vw 0 0"',
-		"        : props.spacing",
-		"          ? `${props.spacing}px 0 0`",
-		'          : "3.75vw 0 0";',
-		"    }",
-		'    if (props.spacingOffset === "bottom") {',
-		'      return props.spacing === "default"',
-		'        ? "0 0 3.75vw"',
-		"        : props.spacing",
-		"          ? `0 0 ${props.spacing}px`",
-		'          : "0 0 3.75vw";',
-		"    }",
-		'    return props.spacing === "default"',
-		'      ? "3.75vw 0"',
-		"      : props.spacing",
-		"        ? `${props.spacing}px 0`",
-		'        : "3.75vw 0";',
-		"  }};",
-		"  ${media.fullWidth} {",
-		"    padding: ${(props) => {",
-		'      if (props.spacingOffset === "top") {',
-		'        return props.spacing === "default"',
-		'          ? "60px 0 0"',
-		"          : props.spacing",
-		"            ? `${props.spacing}px 0 0`",
-		'            : "60px 0 0";',
-		"      }",
-		'      if (props.spacingOffset === "bottom") {',
-		'        return props.spacing === "default"',
-		'          ? "0 0 60px"',
-		"          : props.spacing",
-		"            ? `0 0 ${props.spacing}px`",
-		'            : "0 0 60px";',
-		"      }",
-		'      return props.spacing === "default"',
-		'        ? "60px 0"',
-		"        : props.spacing",
-		"          ? `${props.spacing}px 0`",
-		'          : "60px 0";',
-		"    }};",
-		"  }",
-		"  ${media.tablet} {",
-		"    padding: ${(props) => {",
-		'      if (props.spacingOffset === "top") {',
-		'        return props.spacing === "default"',
-		'          ? "5.859vw 0 0"',
-		"          : props.spacing",
-		"            ? `${props.spacing}px 0 0`",
-		'            : "5.859vw 0 0";',
-		"      }",
-		'      if (props.spacingOffset === "bottom") {',
-		'        return props.spacing === "default"',
-		'          ? "0 0 5.859vw"',
-		"          : props.spacing",
-		"            ? `0 0 ${props.spacing}px`",
-		'            : "0 0 5.859vw";',
-		"      }",
-		'      return props.spacing === "default"',
-		'        ? "5.859vw 0"',
-		"        : props.spacing",
-		"          ? `${props.spacing}px 0`",
-		'          : "5.859vw 0";',
-		"    }};",
-		"  }",
-		"  ${media.mobile} {",
-		"    padding: ${(props) => {",
-		'      if (props.spacingOffset === "top") {',
-		'        return props.spacing === "default"',
-		'          ? "12.5vw 0 0"',
-		"          : props.spacing",
-		"            ? `${props.spacing}px 0 0`",
-		'            : "12.5vw 0 0";',
-		"      }",
-		'      if (props.spacingOffset === "bottom") {',
-		'        return props.spacing === "default"',
-		'          ? "0 0 12.5vw"',
-		"          : props.spacing",
-		"            ? `0 0 ${props.spacing}px`",
-		'            : "0 0 12.5vw";',
-		"      }",
-		'      return props.spacing === "default"',
-		'        ? "12.5vw 0"',
-		"        : props.spacing",
-		"          ? `${props.spacing}px 0`",
-		'          : "12.5vw 0";',
-		"    }};",
-		"  }",
-		"`;",
-	}
-
-	vim.api.nvim_put(lines, "l", true, true)
-
-	-- Move cursor to the component name for easy replacement
-	-- Go up to the component declaration line and position after "const "
-	vim.cmd("normal! " .. (#lines - 9) .. "k6l")
-
-	-- Select the component name for easy replacement
-	vim.cmd("normal! v" .. string.len(component_name) .. "l")
-end, { desc = "Insert React Storyblok Component boilerplate" })
 -- ================================================================
 -- COMPLETION TOGGLE
 -- ================================================================
 
--- Toggle autocomplete on/off
+-- Toggle autocomplete on/off (blink.cmp reads vim.g.blink_cmp_disabled, see blink-cmp.lua)
 keymap.set({ "n", "i" }, "<leader>tc", function()
-	local cmp = require("cmp")
-	local current_setting = cmp.get_config().enabled
-	if current_setting ~= false then
-		cmp.setup({ enabled = false })
+	vim.g.blink_cmp_disabled = not vim.g.blink_cmp_disabled
+	if vim.g.blink_cmp_disabled then
+		pcall(function() require("blink.cmp").hide() end)
 		print("✗ Autocomplete disabled")
 	else
-		cmp.setup({ enabled = true })
 		print("✓ Autocomplete enabled")
 	end
 end, { desc = "Toggle autocomplete" })

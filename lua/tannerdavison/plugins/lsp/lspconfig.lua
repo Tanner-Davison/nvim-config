@@ -1,21 +1,25 @@
+-- LSP setup for Neovim 0.12: vim.lsp.config() declares each server, vim.lsp.enable()
+-- starts it. nvim-lspconfig is kept only for its bundled per-server defaults
+-- (the `lsp/*.lua` files it ships); everything project-specific lives below.
 return {
 	"neovim/nvim-lspconfig",
 	version = false,
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
-		"hrsh7th/cmp-nvim-lsp",
+		"saghen/blink.cmp", -- provides the LSP capabilities (completion, snippets, ...)
 		{ "antosha417/nvim-lsp-file-operations", config = true },
 		{ "folke/lazydev.nvim", ft = "lua", opts = {} },
 	},
 	config = function()
-		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 		local keymap = vim.keymap
 
-		-- File type detection
+		-- ================================================================
+		-- FILETYPE DETECTION
+		-- ================================================================
 		vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 			pattern = {
 				"*.h", "*.hpp", "*.cpp", "*.c", "*.dll",
-				"*.ino",                                       -- Arduino sketches treated as C++
+				"*.ino", -- Arduino sketches treated as C++
 				"*/include/*", "*/SDL2/*", "**/src/**/*.cpp", "*/MSVC/*",
 			},
 			callback = function()
@@ -23,264 +27,251 @@ return {
 			end,
 		})
 
-		-- Enhanced capabilities
-		local capabilities = cmp_nvim_lsp.default_capabilities()
-		capabilities.textDocument.positionEncoding = "utf-16"
+		-- ================================================================
+		-- SHARED CAPABILITIES + KEYMAPS
+		-- ================================================================
+		vim.lsp.config("*", {
+			capabilities = require("blink.cmp").get_lsp_capabilities(),
+		})
 
-		-- Diagnostic signs
-		local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
-		for type, icon in pairs(signs) do
-			local hl = "DiagnosticSign" .. type
-			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
-		end
-
-		-- Common on_attach function
-		local on_attach = function(client, bufnr)
-			local opts = { buffer = bufnr, silent = true }
-
-			keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", vim.tbl_extend("force", opts, { desc = "Show LSP references" }))
-			keymap.set("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
-			keymap.set("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", opts, { desc = "Go to declaration" }))
-			keymap.set("n", "gi", vim.lsp.buf.implementation, vim.tbl_extend("force", opts, { desc = "Show LSP implementations" }))
-			keymap.set("n", "gt", vim.lsp.buf.type_definition, vim.tbl_extend("force", opts, { desc = "Show LSP type definitions" }))
-			keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", opts, { desc = "See available code actions" }))
-			keymap.set("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", opts, { desc = "Smart rename" }))
-			keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", vim.tbl_extend("force", opts, { desc = "Show buffer diagnostics" }))
-			keymap.set("n", "<leader>d", vim.diagnostic.open_float, vim.tbl_extend("force", opts, { desc = "Show line diagnostics" }))
-			keymap.set("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", opts, { desc = "Go to previous diagnostic" }))
-			keymap.set("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", opts, { desc = "Go to next diagnostic" }))
-			keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Show documentation for what is under cursor" }))
-		end
-
-		-- TypeScript/JavaScript
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+		-- One LspAttach autocmd replaces the old per-server on_attach copies.
+		-- (0.12 also ships defaults like gra/grr/gri/grn/gO; these keep your muscle memory.)
+		vim.api.nvim_create_autocmd("LspAttach", {
+			group = vim.api.nvim_create_augroup("tannerdavison_lsp_attach", { clear = true }),
 			callback = function(ev)
-				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'tsconfig.json', 'package.json', '.git' })
+				local function map(mode, lhs, rhs, desc)
+					keymap.set(mode, lhs, rhs, { buffer = ev.buf, silent = true, desc = desc })
+				end
 
-				vim.lsp.start({
-					name = "ts_ls",
-					cmd = { "typescript-language-server", "--stdio" },
-					root_dir = root_dir,
-					capabilities = capabilities,
-					on_attach = function(client, bufnr)
-						client.server_capabilities.documentFormattingProvider = false
-						client.server_capabilities.documentRangeFormattingProvider = false
-						on_attach(client, bufnr)
-					end,
-					settings = {
-						typescript = {
-							suggest = { autoImports = true },
-							preferences = {
-								importModuleSpecifier = "non-relative",
-								quoteStyle = "single",
-							},
-							inlayHints = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = true,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayPropertyDeclarationTypeHints = true,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
-							},
-						},
-						javascript = {
-							suggest = { autoImports = true },
-							preferences = {
-								importModuleSpecifier = "non-relative",
-								quoteStyle = "single",
-							},
-						},
-					},
-				})
+				map("n", "gR", function() Snacks.picker.lsp_references() end, "Show LSP references")
+				map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+				map("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
+				map("n", "gi", vim.lsp.buf.implementation, "Show LSP implementations")
+				map("n", "gt", vim.lsp.buf.type_definition, "Show LSP type definitions")
+				map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, "See available code actions")
+				map("n", "<leader>rn", vim.lsp.buf.rename, "Smart rename")
+				map("n", "<leader>D", function() Snacks.picker.diagnostics_buffer() end, "Show buffer diagnostics")
+				map("n", "<leader>d", vim.diagnostic.open_float, "Show line diagnostics")
+				map("n", "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, "Go to previous diagnostic")
+				map("n", "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, "Go to next diagnostic")
+				map("n", "K", vim.lsp.buf.hover, "Show documentation for what is under cursor")
 			end,
 		})
 
-		-- CSS/SCSS/Less/Sass
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "css", "scss", "less", "sass" },
-			callback = function(ev)
-				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
+		-- ================================================================
+		-- SERVER DEFINITIONS
+		-- ================================================================
 
-				vim.lsp.start({
-					name = "cssls",
-					cmd = { "vscode-css-language-server", "--stdio" },
-					root_dir = root_dir,
-					capabilities = capabilities,
-					on_attach = on_attach,
-					settings = {
-						css = { validate = true, lint = { unknownAtRules = "ignore" } },
-						scss = { validate = true, lint = { unknownAtRules = "ignore" } },
-						less = { validate = true, lint = { unknownAtRules = "ignore" } },
-					},
-				})
+		-- TypeScript / JavaScript (formatting is handled by conform/prettier, not ts_ls)
+		vim.lsp.config("ts_ls", {
+			cmd = { "typescript-language-server", "--stdio" },
+			filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+			root_markers = { "tsconfig.json", "package.json", ".git" },
+			on_attach = function(client)
+				client.server_capabilities.documentFormattingProvider = false
+				client.server_capabilities.documentRangeFormattingProvider = false
 			end,
+			settings = {
+				typescript = {
+					suggest = { autoImports = true },
+					preferences = {
+						importModuleSpecifier = "non-relative",
+						quoteStyle = "single",
+					},
+					inlayHints = {
+						includeInlayParameterNameHints = "all",
+						includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+						includeInlayFunctionParameterTypeHints = true,
+						includeInlayVariableTypeHints = true,
+						includeInlayPropertyDeclarationTypeHints = true,
+						includeInlayFunctionLikeReturnTypeHints = true,
+						includeInlayEnumMemberValueHints = true,
+					},
+				},
+				javascript = {
+					suggest = { autoImports = true },
+					preferences = {
+						importModuleSpecifier = "non-relative",
+						quoteStyle = "single",
+					},
+				},
+			},
+		})
+
+		-- CSS / SCSS / Less / Sass
+		vim.lsp.config("cssls", {
+			cmd = { "vscode-css-language-server", "--stdio" },
+			filetypes = { "css", "scss", "less", "sass" },
+			root_markers = { "package.json", ".git" },
+			settings = {
+				css = { validate = true, lint = { unknownAtRules = "ignore" } },
+				scss = { validate = true, lint = { unknownAtRules = "ignore" } },
+				less = { validate = true, lint = { unknownAtRules = "ignore" } },
+			},
 		})
 
 		-- HTML
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "html" },
-			callback = function(ev)
-				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
-
-				vim.lsp.start({
-					name = "html",
-					cmd = { "vscode-html-language-server", "--stdio" },
-					root_dir = root_dir,
-					capabilities = capabilities,
-					on_attach = on_attach,
-				})
-			end,
+		vim.lsp.config("html", {
+			cmd = { "vscode-html-language-server", "--stdio" },
+			filetypes = { "html" },
+			root_markers = { "package.json", ".git" },
 		})
 
-		-- Tailwind CSS
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
-			callback = function(ev)
-				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs', 'tailwind.config.mjs' })
-
-				if root_dir then
-					vim.lsp.start({
-						name = "tailwindcss",
-						cmd = { "tailwindcss-language-server", "--stdio" },
-						root_dir = root_dir,
-						capabilities = capabilities,
-						on_attach = on_attach,
-					})
-				end
-			end,
+		-- Tailwind CSS (only starts inside a project that has a tailwind config)
+		vim.lsp.config("tailwindcss", {
+			cmd = { "tailwindcss-language-server", "--stdio" },
+			filetypes = { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+			root_markers = { "tailwind.config.js", "tailwind.config.ts", "tailwind.config.cjs", "tailwind.config.mjs" },
+			workspace_required = true,
 		})
 
 		-- Lua
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "lua" },
-			callback = function(ev)
-				if vim.fn.executable("lua-language-server") == 0 then
-					return
-				end
-
-				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.luarc.json', '.luarc.jsonc', '.luacheckrc', '.stylua.toml', 'stylua.toml', '.git' })
-
-				vim.lsp.start({
-					name = "lua_ls",
-					cmd = { "lua-language-server" },
-					root_dir = root_dir,
-					capabilities = capabilities,
-					on_attach = on_attach,
-					settings = {
-						Lua = {
-							diagnostics = { globals = { "vim" } },
-							completion = { callSnippet = "Replace" },
-							workspace = {
-								library = { vim.env.VIMRUNTIME },
-								checkThirdParty = false,
-							},
-							telemetry = { enable = false },
-						},
+		vim.lsp.config("lua_ls", {
+			cmd = { "lua-language-server" },
+			filetypes = { "lua" },
+			root_markers = { ".luarc.json", ".luarc.jsonc", ".luacheckrc", ".stylua.toml", "stylua.toml", ".git" },
+			settings = {
+				Lua = {
+					diagnostics = { globals = { "vim" } },
+					completion = { callSnippet = "Replace" },
+					workspace = {
+						library = { vim.env.VIMRUNTIME },
+						checkThirdParty = false,
 					},
-				})
-			end,
+					telemetry = { enable = false },
+				},
+			},
 		})
 
-		-- C/C++ (clangd)
-		local function setup_clangd()
-			local clangd_cmd
-
-			if vim.fn.has('macunix') == 1 or (vim.fn.has('unix') == 1 and vim.fn.system('uname -s'):match('Darwin')) then
-				local macos_paths = {
-					"/usr/bin/clangd",
-					"/opt/homebrew/bin/clangd",
-					"/usr/local/bin/clangd",
-				}
-				for _, path in ipairs(macos_paths) do
-					if vim.fn.executable(path) == 1 then
-						clangd_cmd = path
-						break
-					end
-				end
-				if not clangd_cmd and vim.fn.executable("clangd") == 1 then
-					clangd_cmd = "clangd"
-				end
-			elseif vim.fn.has('win32') == 1 then
-				clangd_cmd = "clangd"
+		-- C / C++ (clangd): pick the newest clangd binary that is actually installed
+		local function find_clangd()
+			if vim.fn.has("win32") == 1 then
+				return "clangd"
+			end
+			local candidates
+			if vim.fn.has("mac") == 1 then
+				candidates = { "/usr/bin/clangd", "/opt/homebrew/bin/clangd", "/usr/local/bin/clangd", "clangd" }
 			else
-				local linux_paths = {
-					"/usr/bin/clangd-18",
-					"/usr/bin/clangd-17",
-					"/usr/bin/clangd-16",
-					"/usr/bin/clangd-15",
-					"/usr/bin/clangd-14",
-					"clangd",
+				candidates = {
+					"/usr/bin/clangd-18", "/usr/bin/clangd-17", "/usr/bin/clangd-16",
+					"/usr/bin/clangd-15", "/usr/bin/clangd-14", "clangd",
 				}
-				for _, path in ipairs(linux_paths) do
-					if vim.fn.executable(path) == 1 then
-						clangd_cmd = path
-						break
-					end
+			end
+			for _, path in ipairs(candidates) do
+				if vim.fn.executable(path) == 1 then
+					return path
 				end
 			end
+		end
 
-			if not clangd_cmd or vim.fn.executable(clangd_cmd) == 0 then
-				return
-			end
+		local clangd_bin = find_clangd()
+		if clangd_bin then
+			-- Compilers clangd may ask for include paths (Arduino ARM toolchain, system gcc).
+			-- ~ is expanded so this follows whatever home directory this machine uses.
+			local query_driver = table.concat({
+				vim.fn.expand("~/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/*/bin/arm-none-eabi-g*"),
+				"/usr/bin/arm-none-eabi-g*",
+				"/usr/bin/g++",
+				"/usr/bin/gcc",
+			}, ",")
 
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "c", "cpp", "objc", "objcpp" },  -- *.ino is remapped to cpp above
-				callback = function(ev)
-					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.clangd', 'compile_commands.json', 'compile_flags.txt', 'CMakeLists.txt', '.git' })
-
-					vim.lsp.start({
-						name = "clangd",
-						cmd = {
-							clangd_cmd,
-							"--fallback-style=file",
-							"--background-index=false",
-							"--header-insertion=never",
-							"--query-driver=/home/tanner/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/*/bin/arm-none-eabi-g*,/usr/bin/arm-none-eabi-g*,/usr/bin/g++,/usr/bin/gcc",
-						},
-						root_dir = root_dir,
-						capabilities = capabilities,
-						on_attach = on_attach,
-						init_options = {
-							clangdFileStatus = true,
-							usePlaceholders = true,
-							completeUnimported = true,
-							semanticHighlighting = true,
-						},
-					})
-				end,
+			vim.lsp.config("clangd", {
+				cmd = {
+					clangd_bin,
+					"--fallback-style=file",
+					"--background-index=false",
+					"--header-insertion=never",
+					"--query-driver=" .. query_driver,
+				},
+				filetypes = { "c", "cpp", "objc", "objcpp" }, -- *.ino is remapped to cpp above
+				root_markers = { ".clangd", "compile_commands.json", "compile_flags.txt", "CMakeLists.txt", ".git" },
+				init_options = {
+					clangdFileStatus = true,
+					usePlaceholders = true,
+					completeUnimported = true,
+					semanticHighlighting = true,
+				},
 			})
 		end
-		setup_clangd()
 
 		-- Python
-		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "python" },
-			callback = function(ev)
-				local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile', '.git' })
-
-				vim.lsp.start({
-					name = "pyright",
-					cmd = { "pyright-langserver", "--stdio" },
-					root_dir = root_dir,
-					capabilities = capabilities,
-					on_attach = on_attach,
-					settings = {
-						python = {
-							analysis = {
-								autoSearchPaths = true,
-								useLibraryCodeForTypes = true,
-								diagnosticMode = "workspace",
-							},
-						},
+		vim.lsp.config("pyright", {
+			cmd = { "pyright-langserver", "--stdio" },
+			filetypes = { "python" },
+			root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile", ".git" },
+			settings = {
+				python = {
+					analysis = {
+						autoSearchPaths = true,
+						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace",
 					},
-				})
-			end,
+				},
+			},
 		})
 
-		-- Arduino .ino: filter AVR false-positive diagnostics from clangd.
-		-- Uses a reentrance guard to prevent DiagnosticChanged → set → DiagnosticChanged loops.
+		-- GLSL
+		vim.lsp.config("glsl_analyzer", {
+			cmd = { "glsl_analyzer" },
+			filetypes = { "glsl" }, -- .vert/.frag/.comp/... are all detected as "glsl"
+			root_markers = { ".git" },
+		})
+
+		-- Slang (slangd): shader language used in forge3d; ships with the Vulkan / Slang SDK
+		vim.lsp.config("slangd", {
+			cmd = { "slangd" },
+			filetypes = { "slang" },
+			root_markers = { ".git" },
+		})
+
+		-- Prisma
+		vim.lsp.config("prismals", {
+			cmd = { "prisma-language-server", "--stdio" },
+			filetypes = { "prisma" },
+			root_markers = { "package.json", ".git" },
+		})
+
+		-- ================================================================
+		-- ENABLE SERVERS
+		-- ================================================================
+		-- A server is enabled as soon as its binary exists. If it is not installed yet
+		-- (e.g. Mason is still installing it), retry the first time a matching filetype opens.
+		local servers = {
+			{ "ts_ls", "typescript-language-server", { "typescript", "typescriptreact", "javascript", "javascriptreact" } },
+			{ "cssls", "vscode-css-language-server", { "css", "scss", "less", "sass" } },
+			{ "html", "vscode-html-language-server", { "html" } },
+			{ "tailwindcss", "tailwindcss-language-server", { "html", "css", "scss", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" } },
+			{ "lua_ls", "lua-language-server", { "lua" } },
+			{ "pyright", "pyright-langserver", { "python" } },
+			{ "glsl_analyzer", "glsl_analyzer", { "glsl" } },
+			{ "slangd", "slangd", { "slang" } },
+			{ "prismals", "prisma-language-server", { "prisma" } },
+		}
+		if clangd_bin then
+			table.insert(servers, { "clangd", clangd_bin, { "c", "cpp", "objc", "objcpp" } })
+		end
+
+		for _, server in ipairs(servers) do
+			local name, exe, filetypes = server[1], server[2], server[3]
+			if vim.fn.executable(exe) == 1 then
+				vim.lsp.enable(name)
+			else
+				vim.api.nvim_create_autocmd("FileType", {
+					pattern = filetypes,
+					once = true,
+					callback = function()
+						if vim.fn.executable(exe) == 1 then
+							vim.lsp.enable(name)
+						end
+					end,
+				})
+			end
+		end
+
+		-- ================================================================
+		-- ARDUINO: hide AVR false-positive diagnostics from clangd in .ino files
+		-- ================================================================
+		-- Uses a reentrance guard to prevent DiagnosticChanged -> set -> DiagnosticChanged loops.
 		local arduino_fp_patterns = {
 			"undeclared identifier 'OUTPUT'",
 			"undeclared identifier 'INPUT'",
@@ -305,41 +296,42 @@ return {
 
 		local function is_arduino_fp(msg)
 			for _, pat in ipairs(arduino_fp_patterns) do
-				if msg:find(pat, 1, true) then return true end
+				if msg:find(pat, 1, true) then
+					return true
+				end
 			end
-			if msg:find("unknown type name '__", 1, true) then return true end
-			return false
+			return msg:find("unknown type name '__", 1, true) ~= nil
 		end
 
 		local ino_ns = vim.api.nvim_create_namespace("arduino_filtered_diag")
-		-- Per-buffer reentrance guard: bufnr -> bool
-		local _ino_filtering = {}
+		local _ino_filtering = {} -- bufnr -> bool
 
 		vim.api.nvim_create_autocmd("LspAttach", {
 			callback = function(ev)
-				if not vim.api.nvim_buf_get_name(ev.buf):match("%.ino$") then return end
+				if not vim.api.nvim_buf_get_name(ev.buf):match("%.ino$") then
+					return
+				end
 
 				vim.api.nvim_create_autocmd("DiagnosticChanged", {
 					buffer = ev.buf,
 					callback = function()
 						local bufnr = ev.buf
-						-- Guard: if we're already inside filtering for this buf, bail out
-						if _ino_filtering[bufnr] then return end
+						if _ino_filtering[bufnr] then
+							return
+						end
 						_ino_filtering[bufnr] = true
 
-						local all = vim.diagnostic.get(bufnr)
 						local filtered = vim.tbl_filter(function(d)
-							-- Only keep diagnostics NOT from our own namespace AND not false positives
+							-- Keep diagnostics that are NOT from our own namespace and not false positives
 							return d.namespace ~= ino_ns and not is_arduino_fp(d.message)
-						end, all)
+						end, vim.diagnostic.get(bufnr))
 
 						vim.diagnostic.reset(ino_ns, bufnr)
 						vim.diagnostic.set(ino_ns, bufnr, filtered)
 
 						-- Hide clangd's raw diagnostics so only our filtered set shows
 						for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, name = "clangd" })) do
-							local clangd_ns = vim.lsp.diagnostic.get_namespace(client.id)
-							vim.diagnostic.hide(clangd_ns, bufnr)
+							vim.diagnostic.hide(vim.lsp.diagnostic.get_namespace(client.id), bufnr)
 						end
 
 						_ino_filtering[bufnr] = false
@@ -347,59 +339,5 @@ return {
 				})
 			end,
 		})
-
-		-- GLSL (glsl_analyzer)
-		if vim.fn.executable("glsl_analyzer") == 1 then
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "glsl", "vert", "frag", "comp", "geom", "tesc", "tese" },
-				callback = function(ev)
-					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.git' }) or vim.fn.getcwd()
-
-					vim.lsp.start({
-						name = "glsl_analyzer",
-						cmd = { "glsl_analyzer" },
-						root_dir = root_dir,
-						capabilities = capabilities,
-						on_attach = on_attach,
-					})
-				end,
-			})
-		end
-
-		-- Slang (slangd) -- shader language used in forge3d; ships with the Vulkan SDK / Slang SDK
-		if vim.fn.executable("slangd") == 1 then
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "slang" },
-				callback = function(ev)
-					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { '.git' }) or vim.fn.getcwd()
-
-					vim.lsp.start({
-						name = "slangd",
-						cmd = { "slangd" },
-						root_dir = root_dir,
-						capabilities = capabilities,
-						on_attach = on_attach,
-					})
-				end,
-			})
-		end
-
-		-- Prisma
-		if vim.fn.executable("prisma-language-server") == 1 then
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "prisma" },
-				callback = function(ev)
-					local root_dir = vim.fs.root(vim.api.nvim_buf_get_name(ev.buf), { 'package.json', '.git' })
-
-					vim.lsp.start({
-						name = "prismals",
-						cmd = { "prisma-language-server", "--stdio" },
-						root_dir = root_dir,
-						capabilities = capabilities,
-						on_attach = on_attach,
-					})
-				end,
-			})
-		end
 	end,
 }

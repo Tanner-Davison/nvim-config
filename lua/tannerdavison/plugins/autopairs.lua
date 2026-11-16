@@ -1,9 +1,6 @@
 return {
 	"windwp/nvim-autopairs",
 	event = { "InsertEnter" },
-	dependencies = {
-		"hrsh7th/nvim-cmp",
-	},
 	config = function()
 		-- Import nvim-autopairs
 		local autopairs = require("nvim-autopairs")
@@ -12,14 +9,14 @@ return {
 		autopairs.setup({
 			-- Basic settings
 			check_ts = true, -- Enable Tree-sitter for better context
-			disable_filetype = { "TelescopePrompt", "spectre_panel" },
+			disable_filetype = { "snacks_picker_input", "spectre_panel" },
 			enable_check_bracket_line = true,
 			-- Improved pattern to work better with tabout
 			ignored_next_char = "[%w%.%s]", -- will ignore alphanumeric, `.`, and whitespace
 			enable_moveright = true,
 			enable_afterquote = true,
 			enable_bracket_in_quote = true,
-			map_cr = true,
+			map_cr = false, -- <CR> is handled by blink.cmp (it calls autopairs_cr() when no item is selected)
 			map_bs = true, -- Map backspace to delete bracket pair
 			map_c_h = false, -- Disable Ctrl+h mapping
 			map_c_w = false, -- Disable Ctrl+w mapping
@@ -35,11 +32,5 @@ return {
 				cpp = { "string" }, -- Don't add pairs in C++ string nodes
 			},
 		})
-		-- Import nvim-autopairs completion functionality
-		local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-		local cmp = require("cmp") -- Import nvim-cmp plugin (completions plugin)
-
-		-- Ensure autopairs works with nvim-cmp
-		cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 	end,
 }

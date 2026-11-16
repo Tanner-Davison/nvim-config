@@ -64,6 +64,15 @@ return {
 						cond = lazy_status.has_updates,
 					},
 					{
+						-- LSP progress (Neovim 0.12 vim.lsp.status()), only while a client is busy
+						function()
+							return vim.lsp.status()
+						end,
+						cond = function()
+							return vim.lsp.status ~= nil and #vim.lsp.get_clients({ bufnr = 0 }) > 0
+						end,
+					},
+					{
 						function()
 							if not vim.g.loaded_mcphub then
 								return "󰐻 -"
@@ -76,7 +85,7 @@ return {
 							end
 							if executing or status == "starting" or status == "restarting" then
 								local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
-								local frame = math.floor(vim.loop.now() / 100) % #frames + 1
+								local frame = math.floor(vim.uv.now() / 100) % #frames + 1
 								return "󰐻 " .. frames[frame]
 							end
 							return "󰐻 " .. count

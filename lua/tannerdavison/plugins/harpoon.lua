@@ -8,24 +8,19 @@ return {
 		-- REQUIRED
 		harpoon:setup()
 
-		-- Basic telescope configuration
-		local conf = require("telescope.config").values
-		local function toggle_telescope(harpoon_files)
-			local file_paths = {}
+		-- Harpoon list shown in a Snacks picker (file preview included)
+		local function harpoon_picker(harpoon_files)
+			local items = {}
 			for _, item in ipairs(harpoon_files.items) do
-				table.insert(file_paths, item.value)
+				table.insert(items, { text = item.value, file = item.value })
 			end
 
-			require("telescope.pickers")
-				.new({}, {
-					prompt_title = "Harpoon",
-					finder = require("telescope.finders").new_table({
-						results = file_paths,
-					}),
-					previewer = conf.file_previewer({}),
-					sorter = conf.generic_sorter({}),
-				})
-				:find()
+			Snacks.picker({
+				title = "Harpoon",
+				items = items,
+				format = "file",
+				preview = "file",
+			})
 		end
 
 		-- Key mappings - all under <leader>h prefix
@@ -44,10 +39,10 @@ return {
 			harpoon.ui:toggle_quick_menu(harpoon:list())
 		end, { desc = "Harpoon: Toggle menu" })
 
-		-- Use telescope for harpoon list (better UI)
+		-- Picker UI for the harpoon list
 		vim.keymap.set("n", "<leader>ht", function()
-			toggle_telescope(harpoon:list())
-		end, { desc = "Harpoon: Telescope UI" })
+			harpoon_picker(harpoon:list())
+		end, { desc = "Harpoon: Picker UI" })
 
 		-- Quick navigation to files 1-4
 		vim.keymap.set("n", "<leader>h1", function()

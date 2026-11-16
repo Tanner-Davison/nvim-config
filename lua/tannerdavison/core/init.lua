@@ -23,7 +23,7 @@ do
 		-- Only surface the specific upstream ABI-mismatch signature (the
 		-- "Invalid field name ... operator" query error). Every other
 		-- treesitter.start failure -- e.g. no parser for virtual filetypes
-		-- like snacks_notif, alpha, TelescopePrompt -- was always silently
+		-- like snacks_notif, alpha, snacks_picker_input -- was always silently
 		-- swallowed by callers' own pcall(vim.treesitter.start), and should
 		-- stay silent; don't turn ordinary "no parser for this filetype"
 		-- misses into notification spam.
@@ -51,36 +51,30 @@ require("tannerdavison.core.title")
 require("tannerdavison.core.autocommands")
 require("tannerdavison.core.agents")
 
--- Temporarily suppress deprecation warnings until plugins are updated
--- These warnings are from telescope.nvim, nvim-cmp, and cmp-path using deprecated APIs
-local original_deprecate = vim.deprecate
-vim.deprecate = function(name, alternative, version, plugin, backtrace)
-	-- Only suppress specific deprecation warnings from known plugins
-	if
-		name == "client.supports_method"
-		or name == "vim.lsp.util.jump_to_location"
-		or name == "vim.str_utfindex"
-		or name == "vim.validate"
-	then
-		return
-	end
-	-- Call original for other deprecations
-	return original_deprecate(name, alternative, version, plugin, backtrace)
-end
-
---  diagnostic signs using modern API
+-- Diagnostics (Neovim 0.12 style: signs are configured here, not via sign_define).
+-- Inline text is rendered by tiny-inline-diagnostic.nvim, so built-in virtual_text is off.
 vim.diagnostic.config({
 	signs = {
-
 		text = {
-			[vim.diagnostic.severity.ERROR] = "✘", -- X mark
-			[vim.diagnostic.severity.WARN] = "⚠", -- Triangle
-			[vim.diagnostic.severity.INFO] = "󰋽", -- Info curse
-			[vim.diagnostic.severity.HINT] = "💡", -- Light bulb emoji
+			[vim.diagnostic.severity.ERROR] = "✘",
+			[vim.diagnostic.severity.WARN] = "⚠",
+			[vim.diagnostic.severity.INFO] = "󰋽",
+			[vim.diagnostic.severity.HINT] = "💡",
 		},
 	},
-	virtual_text = true,
+	virtual_text = false,
 	underline = true,
 	update_in_insert = false,
 	severity_sort = true,
+	float = { border = "rounded", source = true },
 })
+
+-- Neovim 0.12 experimental ui2: redesigned messages + cmdline (fewer "Press ENTER"
+-- prompts, pager is a real buffer). Wrapped in pcall so a future API change can
+-- never break startup. Set vim.g.tanner_ui2 = false to turn it off.
+if vim.g.tanner_ui2 ~= false then
+	local ok, ui2 = pcall(require, "vim._core.ui2")
+	if ok and type(ui2.enable) == "function" then
+		pcall(ui2.enable, {})
+	end
+end

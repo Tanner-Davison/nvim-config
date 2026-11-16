@@ -3,12 +3,11 @@ return {
 	lazy = false,
 	config = function()
 		require("tabout").setup({
-			-- Left empty: tabout's own load order isn't guaranteed to run after
-			-- Supermaven's (both get deferred to the shared InsertEnter event
-			-- since tabout depends on nvim-cmp, which also loads on InsertEnter),
-			-- so letting tabout self-bind <Tab> creates a race that intermittently
-			-- overwrites Supermaven's mapping. Supermaven's fallback branch calls
-			-- require("tabout").tabout() directly instead, so this key is unused.
+			-- Left empty: tabout's load order isn't guaranteed to run after
+			-- Supermaven's, so letting tabout self-bind <Tab> creates a race that
+			-- intermittently overwrites Supermaven's mapping. Supermaven's fallback
+			-- branch calls require("tabout").tabout() directly instead, so this key
+			-- is unused.
 			tabkey = "",
 			backwards_tabkey = "<S-Tab>",
 			act_as_tab = true,
@@ -16,7 +15,7 @@ return {
 			-- Better handling of complex contexts
 			ignore_beginning = false,
 			-- Don't trigger in certain contexts where we want completion
-			exclude = { "TelescopePrompt", "spectre_panel" },
+			exclude = { "snacks_picker_input", "spectre_panel" },
 			-- Add more specific configuration for better JavaScript support
 			tabouts = {
 				{ open = "'", close = "'" },
@@ -40,7 +39,6 @@ return {
 	end,
 	dependencies = {
 		"nvim-treesitter/nvim-treesitter",
-		"hrsh7th/nvim-cmp",
 		"windwp/nvim-autopairs", -- Add autopairs as dependency
 	},
 }

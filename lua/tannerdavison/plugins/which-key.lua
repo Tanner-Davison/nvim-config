@@ -9,14 +9,16 @@ return {
 		local wk = require("which-key")
 		
 		wk.setup({
-			presets = {
-				operators = true,
-				motions = true,
-				text_objects = true,
-				windows = true,
-				nav = true,
-				z = true,
-				g = true,
+			plugins = {
+				presets = {
+					operators = true,
+					motions = true,
+					text_objects = true,
+					windows = true,
+					nav = true,
+					z = true,
+					g = true,
+				},
 			},
 		})
 		
@@ -24,7 +26,7 @@ return {
 		wk.add({
 			-- Main leader groups
 			{ "<leader>b", group = "Debug/Breakpoints" },
-			{ "<leader>c", group = "C++/Code" },
+			{ "<leader>c", group = "Code/C++ (compile, actions, docs)" },
 			{ "<leader>d", group = "Doxygen/Desktop" },
 			{ "<leader>e", group = "Explorer" },
 			{ "<leader>f", group = "Find/Files" },
@@ -36,7 +38,8 @@ return {
 			{ "<leader>m", group = "CMake/Media/Marks" },
 			{ "<leader>n", group = "Neovim" },
 			{ "<leader>o", group = "Open" },
-			{ "<leader>r", group = "React/Replace" },
+			{ "<leader>p", group = "Preview (markdown)" },
+			{ "<leader>r", group = "Rename" },
 			{ "<leader>s", group = "Split/Session/Snacks" },
 			{ "<leader>t", group = "Tab/TODO/Toggle/Tablet" },
 			{ "<leader>v", group = "Flash Jump" },
@@ -47,9 +50,6 @@ return {
 			-- Subgroups
 			{ "<leader>lw", group = "LSP Workspace" },
 			{ "<leader>ld", group = "LSP Document" },
-			
-			-- Space (non-leader) groups
-			{ "<Space>c", group = "C++ Compile" },
 		})
 	end,
 }

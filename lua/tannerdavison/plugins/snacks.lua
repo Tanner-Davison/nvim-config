@@ -6,7 +6,8 @@ return {
 	opts = {
 		bigfile = { enabled = true },
 		dashboard = { enabled = false },
-		explorer = { enabled = true },
+		-- File explorer (replaces nvim-tree). Also takes over directory buffers from netrw.
+		explorer = { enabled = true, replace_netrw = true },
 		image = {
 			enabled = true,
 			inline = true,
@@ -15,13 +16,26 @@ return {
 				float = true,
 			},
 		},
-		indent = { enabled = true },
+		-- Indent guides (replaces indent-blankline): scope line only, same look as the old ibl setup.
+		indent = {
+			enabled = true,
+			indent = { enabled = false }, -- no per-level guides, just the active scope line
+			scope = { enabled = true, char = "│" },
+		},
 		input = { enabled = true },
 		notifier = {
 			enabled = true,
 			timeout = 3000,
 		},
-		picker = { enabled = true },
+		picker = {
+			enabled = true,
+			-- vim.ui.select / vim.ui.input go through Snacks (replaces dressing.nvim)
+			ui_select = true,
+			-- nvim-tree used to show dotfiles and git-ignored files; keep that for the explorer
+			sources = {
+				explorer = { hidden = true, ignored = true },
+			},
+		},
 		quickfile = { enabled = false },
 		scope = { enabled = true },
 		scroll = { enabled = true },
@@ -437,7 +451,7 @@ return {
 			desc = "Delete Buffer",
 		},
 		{
-			"<leader>cR",
+			"<leader>rf",
 			function()
 				Snacks.rename.rename_file()
 			end,
@@ -537,6 +551,31 @@ return {
 			end,
 			desc = "Browse and open images",
 		},
+		-- ================================================================
+		-- Former Telescope / nvim-tree mappings, now on Snacks
+		-- ================================================================
+		{ "<leader>ee", function() Snacks.explorer() end, desc = "Toggle file explorer" },
+		{ "<leader>ef", function() Snacks.explorer.reveal() end, desc = "File explorer on current file" },
+		{ "<leader>fs", function() Snacks.picker.grep() end, desc = "Find string in cwd" },
+		{ "<leader>fH", function() Snacks.picker.help() end, desc = "List available help tags" },
+		{ "<leader>fk", function() Snacks.picker.keymaps() end, desc = "List keymappings" },
+		{ "<leader>fco", function() Snacks.picker.commands() end, desc = "List available plugin/user commands" },
+		{ "<leader>fo", "<cmd>options<CR>", desc = "List vim options" },
+		{ "<leader>ft", function() Snacks.picker.todo_comments() end, desc = "Find todos" },
+		{ "<leader>fP", function() Snacks.picker.pickers() end, desc = "List all pickers" },
+		{ "<leader>f/", function() Snacks.picker.lines() end, desc = "Fuzzily search in current buffer" },
+		{
+			"<leader>fd",
+			function()
+				Snacks.picker.files({ cwd = vim.fn.expand("%:p:h") })
+			end,
+			desc = "Fuzzy find files relative to current file",
+		},
+		{ "<leader>gc", function() Snacks.picker.git_log() end, desc = "List git commits" },
+		{ "<leader>gfc", function() Snacks.picker.git_log_file() end, desc = "List git commits for current buffer" },
+		{ "<leader>gd", function() Snacks.picker.lsp_definitions() end, desc = "Go to definition" },
+		{ "<leader>lws", function() Snacks.picker.lsp_workspace_symbols() end, desc = "List LSP workspace symbols" },
+		{ "<leader>lds", function() Snacks.picker.lsp_symbols() end, desc = "List LSP document symbols" },
 	},
 	init = function()
 		-- Snacks' image placement sets `self.hidden = true` when its window
